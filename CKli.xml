@@ -1,2 +1,4 @@
 <CKli>
+  <Plugins />
+  <Repository Url="https://github.com/CK-Build/CKli" />
 </CKli>
