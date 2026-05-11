@@ -1,4 +1,7 @@
 <CKli>
-  <Plugins />
+  <Plugins>
+    <ShallowSolution />
+    <BranchModel />
+  </Plugins>
   <Repository Url="https://github.com/CK-Build/CKli" />
 </CKli>

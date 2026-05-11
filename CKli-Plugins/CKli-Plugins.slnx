@@ -1,8 +1,26 @@
 <Solution>
   <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
     <File Path="Directory.Build.props" />
-    <File Path="Directory.Packages.props" />
     <File Path="nuget.config" />
   </Folder>
+
+  <Folder Name="/CKli (Project References)/StandardPlugins/">
+    <Project Path="../../CKli/StandardPlugins/CKli.ShallowSolution.Plugin/CKli.ShallowSolution.Plugin.csproj" />
+    <Project Path="../../CKli/StandardPlugins/CKli.BranchModel.Plugin/CKli.BranchModel.Plugin.csproj" />
+  </Folder>
+
+  <Folder Name="/CKli (Project References)/">
+    <Project Path="../../CKli/CKli.Core/CKli.Core.csproj" />
+    <Project Path="../../CKli/CKli.Loader/CKli.Loader.csproj" />
+    <Project Path="../../CKli/CKli.Plugins.Core/CKli.Plugins.Core.csproj" />
+    <Project Path="../../CKli/CKli.Testing/CKli.Testing.csproj" />
+  </Folder>
+
+  <Folder Name="/Tests/">
+    <Project Path="Tests/Plugins.Tests/Plugins.Tests.csproj" />
+  </Folder>
+
   <Project Path="CKli.Plugins/CKli.Plugins.csproj" />
+
 </Solution>

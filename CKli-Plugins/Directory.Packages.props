@@ -1,8 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageVersion Include="CKli.Plugins.Core" Version="0.0.8--0271-dev" />
-  </ItemGroup>
-</Project>

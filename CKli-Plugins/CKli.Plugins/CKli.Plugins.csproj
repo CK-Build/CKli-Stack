@@ -1,11 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CKli.Plugins.Core" />
+    <ProjectReference Include="..\..\..\CKli\CKli.Plugins.Core\CKli.Plugins.Core.csproj" />
+    <ProjectReference Include="..\..\..\CKli\StandardPlugins\CKli.BranchModel.Plugin\CKli.BranchModel.Plugin.csproj" />
+    <ProjectReference Include="..\..\..\CKli\StandardPlugins\CKli.ShallowSolution.Plugin\CKli.ShallowSolution.Plugin.csproj" />
   </ItemGroup>
 
 </Project>
