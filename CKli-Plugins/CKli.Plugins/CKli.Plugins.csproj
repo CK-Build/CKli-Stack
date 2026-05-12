@@ -6,8 +6,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\CKli\CKli.Plugins.Core\CKli.Plugins.Core.csproj" />
+    <ProjectReference Include="..\..\..\CKli\StandardPlugins\CKli.ArtifactHandler.Plugin\CKli.ArtifactHandler.Plugin.csproj" />
     <ProjectReference Include="..\..\..\CKli\StandardPlugins\CKli.BranchModel.Plugin\CKli.BranchModel.Plugin.csproj" />
+    <ProjectReference Include="..\..\..\CKli\StandardPlugins\CKli.Build.Plugin\CKli.Build.Plugin.csproj" />
+    <ProjectReference Include="..\..\..\CKli\StandardPlugins\CKli.CommonFiles.Plugin\CKli.CommonFiles.Plugin.csproj" />
+    <ProjectReference Include="..\..\..\CKli\StandardPlugins\CKli.HotZone.Plugin\CKli.HotZone.Plugin.csproj" />
+    <ProjectReference Include="..\..\..\CKli\StandardPlugins\CKli.Migration.Plugin\CKli.Migration.Plugin.csproj" />
+    <ProjectReference Include="..\..\..\CKli\StandardPlugins\CKli.Publish.Plugin\CKli.Publish.Plugin.csproj" />
+    <ProjectReference Include="..\..\..\CKli\StandardPlugins\CKli.ReleaseDatabase.Plugin\CKli.ReleaseDatabase.Plugin.csproj" />
     <ProjectReference Include="..\..\..\CKli\StandardPlugins\CKli.ShallowSolution.Plugin\CKli.ShallowSolution.Plugin.csproj" />
+    <ProjectReference Include="..\..\..\CKli\StandardPlugins\CKli.VersionTag.Plugin\CKli.VersionTag.Plugin.csproj" />
   </ItemGroup>
 
 </Project>

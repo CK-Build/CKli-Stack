@@ -19,7 +19,7 @@ namespace CKli.Plugins;
 [GeneratedCode("CKli", "0.0.8--0277-dev")]
 public static class CompiledPlugins
 {
-    static ReadOnlySpan<byte> _configSignature => [0,74,72,145,119,115,45,169,236,231,54,249,57,193,38,29,54,97,233,162];
+    static ReadOnlySpan<byte> _configSignature => [200,32,245,225,68,43,137,126,161,237,125,141,20,109,208,125,127,1,132,230];
 
     public static IPluginFactory Get( PluginCollectorContext ctx )
     {
@@ -29,26 +29,84 @@ public static class CompiledPlugins
     public static IPluginFactory UncheckedGet()
     {
         var infos = new PluginInfo[]{
-            new PluginInfo( "CKli.ShallowSolution.Plugin", "ShallowSolution", (PluginStatus)0, null, new IPluginTypeInfo[1] ),
+            new PluginInfo( "CKli.ArtifactHandler.Plugin", "ArtifactHandler", (PluginStatus)0, null, new IPluginTypeInfo[1] ),
             new PluginInfo( "CKli.BranchModel.Plugin", "BranchModel", (PluginStatus)0, null, new IPluginTypeInfo[1] ),
+            new PluginInfo( "CKli.Build.Plugin", "Build", (PluginStatus)0, null, new IPluginTypeInfo[2] ),
+            new PluginInfo( "CKli.CommonFiles.Plugin", "CommonFiles", (PluginStatus)0, null, new IPluginTypeInfo[1] ),
+            new PluginInfo( "CKli.HotZone.Plugin", "HotZone", (PluginStatus)0, null, new IPluginTypeInfo[1] ),
+            new PluginInfo( "CKli.Migration.Plugin", "Migration", (PluginStatus)0, null, new IPluginTypeInfo[1] ),
+            new PluginInfo( "CKli.Publish.Plugin", "Publish", (PluginStatus)0, null, new IPluginTypeInfo[1] ),
+            new PluginInfo( "CKli.ReleaseDatabase.Plugin", "ReleaseDatabase", (PluginStatus)0, null, new IPluginTypeInfo[1] ),
+            new PluginInfo( "CKli.ShallowSolution.Plugin", "ShallowSolution", (PluginStatus)0, null, new IPluginTypeInfo[1] ),
+            new PluginInfo( "CKli.VersionTag.Plugin", "VersionTag", (PluginStatus)0, null, new IPluginTypeInfo[1] ),
         };
         PluginInfo plugin;
         IPluginTypeInfo[] types;
         plugin = infos[0];
         types = (IPluginTypeInfo[])plugin.PluginTypes;
-        types[0] = new PluginTypeInfo( plugin, "CKli.ShallowSolution.Plugin.ShallowSolutionPlugin", true, 0, 0 );
+        types[0] = new PluginTypeInfo( plugin, "CKli.ArtifactHandler.Plugin.ArtifactHandlerPlugin", true, 0, 2 );
         plugin = infos[1];
         types = (IPluginTypeInfo[])plugin.PluginTypes;
         types[0] = new PluginTypeInfo( plugin, "CKli.BranchModel.Plugin.BranchModelPlugin", true, 0, 1 );
+        plugin = infos[2];
+        types = (IPluginTypeInfo[])plugin.PluginTypes;
+        types[0] = new PluginTypeInfo( plugin, "CKli.Build.Plugin.RepositoryBuilderPlugin", true, 0, 6 );
+        types[1] = new PluginTypeInfo( plugin, "CKli.Build.Plugin.BuildPlugin", true, 0, 7 );
+        plugin = infos[3];
+        types = (IPluginTypeInfo[])plugin.PluginTypes;
+        types[0] = new PluginTypeInfo( plugin, "CKli.CommonFiles.Plugin.CommonFilesPlugin", true, 0, 8 );
+        plugin = infos[4];
+        types = (IPluginTypeInfo[])plugin.PluginTypes;
+        types[0] = new PluginTypeInfo( plugin, "CKli.HotZone.Plugin.HotZonePlugin", true, 0, 5 );
+        plugin = infos[5];
+        types = (IPluginTypeInfo[])plugin.PluginTypes;
+        types[0] = new PluginTypeInfo( plugin, "CKli.Migration.Plugin.MigrationPlugin", true, 0, 9 );
+        plugin = infos[6];
+        types = (IPluginTypeInfo[])plugin.PluginTypes;
+        types[0] = new PluginTypeInfo( plugin, "CKli.Publish.Plugin.PublishPlugin", true, 0, 10 );
+        plugin = infos[7];
+        types = (IPluginTypeInfo[])plugin.PluginTypes;
+        types[0] = new PluginTypeInfo( plugin, "CKli.ReleaseDatabase.Plugin.ReleaseDatabasePlugin", true, 0, 3 );
+        plugin = infos[8];
+        types = (IPluginTypeInfo[])plugin.PluginTypes;
+        types[0] = new PluginTypeInfo( plugin, "CKli.ShallowSolution.Plugin.ShallowSolutionPlugin", true, 0, 0 );
+        plugin = infos[9];
+        types = (IPluginTypeInfo[])plugin.PluginTypes;
+        types[0] = new PluginTypeInfo( plugin, "CKli.VersionTag.Plugin.VersionTagPlugin", true, 0, 4 );
         var pluginCommands = new PluginCommand[]{
             new Cmd_checkout( infos[1].PluginTypes[0] ),
             new Cmd_commit( infos[1].PluginTypes[0] ),
+            new Cmd_version＿deprecate( infos[9].PluginTypes[0] ),
+            new Cmd_maintenance＿release_database＿rebuild( infos[9].PluginTypes[0] ),
+            new Cmd_fix＿start( infos[4].PluginTypes[0] ),
+            new Cmd_fix＿info( infos[4].PluginTypes[0] ),
+            new Cmd_fix＿cancel( infos[4].PluginTypes[0] ),
+            new Cmd_ci＿build( infos[2].PluginTypes[1] ),
+            new Cmd_ci＿publish( infos[2].PluginTypes[1] ),
+            new Cmd_ci＿жbuild( infos[2].PluginTypes[1] ),
+            new Cmd_ci＿жpublish( infos[2].PluginTypes[1] ),
+            new Cmd_build( infos[2].PluginTypes[1] ),
+            new Cmd_publish( infos[2].PluginTypes[1] ),
+            new Cmd_жbuild( infos[2].PluginTypes[1] ),
+            new Cmd_жpublish( infos[2].PluginTypes[1] ),
+            new Cmd_fix＿build( infos[2].PluginTypes[1] ),
+            new Cmd_fix＿publish( infos[2].PluginTypes[1] ),
+            new Cmd_maintenance＿rebuild＿old( infos[2].PluginTypes[1] ),
+            new Cmd_maintenance＿rebuild＿version( infos[2].PluginTypes[1] ),
+            new Cmd_maintenance＿migrate＿net8( infos[5].PluginTypes[0] ),
         };
         var cmds = new Dictionary<string,Command>();
         foreach( var c in pluginCommands )
         {
             cmds.Add( c.CommandPath, c );
         }
+       cmds.Add( "version", null );
+       cmds.Add( "maintenance", null );
+       cmds.Add( "maintenance release-database", null );
+       cmds.Add( "fix", null );
+       cmds.Add( "ci", null );
+       cmds.Add( "maintenance rebuild", null );
+       cmds.Add( "maintenance migrate", null );
         return new Generated( infos, pluginCommands, CommandNamespace.UnsafeCreate( cmds ) );
     }
 }
@@ -79,9 +137,18 @@ sealed class Generated : IPluginFactory
     {
         var configs = world.DefinitionFile.ReadPluginsConfiguration( monitor );
         Throw.CheckState( "Plugins configurations have already been loaded.", configs != null );
-        var objects = new object[2];
-        objects[0] = new CKli.ShallowSolution.Plugin.ShallowSolutionPlugin( new PrimaryPluginContext( _plugins[0], configs, world ) );
+        var objects = new object[11];
+        objects[0] = new CKli.ShallowSolution.Plugin.ShallowSolutionPlugin( new PrimaryPluginContext( _plugins[8], configs, world ) );
         objects[1] = new CKli.BranchModel.Plugin.BranchModelPlugin( new PrimaryPluginContext( _plugins[1], configs, world ), (CKli.ShallowSolution.Plugin.ShallowSolutionPlugin)objects[0] );
+        objects[2] = new CKli.ArtifactHandler.Plugin.ArtifactHandlerPlugin( new PrimaryPluginContext( _plugins[0], configs, world ), (CKli.BranchModel.Plugin.BranchModelPlugin)objects[1] );
+        objects[3] = new CKli.ReleaseDatabase.Plugin.ReleaseDatabasePlugin( new PrimaryPluginContext( _plugins[7], configs, world ), (CKli.ArtifactHandler.Plugin.ArtifactHandlerPlugin)objects[2] );
+        objects[4] = new CKli.VersionTag.Plugin.VersionTagPlugin( new PrimaryPluginContext( _plugins[9], configs, world ), (CKli.ReleaseDatabase.Plugin.ReleaseDatabasePlugin)objects[3], (CKli.ArtifactHandler.Plugin.ArtifactHandlerPlugin)objects[2] );
+        objects[5] = new CKli.HotZone.Plugin.HotZonePlugin( new PrimaryPluginContext( _plugins[4], configs, world ), (CKli.BranchModel.Plugin.BranchModelPlugin)objects[1], (CKli.VersionTag.Plugin.VersionTagPlugin)objects[4], (CKli.ShallowSolution.Plugin.ShallowSolutionPlugin)objects[0], (CKli.ReleaseDatabase.Plugin.ReleaseDatabasePlugin)objects[3], (CKli.ArtifactHandler.Plugin.ArtifactHandlerPlugin)objects[2] );
+        objects[6] = new CKli.Build.Plugin.RepositoryBuilderPlugin( new PrimaryPluginContext( _plugins[2], configs, world ), (CKli.ArtifactHandler.Plugin.ArtifactHandlerPlugin)objects[2] );
+        objects[7] = new CKli.Build.Plugin.BuildPlugin( new PrimaryPluginContext( _plugins[2], configs, world ), (CKli.VersionTag.Plugin.VersionTagPlugin)objects[4], (CKli.BranchModel.Plugin.BranchModelPlugin)objects[1], (CKli.HotZone.Plugin.HotZonePlugin)objects[5], (CKli.Build.Plugin.RepositoryBuilderPlugin)objects[6], (CKli.ReleaseDatabase.Plugin.ReleaseDatabasePlugin)objects[3], (CKli.ArtifactHandler.Plugin.ArtifactHandlerPlugin)objects[2], (CKli.ShallowSolution.Plugin.ShallowSolutionPlugin)objects[0] );
+        objects[8] = new CKli.CommonFiles.Plugin.CommonFilesPlugin( new PrimaryPluginContext( _plugins[3], configs, world ), (CKli.BranchModel.Plugin.BranchModelPlugin)objects[1] );
+        objects[9] = new CKli.Migration.Plugin.MigrationPlugin( new PrimaryPluginContext( _plugins[5], configs, world ), (CKli.ArtifactHandler.Plugin.ArtifactHandlerPlugin)objects[2], (CKli.VersionTag.Plugin.VersionTagPlugin)objects[4], (CKli.BranchModel.Plugin.BranchModelPlugin)objects[1], (CKli.HotZone.Plugin.HotZonePlugin)objects[5], (CKli.Build.Plugin.BuildPlugin)objects[7] );
+        objects[10] = new CKli.Publish.Plugin.PublishPlugin( new PrimaryPluginContext( _plugins[6], configs, world ), (CKli.Build.Plugin.BuildPlugin)objects[7], (CKli.ArtifactHandler.Plugin.ArtifactHandlerPlugin)objects[2], (CKli.ReleaseDatabase.Plugin.ReleaseDatabasePlugin)objects[3], (CKli.VersionTag.Plugin.VersionTagPlugin)objects[4] );
         return PluginCollectionImpl.CreateAndBindCommands( objects, _plugins, _commands, _pluginCommands );
     }
 
@@ -141,5 +208,547 @@ sealed class Cmd_commit : PluginCommand
         if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
         return ValueTask.FromResult( ((CKli.BranchModel.Plugin.BranchModelPlugin)Instance).Commit(
                                            monitor, context, a0, f0 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_version＿deprecate : PluginCommand
+{
+    internal Cmd_version＿deprecate( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "version deprecate",
+                "Deprecates a version tag by ensuring that an associated \"+deprecated\" tag appears on the same commit and propagates this deprecation to all its downstream packages.\r\nThe tag annotation contains the actual \"Expiration\" date at which the packages must be unlisted or deleted from any feeds: this must be set thanks to the --immediate flag or --days option.",
+                1,
+                -1,
+                arguments: [
+                    ("version", "The version to deprecate."),
+                ],
+                options: [
+                    (["--reason",], "Appear in the tag annotation. Defaults to \"(unspecified)\".", false ),
+                    (["--days",], "Specify the actual deprecation delay in days. This option excludes --immediate.", false ),
+                ],
+                flags: [
+                    (["--immediate",], "Apply the deprecation immediately. This flag excludes --days." ),
+                    (["--allow-update",], "Allow the deprecated tag to already exist and updates it (must not already be expired)." ),
+                ],
+                "DeprecateVersion", MethodAsyncReturn.None ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var a0 = cmdLine.EatArgument();
+        var o0 = cmdLine.EatSingleOption( Options[0].Names );
+        var o1 = cmdLine.EatSingleOption( Options[1].Names );
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        var f1 = cmdLine.EatFlag( Flags[1].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return ValueTask.FromResult( ((CKli.VersionTag.Plugin.VersionTagPlugin)Instance).DeprecateVersion(
+                                           monitor, context, a0, o0, o1, f0, f1 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_maintenance＿release_database＿rebuild : PluginCommand
+{
+    internal Cmd_maintenance＿release_database＿rebuild( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "maintenance release-database rebuild",
+                "Suppress the published and local databases and rebuild them from the version tags content.\r\nRemote tags drives the update of the published database: a local only version tag will remain local.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                ],
+                flags: [
+                    (["--update-remote-tags",], "Pushes the local tag to update an existing remote tag if its content differ." ),
+                ],
+                "RebuildReleaseDatabases", MethodAsyncReturn.None ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return ValueTask.FromResult( ((CKli.VersionTag.Plugin.VersionTagPlugin)Instance).RebuildReleaseDatabases(
+                                           monitor, context, f0 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_fix＿start : PluginCommand
+{
+    internal Cmd_fix＿start( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "fix start",
+                "Starts a Fix Workflow. This Repo 'fix/vMajor.Minor' branch is checked out.",
+                1,
+                -1,
+                arguments: [
+                    ("version", "The Major or Major.Minor version to fix."),
+                ],
+                options: [
+                ],
+                flags: [
+                    (["--move-branch",], "Allow 'fix/' branches to be moved on the commit to fix if they are not already on it." ),
+                ],
+                "FixStartAsync", MethodAsyncReturn.Task ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var a0 = cmdLine.EatArgument();
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return new ValueTask<bool>( ((CKli.HotZone.Plugin.HotZonePlugin)Instance).FixStartAsync(
+                                           monitor, context, a0, f0 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_fix＿info : PluginCommand
+{
+    internal Cmd_fix＿info( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "fix info",
+                "Dumps the current Fix Workflow.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                ],
+                flags: [
+                ],
+                "FixInfo", MethodAsyncReturn.None ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return ValueTask.FromResult( ((CKli.HotZone.Plugin.HotZonePlugin)Instance).FixInfo(
+                                           monitor, context ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_fix＿cancel : PluginCommand
+{
+    internal Cmd_fix＿cancel( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "fix cancel",
+                "Cancels the current Fix Workflow.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                ],
+                flags: [
+                ],
+                "FixCancel", MethodAsyncReturn.None ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return ValueTask.FromResult( ((CKli.HotZone.Plugin.HotZonePlugin)Instance).FixCancel(
+                                           monitor, context ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_ci＿build : PluginCommand
+{
+    internal Cmd_ci＿build( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "ci build",
+                "Build-Test-Package and propagates packages in CI versions from the current repositories to their consumers, keeping them local.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                    (["--branch","-b",], "Specify the branch to consider. By default, the current head is considered when in a Repo.", false ),
+                    (["--max-dop",], "Maximal Degree of Parallelism. Defaults to 4.", false ),
+                ],
+                flags: [
+                    (["--all",], "Build all the Repos, not only the current repositories and their consumers." ),
+                    (["--skip-tests",], "Don't run tests even if they have never locally run on the commit." ),
+                    (["--force-tests",], "Run tests even if they have already run successfully on the commit." ),
+                    (["--dry-run","-d",], "Only display the build roadmap." ),
+                ],
+                "CIBuildAsync", MethodAsyncReturn.Task ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var o0 = cmdLine.EatSingleOption( Options[0].Names );
+        var o1 = cmdLine.EatSingleOption( Options[1].Names );
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        var f1 = cmdLine.EatFlag( Flags[1].Names );
+        var f2 = cmdLine.EatFlag( Flags[2].Names );
+        var f3 = cmdLine.EatFlag( Flags[3].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return new ValueTask<bool>( ((CKli.Build.Plugin.BuildPlugin)Instance).CIBuildAsync(
+                                           monitor, context, o0, o1, f0, f1, f2, f3 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_ci＿publish : PluginCommand
+{
+    internal Cmd_ci＿publish( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "ci publish",
+                "Build-Test-Package and propagates packages in CI versions from the current repositories to their consumers and publishes all the artifacts.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                    (["--branch","-b",], "Specify the branch to consider. By default, the current head is considered when in a Repo.", false ),
+                    (["--max-dop",], "Maximal Degree of Parallelism. Defaults to 4.", false ),
+                ],
+                flags: [
+                    (["--all",], "Build all the Repos, not only the current repositories and their consumers." ),
+                    (["--skip-tests",], "Don't run tests even if they have never locally run on the commit." ),
+                    (["--force-tests",], "Run tests even if they have already run successfully on the commit." ),
+                    (["--dry-run","-d",], "Only display the build roadmap." ),
+                ],
+                "CIPublishAsync", MethodAsyncReturn.Task ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var o0 = cmdLine.EatSingleOption( Options[0].Names );
+        var o1 = cmdLine.EatSingleOption( Options[1].Names );
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        var f1 = cmdLine.EatFlag( Flags[1].Names );
+        var f2 = cmdLine.EatFlag( Flags[2].Names );
+        var f3 = cmdLine.EatFlag( Flags[3].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return new ValueTask<bool>( ((CKli.Build.Plugin.BuildPlugin)Instance).CIPublishAsync(
+                                           monitor, context, o0, o1, f0, f1, f2, f3 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_ci＿жbuild : PluginCommand
+{
+    internal Cmd_ci＿жbuild( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "ci *build",
+                "Build-Test-Package the consumers of the current repositories and propagates packages in CI versions to their consumers, keeping them local.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                    (["--branch","-b",], "Specify the branch to consider. By default, the current head is considered when in a Repo.", false ),
+                    (["--max-dop",], "Maximal Degree of Parallelism. Defaults to 4.", false ),
+                ],
+                flags: [
+                    (["--all",], "Build all the Repos, not only the ones that consume or produce the current repositories." ),
+                    (["--skip-tests",], "Don't run tests even if they have never locally run on the commit." ),
+                    (["--force-tests",], "Run tests even if they have already run successfully on the commit." ),
+                    (["--dry-run","-d",], "Only display the build roadmap." ),
+                ],
+                "CIStarBuildAsync", MethodAsyncReturn.Task ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var o0 = cmdLine.EatSingleOption( Options[0].Names );
+        var o1 = cmdLine.EatSingleOption( Options[1].Names );
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        var f1 = cmdLine.EatFlag( Flags[1].Names );
+        var f2 = cmdLine.EatFlag( Flags[2].Names );
+        var f3 = cmdLine.EatFlag( Flags[3].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return new ValueTask<bool>( ((CKli.Build.Plugin.BuildPlugin)Instance).CIStarBuildAsync(
+                                           monitor, context, o0, o1, f0, f1, f2, f3 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_ci＿жpublish : PluginCommand
+{
+    internal Cmd_ci＿жpublish( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "ci *publish",
+                "Build-Test-Package the consumers of the current repositories and propagates packages in CI versions to their consumers and publishes all the artifacts.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                    (["--branch","-b",], "Specify the branch to consider. By default, the current head is considered when in a Repo.", false ),
+                    (["--max-dop",], "Maximal Degree of Parallelism. Defaults to 4.", false ),
+                ],
+                flags: [
+                    (["--all",], "Build all the Repos, not only the ones that consume or produce the current repositories." ),
+                    (["--skip-tests",], "Don't run tests even if they have never locally run on the commit." ),
+                    (["--force-tests",], "Run tests even if they have already run successfully on the commit." ),
+                    (["--dry-run","-d",], "Only display the build roadmap." ),
+                ],
+                "CIStarPublishAsync", MethodAsyncReturn.Task ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var o0 = cmdLine.EatSingleOption( Options[0].Names );
+        var o1 = cmdLine.EatSingleOption( Options[1].Names );
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        var f1 = cmdLine.EatFlag( Flags[1].Names );
+        var f2 = cmdLine.EatFlag( Flags[2].Names );
+        var f3 = cmdLine.EatFlag( Flags[3].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return new ValueTask<bool>( ((CKli.Build.Plugin.BuildPlugin)Instance).CIStarPublishAsync(
+                                           monitor, context, o0, o1, f0, f1, f2, f3 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_build : PluginCommand
+{
+    internal Cmd_build( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "build",
+                "Build-Test-Package and propagates packages from the current repositories to their consumers, keeping them local.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                    (["--branch","-b",], "Specify the branch to consider. By default, the current head is considered when in a Repo.", false ),
+                    (["--max-dop",], "Maximal Degree of Parallelism. Defaults to 4.", false ),
+                ],
+                flags: [
+                    (["--all",], "Build all the Repos, not only the current repositories and their consumers." ),
+                    (["--force-tests",], "Run tests even if they have already run successfully on the commit." ),
+                    (["--dry-run","-d",], "Only display the build roadmap." ),
+                ],
+                "BuildAsync", MethodAsyncReturn.Task ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var o0 = cmdLine.EatSingleOption( Options[0].Names );
+        var o1 = cmdLine.EatSingleOption( Options[1].Names );
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        var f1 = cmdLine.EatFlag( Flags[1].Names );
+        var f2 = cmdLine.EatFlag( Flags[2].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return new ValueTask<bool>( ((CKli.Build.Plugin.BuildPlugin)Instance).BuildAsync(
+                                           monitor, context, o0, o1, f0, f1, f2 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_publish : PluginCommand
+{
+    internal Cmd_publish( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "publish",
+                "Build-Test-Package and propagates packages from the current repositories to their consumers and publishes all the artifacts.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                    (["--branch","-b",], "Specify the branch to consider. By default, the current head is considered when in a Repo.", false ),
+                    (["--max-dop",], "Maximal Degree of Parallelism. Defaults to 4.", false ),
+                ],
+                flags: [
+                    (["--all",], "Publish all the Repos, not only the current repositories and their consumers." ),
+                    (["--force-tests",], "Run tests even if they have already run successfully on the commit." ),
+                    (["--dry-run","-d",], "Only display the build roadmap." ),
+                ],
+                "PublishAsync", MethodAsyncReturn.Task ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var o0 = cmdLine.EatSingleOption( Options[0].Names );
+        var o1 = cmdLine.EatSingleOption( Options[1].Names );
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        var f1 = cmdLine.EatFlag( Flags[1].Names );
+        var f2 = cmdLine.EatFlag( Flags[2].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return new ValueTask<bool>( ((CKli.Build.Plugin.BuildPlugin)Instance).PublishAsync(
+                                           monitor, context, o0, o1, f0, f1, f2 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_жbuild : PluginCommand
+{
+    internal Cmd_жbuild( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "*build",
+                "Build-Test-Package the consumers of the current repositories, propagates packages to their consumers and publishes all the artifacts.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                    (["--branch","-b",], "Specify the branch to consider. By default, the current head is considered when in a Repo.", false ),
+                    (["--max-dop",], "Maximal Degree of Parallelism. Defaults to 4.", false ),
+                ],
+                flags: [
+                    (["--all",], "Build all the Repos, not only the ones that consume or produce the current repositories." ),
+                    (["--force-tests",], "Run tests even if they have already run successfully on the commit." ),
+                    (["--dry-run","-d",], "Only display the build roadmap." ),
+                ],
+                "StarBuildAsync", MethodAsyncReturn.Task ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var o0 = cmdLine.EatSingleOption( Options[0].Names );
+        var o1 = cmdLine.EatSingleOption( Options[1].Names );
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        var f1 = cmdLine.EatFlag( Flags[1].Names );
+        var f2 = cmdLine.EatFlag( Flags[2].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return new ValueTask<bool>( ((CKli.Build.Plugin.BuildPlugin)Instance).StarBuildAsync(
+                                           monitor, context, o0, o1, f0, f1, f2 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_жpublish : PluginCommand
+{
+    internal Cmd_жpublish( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "*publish",
+                "Build-Test-Package the consumers of the current repositories, propagates packages to their consumers and publishes all the artifacts.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                    (["--branch","-b",], "Specify the branch to consider. By default, the current head is considered when in a Repo.", false ),
+                    (["--max-dop",], "Maximal Degree of Parallelism. Defaults to 4.", false ),
+                ],
+                flags: [
+                    (["--all",], "Publish all the Repos, not only the ones that consume or produce the current repositories." ),
+                    (["--force-tests",], "Run tests even if they have already run successfully on the commit." ),
+                    (["--dry-run","-d",], "Only display the build roadmap." ),
+                ],
+                "StarPublishAsync", MethodAsyncReturn.Task ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var o0 = cmdLine.EatSingleOption( Options[0].Names );
+        var o1 = cmdLine.EatSingleOption( Options[1].Names );
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        var f1 = cmdLine.EatFlag( Flags[1].Names );
+        var f2 = cmdLine.EatFlag( Flags[2].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return new ValueTask<bool>( ((CKli.Build.Plugin.BuildPlugin)Instance).StarPublishAsync(
+                                           monitor, context, o0, o1, f0, f1, f2 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_fix＿build : PluginCommand
+{
+    internal Cmd_fix＿build( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "fix build",
+                "Local build the current Fix Workflow.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                ],
+                flags: [
+                    (["--skip-tests",], "Don't run tests even if they have never locally run on a commit." ),
+                    (["--force-tests",], "Run tests even if they have already run successfully on a commit." ),
+                    (["--rebuild",], "Force a rebuild." ),
+                ],
+                "FixBuildAsync", MethodAsyncReturn.Task ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        var f1 = cmdLine.EatFlag( Flags[1].Names );
+        var f2 = cmdLine.EatFlag( Flags[2].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return new ValueTask<bool>( ((CKli.Build.Plugin.BuildPlugin)Instance).FixBuildAsync(
+                                           monitor, context, f0, f1, f2 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_fix＿publish : PluginCommand
+{
+    internal Cmd_fix＿publish( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "fix publish",
+                "Publishes the current Fix Workflow.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                ],
+                flags: [
+                    (["--rebuild",], "Force a rebuild." ),
+                ],
+                "FixPublishAsync", MethodAsyncReturn.Task ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return new ValueTask<bool>( ((CKli.Build.Plugin.BuildPlugin)Instance).FixPublishAsync(
+                                           monitor, context, f0 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_maintenance＿rebuild＿old : PluginCommand
+{
+    internal Cmd_maintenance＿rebuild＿old( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "maintenance rebuild old",
+                "Tries to rebuild the oldest releases until a success.\r\nFailing commits are tagged with a '+invalid' tag.",
+                1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                ],
+                flags: [
+                    (["--warn-only",], "Warns only: doesn't create a '+invalid' tag on the failing commit." ),
+                    (["--run-test",], "Runs unit tests. They must be successful." ),
+                    (["--all",], "Consider all the Repos of the current World (even if current path is in a Repo)." ),
+                ],
+                "RebuildOldAsync", MethodAsyncReturn.Task ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        var f1 = cmdLine.EatFlag( Flags[1].Names );
+        var f2 = cmdLine.EatFlag( Flags[2].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return new ValueTask<bool>( ((CKli.Build.Plugin.BuildPlugin)Instance).RebuildOldAsync(
+                                           monitor, context, f0, f1, f2 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_maintenance＿rebuild＿version : PluginCommand
+{
+    internal Cmd_maintenance＿rebuild＿version( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "maintenance rebuild version",
+                "Rebuild the specified version in the current repository.",
+                1,
+                -1,
+                arguments: [
+                    ("version", "The version to rebuild."),
+                ],
+                options: [
+                ],
+                flags: [
+                    (["--skip-tests",], "Don't run tests even if they have never locally run on this commit." ),
+                    (["--force-tests",], "Run tests even if they have already run successfully on this commit." ),
+                ],
+                "RebuildVersionAsync", MethodAsyncReturn.Task ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var a0 = cmdLine.EatArgument();
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        var f1 = cmdLine.EatFlag( Flags[1].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return new ValueTask<bool>( ((CKli.Build.Plugin.BuildPlugin)Instance).RebuildVersionAsync(
+                                           monitor, context, a0, f0, f1 ) );
+    }
+}
+[GeneratedCode("CKli", "0.0.8--0277-dev")]
+sealed class Cmd_maintenance＿migrate＿net8 : PluginCommand
+{
+    internal Cmd_maintenance＿migrate＿net8( IPluginTypeInfo typeInfo )
+        : base( typeInfo,
+                "maintenance migrate net8",
+                "Migrate Net8 stack.",
+                -1,
+                -1,
+                arguments: [
+                ],
+                options: [
+                ],
+                flags: [
+                    (["--hard-reset-all",], "<no description>" ),
+                    (["--restore-remotes",], "<no description>" ),
+                ],
+                "MigrateNet8", MethodAsyncReturn.None ) {}
+    protected override ValueTask<bool> HandleCommandAsync( IActivityMonitor monitor, CKliEnv context, CommandLineArguments cmdLine )
+    {
+        var f0 = cmdLine.EatFlag( Flags[0].Names );
+        var f1 = cmdLine.EatFlag( Flags[1].Names );
+        if( !cmdLine.Close( monitor ) ) return ValueTask.FromResult( false );
+        return ValueTask.FromResult( ((CKli.Migration.Plugin.MigrationPlugin)Instance).MigrateNet8(
+                                           monitor, f0, f1 ) );
     }
 }
