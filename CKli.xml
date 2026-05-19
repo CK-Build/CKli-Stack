@@ -20,5 +20,7 @@
     <ShallowSolution />
     <VersionTag />
   </Plugins>
-  <Repository Url="https://github.com/CK-Build/CKli" />
+  <Repository Url="https://github.com/CK-Build/CKli">
+    <VersionTag MinVersion="0.0.0" />
+  </Repository>
 </CKli>
