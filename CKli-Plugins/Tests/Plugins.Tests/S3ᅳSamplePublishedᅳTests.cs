@@ -7,7 +7,6 @@ using static CK.Testing.MonitorTestHelper;
 
 namespace Plugins.Tests;
 
-
 [TestFixture]
 public class S3ᅳSamplePublishedᅳTests
 {
