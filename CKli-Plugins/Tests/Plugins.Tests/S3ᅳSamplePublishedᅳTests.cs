@@ -198,6 +198,7 @@ public class S3ᅳSamplePublishedᅳTests
                                    fileName: fileName );
     }
 
+
     [Test]
     public async Task with_deprecation_Async()
     {
@@ -207,7 +208,7 @@ public class S3ᅳSamplePublishedᅳTests
         var display = (StringScreen)context.Screen;
 
         // Let's deprecate the current CKt-PerfectEvent v0.3.3 package (in 30.days).
-
+        // => This propagates to downstream repositories (here: Samples/CKt-Sample-Monitoring).
         var inPerfectEvent = context.ChangeDirectory( "CKt-PerfectEvent" );
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "version", "deprecate", "v0.3.3", "--days", "30", "--reason", "For fun." )).ShouldBeTrue();
@@ -215,19 +216,20 @@ public class S3ᅳSamplePublishedᅳTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            - →·   CKt-Core                      v1.0.1           
-            - →·   CKt-ActivityMonitor           v0.1.1           
-            ╓  ⊙   CKt-PerfectEvent              v0.3.3+deprecated
-            ║      CKt-Monitoring                v0.2.4           
-            ╙      Samples/CKt-App-Sample        v0.0.1           
-            -  ·→  Samples/CKt-Sample-Monitoring v0.0.1+deprecated
-            There is nothing to build from the 1 pivots out of 6 repositories.
-            (Using '*publish' may detect required builds in upstreams repositories.)
-            Nothing to publish (the 6 repositories are already published)
+              - →·   CKt-Core                      v1.0.1           
+              - →·   CKt-ActivityMonitor           v0.1.1           
+            1 ╓  ⊙   CKt-PerfectEvent              v0.3.3+deprecated → v0.3.4 🡡 (DeprecatedVersion)               
+              ║      CKt-Monitoring                v0.2.4           
+              ╙      Samples/CKt-App-Sample        v0.0.1           
+            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.1+deprecated → v0.0.2 🡡 (UpstreamBuild, DeprecatedVersion)
+            Required build for 2 from the 1 pivots out of 6 repositories.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            🡡 2 repositories must be published.
             ❰✓❱
 
             """ );
 
+        // Deprecate it now!
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "version", "deprecate", "v0.3.3", "--immediate", "--allow-update" )).ShouldBeTrue();
 
         display.Clear();
@@ -240,15 +242,19 @@ public class S3ᅳSamplePublishedᅳTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            - →·   CKt-Core                      v1.0.1           
-            - →·   CKt-ActivityMonitor           v0.1.1           
-            ╓  ⊙   CKt-PerfectEvent              v0.3.3+deprecated
-            ║      CKt-Monitoring                v0.2.4           
-            ╙      Samples/CKt-App-Sample        v0.0.1           
-            -  ·→  Samples/CKt-Sample-Monitoring v0.0.1+deprecated
-            There is nothing to build from the 1 pivots out of 6 repositories.
-            (Using '*publish' may detect required builds in upstreams repositories.)
-            Nothing to publish (the 6 repositories are already published)
+              - →·   CKt-Core                      v1.0.1           
+              - →·   CKt-ActivityMonitor           v0.1.1           
+            1 ╓  ⊙   CKt-PerfectEvent              v0.3.3+deprecated → v0.3.4 🡡 (DeprecatedVersion)               
+              ║      CKt-Monitoring                v0.2.4           
+              ╙      Samples/CKt-App-Sample        v0.0.1           
+            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.1+deprecated → v0.0.2 🡡 (UpstreamBuild, DeprecatedVersion)
+            Required build for 2 from the 1 pivots out of 6 repositories.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            🡡 2 repositories must be published.
+            ❰✓❱
+
+            """ );
+    }
             ❰✓❱
 
             """ );
