@@ -39,7 +39,7 @@ public class S0ᅳInitᅳTests
         // And this would prevent the BranchModel ContentIssue to be raised and the NuGet.config => nuget.config to be discovered.
         // Unfortunately, on Linux, the "NuGet.config" casing fails the builds...
         // To make this test pass on Linux, we must remove the "Removable branches" issue.
-        // We may have handled this specifically here but instead, this mad us considered that the "useless branch" issue is a
+        // We may have handled this specifically here but instead, this made us considered that the "useless branch" issue is a
         // "weak issue": they don't prevent the ContentIssue to be raised and this is a real improvement because this really is
         // a "weak issue".
         //
