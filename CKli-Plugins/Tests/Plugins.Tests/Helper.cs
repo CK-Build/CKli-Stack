@@ -1,9 +1,7 @@
 using CK.Core;
-using CKli;
 using CKli.Core;
 using Shouldly;
 using System;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using static CK.Testing.MonitorTestHelper;
 

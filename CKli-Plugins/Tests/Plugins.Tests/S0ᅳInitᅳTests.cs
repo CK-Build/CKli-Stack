@@ -3,7 +3,6 @@ using CKli.Core;
 using NUnit.Framework;
 using Shouldly;
 using System.Threading.Tasks;
-using static CK.Core.ActivityMonitorErrorCounter;
 using static CK.Testing.MonitorTestHelper;
 
 namespace Plugins.Tests;

@@ -2,10 +2,8 @@ using CKli;
 using CKli.Core;
 using NUnit.Framework;
 using Shouldly;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static CK.Testing.MonitorTestHelper;
-using static Microsoft.IO.RecyclableMemoryStreamManager;
 
 namespace Plugins.Tests;
 
