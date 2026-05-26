@@ -2,6 +2,7 @@ using CKli;
 using CKli.Core;
 using NUnit.Framework;
 using Shouldly;
+using System.IO;
 using System.Threading.Tasks;
 using static CK.Testing.MonitorTestHelper;
 
@@ -370,6 +371,73 @@ public partial class S3ᅳSamplePublishedᅳTests
 
             """ );
 
+
+    }
+
+
+    [Test]
+    public async Task common_files_tests_Async()
+    {
+        var clonedFolder = TestHelper.InitializeClonedFolder();
+        var remotes = TestHelper.OpenRemotes( "CKt(sample_published)" );
+        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var display = (StringScreen)context.Screen;
+
+        var ckliRoot = TestHelper.SolutionFolder.RemoveLastPart().AppendPart( "CKli" );
+
+        var commonFolder = context.CurrentStackPath.AppendPart( "Common" );
+        Directory.CreateDirectory( commonFolder );
+
+        var globalJsonContent = File.ReadAllText( ckliRoot.AppendPart( "global.json" ) );
+        File.WriteAllText( commonFolder.AppendPart( "global.json" ), globalJsonContent );
+
+        var directoryPropsContent = File.ReadAllText( ckliRoot.AppendPart( "Directory.Build.props" ) );
+        File.WriteAllText( commonFolder.AppendPart( "Directory.Build.props" ), directoryPropsContent );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            > CKt-Core (1)
+            │ > Content issues.
+            │ │ Branch: stable (2 content issues)
+            │ │ > File 'global.json' must be created.
+            │ │ > File 'Directory.Build.props' must be updated.
+            > CKt-ActivityMonitor (1)
+            │ > Content issues.
+            │ │ Branch: stable (2 content issues)
+            │ │ > File 'global.json' must be created.
+            │ │ > File 'Directory.Build.props' must be updated.
+            > CKt-PerfectEvent (1)
+            │ > Content issues.
+            │ │ Branch: stable (2 content issues)
+            │ │ > File 'global.json' must be created.
+            │ │ > File 'Directory.Build.props' must be updated.
+            > CKt-Monitoring (1)
+            │ > Content issues.
+            │ │ Branch: stable (2 content issues)
+            │ │ > File 'global.json' must be created.
+            │ │ > File 'Directory.Build.props' must be updated.
+            > Samples/CKt-Sample-Monitoring (1)
+            │ > Content issues.
+            │ │ Branch: stable (2 content issues)
+            │ │ > 2 files must be created:
+            │ │ - global.json
+            │ │ - Directory.Build.props'.
+            > Samples/CKt-App-Sample (1)
+            │ > Content issues.
+            │ │ Branch: stable (2 content issues)
+            │ │ > 2 files must be created:
+            │ │ - global.json
+            │ │ - Directory.Build.props'.
+            ❰✓❱
+
+            """ );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue", "--fix" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            ❰✓❱
+            
+            """ );
 
     }
 
