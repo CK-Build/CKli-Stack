@@ -439,6 +439,41 @@ public partial class S3ᅳSamplePublishedᅳTests
             
             """ );
 
+        // Use CKt-App-Sample to test the build as it is packable.
+        var inAppSample = context.ChangeDirectory( "Samples/CKt-App-Sample" );
+
+        // With the "standard" Directory.Build.props:
+        // - <Project>/Doc/Package.md is required in any packable project.
+        // - Common/Package.icon is required when packing.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "checkout", "dev/stable" )).ShouldBeTrue();
+
+        Directory.CreateDirectory( inAppSample.CurrentDirectory.Combine( "CKt.SomeApp/Doc" ) );
+        File.WriteAllText( inAppSample.CurrentDirectory.Combine( "CKt.SomeApp/Doc/Package.md" ), """
+            This package is a fake to test [CKli](https://github.com/CK-Build/CKli).
+            """ );
+
+        Directory.CreateDirectory( inAppSample.CurrentDirectory.Combine( "Common" ) );
+        File.Copy( ckliRoot.Combine( "Common/PackageIcon.png" ), inAppSample.CurrentDirectory.Combine( "Common/PackageIcon.png" ) );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "commit", "Added package doc." )).ShouldBeTrue();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "build" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+              - →·   CKt-Core                      v1.0.1
+              - →·   CKt-ActivityMonitor           v0.1.1
+              ╓      CKt-PerfectEvent              v0.3.3
+              ║      CKt-Monitoring                v0.2.4
+            1 ╙  ⊙   Samples/CKt-App-Sample        v0.0.0 → v0.0.1 🡡 (CodeChange)
+              -      Samples/CKt-Sample-Monitoring v0.0.0
+            Required build for 1 from the 1 pivots out of 6 repositories.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            🡡 1 repositories can be published.
+            ❰✓❱
+            
+            """ );
+
+
     }
 
 }
