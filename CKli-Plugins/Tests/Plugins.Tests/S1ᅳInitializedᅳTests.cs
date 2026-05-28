@@ -281,6 +281,9 @@ public class S1ᅳInitializedᅳTests
             Directory.CreateDirectory( deployFolder );
             File.WriteAllText( deployFolder.AppendPart( "GenerateAssets.cs" ), """
                 #:property PublishAot=false
+                using System;
+                using System.IO;
+
                 File.WriteAllText( $"Assets/Install-{args[0]}.txt", $"I'm the install manual of CKt-Sample-Monitoring version '{args[0]}'." );
                 """ );
             File.WriteAllText( deployFolder.AppendPart( ".gitignore" ), "Assets/" );
@@ -328,10 +331,13 @@ public class S1ᅳInitializedᅳTests
             Directory.CreateDirectory( deployFolder );
             File.WriteAllText( deployFolder.AppendPart( "GenerateAssets.cs" ), """
                 #:property PublishAot=false
+                using System;
+                using System.IO;
+
                 Directory.CreateDirectory( "Assets/ZipDemo" );
                 File.WriteAllText( $"Assets/ZipDemo/Install-{args[0]}.txt", "I'm the install manual of CKt.SomeApp version '{args[0]}'." );
                 File.WriteAllText( $"Assets/ZipDemo/AnotherFile.txt", "Another file..." );
-
+                
                 """ );
             File.WriteAllText( deployFolder.AppendPart( ".gitignore" ), "Assets/" );
         }
