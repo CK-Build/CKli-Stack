@@ -118,7 +118,17 @@ public class S1ᅳInitializedᅳTests
         {
             // ckli fix build
             // This applies the Net8 Migration: there is a change in the code base, so we build the fixes. 
+            display.Clear();
             (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build" )).ShouldBeTrue();
+            display.ToString().ShouldBe( """
+                  CKt-Core            fix/v1.0  1.0.1-local.fix.2
+                  CKt-ActivityMonitor fix/v0.1  0.1.1-local.fix.2
+                  CKt-PerfectEvent    fix/v0.3  0.2.2-local.fix.3
+                  CKt-PerfectEvent    fix/v0.3  0.3.3-local.fix.3
+                  CKt-Monitoring      fix/v0.2  0.2.4-local.fix.2
+                ❰✓❱
+
+                """ );
 
             var files = Directory.EnumerateFiles( localNuGetFeed )
                              .Select( p => Path.GetFileName( p ) )
@@ -141,7 +151,8 @@ public class S1ᅳInitializedᅳTests
 
         }
 
-        TestHelper.TouchAndCommit( cktCoreContext.CurrentDirectory.Combine( "../CKt-ActivityMonitor/CKt.ActivityMonitor" ), "fix/v0.1" );
+        TestHelper.TouchAndCommit( cktCoreContext.CurrentDirectory.Combine( "../CKt-ActivityMonitor/CKt.ActivityMonitor" ),
+                                   branchName: "fix/v0.1" );
 
         using( TestHelper.Monitor.OpenInfo( "Second 'ckli fix build' (CKt.ActivityMonitor has changed)." ) )
         {
