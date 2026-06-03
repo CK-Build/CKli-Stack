@@ -2,4 +2,5 @@ $Local/
 Logs/
 .vs/
 .idea/
+/CKli-Plugins/CKli.Plugins/CKli.CompiledPlugins.cs
 !.gitignore
