@@ -420,14 +420,14 @@ public partial class S3ᅳSamplePublishedᅳTests
             │ > Content issues.
             │ │ Branch: stable (2 content issues)
             │ │ > 2 files must be created:
+            │ │ - Directory.Build.props
             │ │ - global.json
-            │ │ - Directory.Build.props'.
             > Samples/CKt-App-Sample (1)
             │ > Content issues.
             │ │ Branch: stable (2 content issues)
             │ │ > 2 files must be created:
+            │ │ - Directory.Build.props
             │ │ - global.json
-            │ │ - Directory.Build.props'.
             ❰✓❱
 
             """ );
@@ -437,6 +437,75 @@ public partial class S3ᅳSamplePublishedᅳTests
         display.ToString().ShouldBe( """
             ❰✓❱
             
+            """ );
+
+        var initOnlyFilePath = commonFolder.AppendPart( "[InitOnly] JustForTest.txt" );
+        File.WriteAllText( initOnlyFilePath, "Hello" );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            > CKt-Core (1)
+            │ > Content issues.
+            │ │ Branch: stable (1 content issue)
+            │ │ > File 'JustForTest.txt' must be created.
+            > CKt-ActivityMonitor (1)
+            │ > Content issues.
+            │ │ Branch: stable (1 content issue)
+            │ │ > File 'JustForTest.txt' must be created.
+            > CKt-PerfectEvent (1)
+            │ > Content issues.
+            │ │ Branch: stable (1 content issue)
+            │ │ > File 'JustForTest.txt' must be created.
+            > CKt-Monitoring (1)
+            │ > Content issues.
+            │ │ Branch: stable (1 content issue)
+            │ │ > File 'JustForTest.txt' must be created.
+            > Samples/CKt-Sample-Monitoring (1)
+            │ > Content issues.
+            │ │ Branch: stable (1 content issue)
+            │ │ > File 'JustForTest.txt' must be created.
+            > Samples/CKt-App-Sample (1)
+            │ > Content issues.
+            │ │ Branch: stable (1 content issue)
+            │ │ > File 'JustForTest.txt' must be created.
+            ❰✓❱
+
+            """ );
+
+        // Test with different case and space.
+        File.Delete( initOnlyFilePath );
+        initOnlyFilePath = commonFolder.AppendPart( " [ iNItonlY ]Justfortest.txt" );
+        File.WriteAllText( initOnlyFilePath, "Hello" );
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            > CKt-Core (1)
+            │ > Content issues.
+            │ │ Branch: stable (1 content issue)
+            │ │ > File 'Justfortest.txt' must be created.
+            > CKt-ActivityMonitor (1)
+            │ > Content issues.
+            │ │ Branch: stable (1 content issue)
+            │ │ > File 'Justfortest.txt' must be created.
+            > CKt-PerfectEvent (1)
+            │ > Content issues.
+            │ │ Branch: stable (1 content issue)
+            │ │ > File 'Justfortest.txt' must be created.
+            > CKt-Monitoring (1)
+            │ > Content issues.
+            │ │ Branch: stable (1 content issue)
+            │ │ > File 'Justfortest.txt' must be created.
+            > Samples/CKt-Sample-Monitoring (1)
+            │ > Content issues.
+            │ │ Branch: stable (1 content issue)
+            │ │ > File 'Justfortest.txt' must be created.
+            > Samples/CKt-App-Sample (1)
+            │ > Content issues.
+            │ │ Branch: stable (1 content issue)
+            │ │ > File 'Justfortest.txt' must be created.
+            ❰✓❱
+
             """ );
 
         // Use CKt-App-Sample to test the build as it is packable.
