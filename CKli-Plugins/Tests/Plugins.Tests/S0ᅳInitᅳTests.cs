@@ -48,7 +48,7 @@ public class S0ᅳInitᅳTests
         // Note that this works only because the repository order is the dependency order of the new "stable" branch
         // because there is no "CKt.*" packages in real remote feeds.
         //
-        // This renames all "NuGet.config" files to "nuget.config": this is  the work of the CommonFiles plugin and
+        // This renames all "NuGet.config" files to "nuget.config": this is  the work of the ArtifactHandlerPlugin plugin and
         // the BranchModel/HotBranch/ContentIssue.
         //
         display.Clear();

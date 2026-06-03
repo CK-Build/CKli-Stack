@@ -382,7 +382,7 @@ public class S1ᅳInitializedᅳTests
         // ... so we commit.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleFolder, "commit", "Initialized CKt-Sample-Monitoring and CKt-App-Sample." )).ShouldBeTrue();
 
-        // This created the missing nuget.config file: this is the work of the CommonFiles plugin
+        // This created the missing nuget.config file: this is the work of the ArtifactHandlerPlugin plugin
         // and the BranchModel/HotBranch/ContentIssue.
         //
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue", "--fix" )).ShouldBeTrue();
