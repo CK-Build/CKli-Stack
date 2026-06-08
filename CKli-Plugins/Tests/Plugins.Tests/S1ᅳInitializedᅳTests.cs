@@ -2,7 +2,6 @@ using CK.Core;
 using CKli;
 using CKli.ArtifactHandler.Plugin;
 using CKli.Core;
-using CSemVer;
 using NUnit.Framework;
 using Shouldly;
 using System.IO;
