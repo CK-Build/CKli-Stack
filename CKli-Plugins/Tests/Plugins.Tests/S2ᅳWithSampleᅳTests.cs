@@ -266,12 +266,12 @@ public class S2ᅳWithSampleᅳTests
         var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
         var display = (StringScreen)context.Screen;
 
-        // Same context as CKt_publish_PerfectEvent_Async test above...
+        // Same context as CKt_with_sample_ci_build_and_жbuild_Async test above...
         //
         // ... except that we inject an error in the CKt-Sample-Monitoring build
         //     so that during the 2nd build (after the fix), the CKt-PerfectEvent is already
         //     available in v0.3.3: the fact that it must be updated in CKt-Sample-Monitoring must
-        //     be detected and CKt-Sample-Monitoring must be built (v0.0.0 → v0.0.1).
+        //     be detected and CKt-Sample-Monitoring must be built (v0.0.0+fake → v0.0.0).
         //
         var inPerfectEvent = context.ChangeDirectory( "CKt-PerfectEvent" );
 
@@ -284,17 +284,17 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish" )).ShouldBeFalse();
         display.ToString().ShouldBe(
               """
-                - →·   CKt-Core                      v1.0.0     
-                - →·   CKt-ActivityMonitor           v0.1.0     
+                - →·   CKt-Core                      v1.0.0 🡡  
+                - →·   CKt-ActivityMonitor           v0.1.0 🡡  
               1 ╓  ⊙   CKt-PerfectEvent              v0.3.2      → v0.3.3 🡡 (DependencyUpdate, CodeChange)             
                                                                              U CKt.ActivityMonitor: 0.1.1--ci.4 → 0.1.0 
-                ║      CKt-Monitoring                v0.2.3     
+                ║      CKt-Monitoring                v0.2.3 🡡  
               2 ╙      Samples/CKt-App-Sample        v0.0.0+fake → v0.0.0 🡡 (FakeVersion, DependencyUpdate, CodeChange)
                                                                              U CKt.ActivityMonitor: 0.1.1--ci.4 → 0.1.0 
               3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → v0.0.0 🡡 (UpstreamBuild, FakeVersion, CodeChange)   
               Required build for 3 from the 1 pivots out of 6 repositories.
               U 2 updates from upstreams (not using '*publish' here).
-              🡡 3 repositories must be published.
+              🡡 6 repositories must be published.
               ❌ Failed
           
               """ );
@@ -304,45 +304,47 @@ public class S2ᅳWithSampleᅳTests
         FileHelper.DeleteFile( TestHelper.Monitor, inSampleMonitoring.CurrentDirectory.Combine( "CKt.Sample.Monitoring/Bug.cs" ) );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleMonitoring, "commit", "Removed bug." )).ShouldBeTrue();
 
-        // Note the "FakeVersion" that replaced the previous "UpstreamBuild": the upstream is already build and its reference
+        // Note the "FakeVersion" without the previous "UpstreamBuild": the upstream is already build and its reference
         // has been updated (so that the developer can use the actual, up-to-date code in the reference): we are left with
         // the FakeVersion reason.
+        // ==> We publish this.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
-                - →·   CKt-Core                      v1.0.0     
-                - →·   CKt-ActivityMonitor           v0.1.0     
+                - →·   CKt-Core                      v1.0.0 🡡  
+                - →·   CKt-ActivityMonitor           v0.1.0 🡡  
                 ╓  ⊙   CKt-PerfectEvent              v0.3.3 🡡  
-                ║      CKt-Monitoring                v0.2.3     
+                ║      CKt-Monitoring                v0.2.3 🡡  
                 ╙      Samples/CKt-App-Sample        v0.0.0 🡡  
               1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → v0.0.0 🡡 (FakeVersion, CodeChange)
               Required build for 1 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 3 repositories must be published.
+              🡡 6 repositories must be published.
               ❰✓❱
           
               """ );
 
-        // Make a code change in CKt-App-Sample: this doesn't change anything.
+        // Make a code change in CKt-App-Sample.
         var inAppSample = context.ChangeDirectory( "Samples/CKt-App-Sample" );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "checkout", "dev/stable" )).ShouldBeTrue();
         File.WriteAllText( inAppSample.CurrentDirectory.Combine( "CKt.SomeApp/DoMore.cs" ), "// More feature..." );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "commit", "Added feature." )).ShouldBeTrue();
 
+        // This doesn't change anything when publishing from CKt-PerfectEvent.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
-                - →·   CKt-Core                      v1.0.0     
-                - →·   CKt-ActivityMonitor           v0.1.0     
-                ╓  ⊙   CKt-PerfectEvent              v0.3.3 🡡  
-                ║      CKt-Monitoring                v0.2.3     
-                ╙      Samples/CKt-App-Sample        v0.0.0 🡡  
-              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → v0.0.0 🡡 (FakeVersion, CodeChange)
-              Required build for 1 from the 1 pivots out of 6 repositories.
-              (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 3 repositories must be published.
+              - →·   CKt-Core                      v1.0.0
+              - →·   CKt-ActivityMonitor           v0.1.0
+              ╓  ⊙   CKt-PerfectEvent              v0.3.3
+              ║      CKt-Monitoring                v0.2.3
+              ╙      Samples/CKt-App-Sample        v0.0.0
+              -  ·→  Samples/CKt-Sample-Monitoring v0.0.0
+              There is nothing to build from the 1 pivots out of 6 repositories.
+              (Using '*publish' may detect required builds in upstreams repositories.)
+              Nothing to publish (the 6 repositories are already published)
               ❰✓❱
           
               """ );
@@ -358,15 +360,15 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
-                - →·   CKt-Core                      v1.0.0     
-                - →·   CKt-ActivityMonitor           v0.1.0     
-                ╓  ⊙   CKt-PerfectEvent              v0.3.3 🡡  
-                ║      CKt-Monitoring                v0.2.3     
-                ╙      Samples/CKt-App-Sample        v0.0.0 🡡  
-              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → v0.0.0 🡡 (FakeVersion, CodeChange)
-              Required build for 1 from the 1 pivots out of 6 repositories.
-              (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 3 repositories must be published.
+              - →·   CKt-Core                      v1.0.0
+              - →·   CKt-ActivityMonitor           v0.1.0
+              ╓  ⊙   CKt-PerfectEvent              v0.3.3
+              ║      CKt-Monitoring                v0.2.3
+              ╙      Samples/CKt-App-Sample        v0.0.0
+              -  ·→  Samples/CKt-Sample-Monitoring v0.0.0
+              There is nothing to build from the 1 pivots out of 6 repositories.
+              (Using '*publish' may detect required builds in upstreams repositories.)
+              Nothing to publish (the 6 repositories are already published)
               ❰✓❱
           
               """ );
@@ -378,20 +380,18 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
-              1 - →·   CKt-Core                      v1.0.0      → v1.0.1 🡡 (CodeChange)                            
-              2 - →·   CKt-ActivityMonitor           v0.1.0      → v0.2.0 🡡 (UpstreamBuild, CodeChange)             
-              3 ╓  ⊙   CKt-PerfectEvent              v0.3.3      → v0.4.0 🡡 (UpstreamBuild)                         
-              4 ║      CKt-Monitoring                v0.2.3      → v0.3.0 🡡 (UpstreamBuild, CodeChange)             
-              5 ╙      Samples/CKt-App-Sample        v0.0.0      → v0.1.0 🡡 (UpstreamBuild, CodeChange)             
-              6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → v0.1.0 🡡 (UpstreamBuild, FakeVersion, CodeChange)
+              1 - →·   CKt-Core                      v1.0.0 → v1.0.1 🡡 (CodeChange)               
+              2 - →·   CKt-ActivityMonitor           v0.1.0 → v0.2.0 🡡 (UpstreamBuild, CodeChange)
+              3 ╓  ⊙   CKt-PerfectEvent              v0.3.3 → v0.4.0 🡡 (UpstreamBuild)            
+              4 ║      CKt-Monitoring                v0.2.3 → v0.3.0 🡡 (UpstreamBuild, CodeChange)
+              5 ╙      Samples/CKt-App-Sample        v0.0.0 → v0.1.0 🡡 (UpstreamBuild, CodeChange)
+              6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → v0.1.0 🡡 (UpstreamBuild)            
               Required build for 6 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
               🡡 6 repositories must be published.
               ❰✓❱
           
               """ );
-
-        // We don't have anymore +fake. Now tests the intermediate error on fully published repositories.
 
         // Make a MAJOR code change in CKt-PerfectEvent.
         // Because CKt-PerfectEvent is in 0.X.Y version, only the minor is incremented (SemVer rule).
@@ -474,7 +474,7 @@ public class S2ᅳWithSampleᅳTests
         var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
         var display = (StringScreen)context.Screen;
 
-        // Same context as CKt_publish_PerfectEvent_Async test above...
+        // Same context as CKt_with_sample_ci_build_and_жbuild_Async test above...
         //
         // ... except that we inject an error in the CKt-Sample-Monitoring build
         //     so that during the 2nd build, the CKt-PerfectEvent is already available
@@ -592,7 +592,6 @@ public class S2ᅳWithSampleᅳTests
               ❰✓❱
           
               """ );
-
     }
 
 
@@ -603,7 +602,7 @@ public class S2ᅳWithSampleᅳTests
         var remotes = TestHelper.OpenRemotes( "CKt(with_sample)" );
 
         var nonPackableSample = mode == "NonPackableSample";
-        var clonedFolder = TestHelper.InitializeClonedFolder( $"CKt_publish_PerfectEvent-{mode}" );
+        var clonedFolder = TestHelper.InitializeClonedFolder( $"CKt_publish_with_sample-{mode}" );
         var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
         var display = (StringScreen)context.Screen;
 
@@ -649,6 +648,38 @@ public class S2ᅳWithSampleᅳTests
 
         Directory.Exists( nugetOrgFeed.AppendPart( "ckt.sample.monitoring" ) ).ShouldBe( !nonPackableSample );
         Directory.Exists( sosFeed.AppendPart( "ckt.sample.monitoring" ) ).ShouldBe( !nonPackableSample );
+
+        // The publication leaves the +fake tags useless. Cleaning them up.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            > Samples/CKt-Sample-Monitoring (1)
+            │ > Found 1 removable version tags.
+            │ │ v0.0.0+fake
+            │ │ 
+            │ │ This will be fixed by deleting them locally: a fetch from the remote will make them reappear.
+            │ │ To really remove them, the tag should be deleted from the remote origin and local +invalid
+            │ │ tags that replace them should be pushed. Use the command 'ckli tag push/pull/list/delete' to publish
+            │ │ version tags to the remote origin.
+            > Samples/CKt-App-Sample (1)
+            │ > Found 1 removable version tags.
+            │ │ v0.0.0+fake
+            │ │ 
+            │ │ This will be fixed by deleting them locally: a fetch from the remote will make them reappear.
+            │ │ To really remove them, the tag should be deleted from the remote origin and local +invalid
+            │ │ tags that replace them should be pushed. Use the command 'ckli tag push/pull/list/delete' to publish
+            │ │ version tags to the remote origin.
+            ❰✓❱
+
+            """ );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue", "--fix" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            ❰✓❱
+
+            """ );
+
     }
 
     [Explicit]
@@ -657,7 +688,7 @@ public class S2ᅳWithSampleᅳTests
     {
         FileHelper.DeleteFolder( TestHelper.Monitor, TestHelper.CKliRemotesPath.AppendPart( "CKt(sample_published)" ) );
         await CKt_publish_with_sample_Async( "NonPackableSample" );
-        TestHelper.CKliCreateRemoteFolderFromCloned( "CKt_publish_PerfectEvent-NonPackableSample", "CKt", "(sample_published)" );
+        TestHelper.CKliCreateRemoteFolderFromCloned( "CKt_publish_with_sample-NonPackableSample", "CKt", "(sample_published)" );
     }
 
 }
