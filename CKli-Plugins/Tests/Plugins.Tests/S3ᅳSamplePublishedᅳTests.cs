@@ -542,7 +542,59 @@ public partial class S3ᅳSamplePublishedᅳTests
             
             """ );
 
+    }
+
+
+    [TestCase( true )]
+    [TestCase( false )]
+    public async Task with_ci_0_Async( bool useCheckout )
+    {
+        var clonedFolder = TestHelper.InitializeClonedFolder();
+        var remotes = TestHelper.OpenRemotes( "CKt(sample_published)" );
+        var context = remotes.Clone( clonedFolder,
+                                     ( monitor, stackPath, plugins ) => Helper.ConfigureFakeFeeds( monitor, stackPath.RemoveLastPart(), plugins ) );
+        var display = (StringScreen)context.Screen;
+
+        var activityMonitor = context.ChangeDirectory( "CKt-ActivityMonitor" );
+        var perfectEvent = context.ChangeDirectory( "CKt-PerfectEvent" );
+
+        await TouchDevStableAsync( perfectEvent, useCheckout );
+
+        // The ci.0 is generated for all unchanged repos.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--ci.0" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+              -  CKt-Core                      v1.0.1 → v1.0.2--ci.0
+              -  CKt-ActivityMonitor           v0.1.1 → v0.1.2--ci.0
+            1 ╓  CKt-PerfectEvent              v0.3.3 → v0.3.4--ci.1 🡡 (CodeChange)   
+              ║  CKt-Monitoring                v0.2.4 → v0.2.5--ci.0
+              ╙  Samples/CKt-App-Sample        v0.0.0 → v0.0.1--ci.0
+            2 -  Samples/CKt-Sample-Monitoring v0.0.0 → v0.0.1--ci.1 🡡 (UpstreamBuild)
+            Required build for 2 repositories across the 6 repositories.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            🡡 2 repositories must be published.
+            ❰✓❱
+
+            """ );
+
+        // Once published, they don't change the regular version.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+              -  CKt-Core                      v1.0.1
+              -  CKt-ActivityMonitor           v0.1.1
+            1 ╓  CKt-PerfectEvent              v0.3.3 → v0.3.4 🡡 (CodeChange)               
+              ║  CKt-Monitoring                v0.2.4
+              ╙  Samples/CKt-App-Sample        v0.0.0
+            2 -  Samples/CKt-Sample-Monitoring v0.0.0 → v0.0.1 🡡 (UpstreamBuild, CodeChange)
+            Required build for 2 repositories across the 6 repositories.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            🡡 2 repositories must be published.
+            ❰✓❱
+
+            """ );
 
     }
+
 
 }

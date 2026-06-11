@@ -445,9 +445,10 @@ public class S2ᅳWithSampleᅳTests
           
               """ );
 
-        // Nothing to do.
+        // Everything is published. Without any change if we "build" or "build --ci" there's nothing to build,
+        // but if we "build --ci.0" then we can create the ci.0 version for all of them. 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
               - →·   CKt-Core                      v1.0.1
@@ -457,7 +458,41 @@ public class S2ᅳWithSampleᅳTests
               ╙      Samples/CKt-App-Sample        v0.1.0
               -  ·→  Samples/CKt-Sample-Monitoring v0.2.0
               There is nothing to build from the 1 pivots out of 6 repositories.
-              (Using '*publish' may detect required builds in upstreams repositories.)
+              (Using '*build' may detect required builds in upstreams repositories.)
+              Nothing to publish (the 6 repositories are already published)
+              ❰✓❱
+          
+              """ );
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build", "--ci" )).ShouldBeTrue();
+        display.ToString().ShouldBe(
+              """
+              - →·   CKt-Core                      v1.0.1
+              - →·   CKt-ActivityMonitor           v0.2.0
+              ╓  ⊙   CKt-PerfectEvent              v0.5.0
+              ║      CKt-Monitoring                v0.3.0
+              ╙      Samples/CKt-App-Sample        v0.1.0
+              -  ·→  Samples/CKt-Sample-Monitoring v0.2.0
+              There is nothing to build from the 1 pivots out of 6 repositories.
+              (Using '*build' may detect required builds in upstreams repositories.)
+              Nothing to publish (the 6 repositories are already published)
+              ❰✓❱
+          
+              """ );
+
+        // The "--ci.0" flag produces the ci.0 versions.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build", "--ci.0", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe(
+              """
+              - →·   CKt-Core                      v1.0.1 → v1.0.2--ci.0
+              - →·   CKt-ActivityMonitor           v0.2.0 → v0.2.1--ci.0
+              ╓  ⊙   CKt-PerfectEvent              v0.5.0 → v0.5.1--ci.0
+              ║      CKt-Monitoring                v0.3.0 → v0.3.1--ci.0
+              ╙      Samples/CKt-App-Sample        v0.1.0 → v0.1.1--ci.0
+              -  ·→  Samples/CKt-Sample-Monitoring v0.2.0 → v0.2.1--ci.0
+              There is nothing to build from the 1 pivots out of 6 repositories.
+              (Using '*build' may detect required builds in upstreams repositories.)
               Nothing to publish (the 6 repositories are already published)
               ❰✓❱
           
