@@ -123,7 +123,7 @@ public class S0ᅳInitᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "branch", "push", "stable" )).ShouldBeTrue();
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "ci", "build", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  CKt-Core            v1.0.0 → v1.0.1--ci.3 🡡 (CodeChange)               
             2 -  CKt-ActivityMonitor v0.1.0 → v0.1.1--ci.4 🡡 (UpstreamBuild, CodeChange)

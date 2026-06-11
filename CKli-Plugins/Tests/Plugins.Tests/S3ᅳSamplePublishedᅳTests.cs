@@ -96,7 +96,7 @@ public partial class S3ᅳSamplePublishedᅳTests
 
         /// Bob wants its "Bob-work.txt" contribution to be published, but he cannot (either in CI or in non-CI):
         /// first it must incorporate Tim's work.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, bobPerfectEvent, "ci", "publish", "-d" )).ShouldBeFalse();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, bobPerfectEvent, "publish", "--ci", "-d" )).ShouldBeFalse();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, bobPerfectEvent, "publish", "-d" )).ShouldBeFalse();
 
         bobDisplay.Clear();
@@ -116,7 +116,7 @@ public partial class S3ᅳSamplePublishedᅳTests
                                    fileName: "Tim-work.txt" );
 
         timDisplay.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, timPerfectEvent, "ci", "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, timPerfectEvent, "publish", "--ci" )).ShouldBeTrue();
         timDisplay.ToString().ShouldBe( """
               - →·   CKt-Core                      v1.0.1
               - →·   CKt-ActivityMonitor           v0.1.1
@@ -305,7 +305,7 @@ public partial class S3ᅳSamplePublishedᅳTests
         await TouchDevStableAsync( perfectEvent, useCheckout );
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "ci", "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--ci" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
               -  CKt-Core                      v1.0.1
               -  CKt-ActivityMonitor           v0.1.1

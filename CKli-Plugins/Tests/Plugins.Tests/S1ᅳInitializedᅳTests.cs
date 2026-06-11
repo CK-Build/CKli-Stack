@@ -396,7 +396,7 @@ public class S1ᅳInitializedᅳTests
 
         // Let's build (but not publish yet) the CI versions.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "ci", "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  CKt-Core                      v1.0.0      → v1.0.1--ci.3 🡡 (CodeChange)                            
             2 -  CKt-ActivityMonitor           v0.1.0      → v0.1.1--ci.4 🡡 (UpstreamBuild, CodeChange)             
@@ -413,7 +413,7 @@ public class S1ᅳInitializedᅳTests
 
         // Everything has been built but nothing has been published.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "ci", "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             -  CKt-Core                      v1.0.1--ci.3 🡡
             -  CKt-ActivityMonitor           v0.1.1--ci.4 🡡
@@ -430,7 +430,7 @@ public class S1ᅳInitializedᅳTests
 
         // Now we publish.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "ci", "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--ci" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             -  CKt-Core                      v1.0.1--ci.3 🡡
             -  CKt-ActivityMonitor           v0.1.1--ci.4 🡡
