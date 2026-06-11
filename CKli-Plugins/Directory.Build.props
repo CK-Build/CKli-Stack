@@ -4,5 +4,6 @@
     <ArtifactsPath>$(MSBuildThisFileDirectory)../$Local/CKli-Plugins</ArtifactsPath>
     <ArtifactsPivots>run</ArtifactsPivots>
     <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 </Project>
