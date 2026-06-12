@@ -555,6 +555,9 @@ public partial class S3ᅳSamplePublishedᅳTests
                                      ( monitor, stackPath, plugins ) => Helper.ConfigureFakeFeeds( monitor, stackPath.RemoveLastPart(), plugins ) );
         var display = (StringScreen)context.Screen;
 
+        // This test publishes.
+        Helper.SetFileSystemWritePAT();
+
         // The ci.0 is generated for all unchanged repos... But only rank 0 repositories are actually concerned
         // (the ones without upstreams) can be CI0 because the other ones are de facto UpstreamBuild.
         display.Clear();
@@ -627,20 +630,45 @@ public partial class S3ᅳSamplePublishedᅳTests
             ❰✓❱
 
             """ );
-        // Already published. Nothing to do.
+
+        // Already published. Nothing to do in "--ci.0".
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "*publish", "--ci.0" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            Nothing
+            - →·   CKt-Core                      v1.0.1      
+            - →·   CKt-ActivityMonitor           v0.1.2--ci.1
+            ╓  ⊙   CKt-PerfectEvent              v0.3.4--ci.1
+            ║      CKt-Monitoring                v0.2.5--ci.1
+            ╙      Samples/CKt-App-Sample        v0.0.1--ci.1
+            -  ·→  Samples/CKt-Sample-Monitoring v0.0.1--ci.1
+            There is nothing to build from the 1 pivots out of 6 repositories.
+            Nothing to publish (the 6 repositories are already published)
             ❰✓❱
 
             """ );
 
-        // Once built, the commit for the UpstreamBuild exists... This is clearly noise: there's no
+        // Nothing to do also in "--ci".
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "*publish", "--ci" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            - →·   CKt-Core                      v1.0.1      
+            - →·   CKt-ActivityMonitor           v0.1.2--ci.1
+            ╓  ⊙   CKt-PerfectEvent              v0.3.4--ci.1
+            ║      CKt-Monitoring                v0.2.5--ci.1
+            ╙      Samples/CKt-App-Sample        v0.0.1--ci.1
+            -  ·→  Samples/CKt-Sample-Monitoring v0.0.1--ci.1
+            There is nothing to build from the 1 pivots out of 6 repositories.
+            Nothing to publish (the 6 repositories are already published)
+            ❰✓❱
+
+            """ );
+
+        // Once built, the commit for the UpstreamBuild exists... This is clearly noisy: there's no
         // change at all because the updates of the dependencies restores the exact same content as
         // the previously built/published version.
         // Unfortunately, to handle this, we must be sure that no source code other than the
-        // dependencies version have changed
+        // dependencies version have changed.
+        // TODO: This is currently not implemented.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
