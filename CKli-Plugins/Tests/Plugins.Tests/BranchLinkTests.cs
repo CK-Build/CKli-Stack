@@ -176,7 +176,7 @@ public class BranchLinkTests
             repo.Commit( monitor, "On Base! (1)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Commited );
 
             // Refresh.
-            mainLink = mainLink.Refresh( repo ).ShouldNotBeNull();
+            mainLink = mainLink.Refresh( monitor, repo ).ShouldNotBeNull();
             mainLink.Issue.ShouldBe( BranchLink.IssueKind.Desynchronized );
 
             mainLink = mainLink.SynchronizeAhead( monitor, repo ).ShouldNotBeNull();
@@ -188,7 +188,7 @@ public class BranchLinkTests
             // Cleanup "main" for subsequent tests.
             repo.Checkout( monitor, root ).ShouldBeTrue();
             repo.Repository.Branches.Remove( mainLink.Branch );
-            mainLink.Refresh( repo ).ShouldBeNull();
+            mainLink.Refresh( monitor, repo ).ShouldBeNull();
         }
 
         // Desynchronized and commits in ahead without conflicts: SynchronizeAhead then IntegrateAhead.
@@ -209,7 +209,7 @@ public class BranchLinkTests
             repo.Commit( monitor, "On Base! (2)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Commited );
 
             // Refresh: Desynchronized!
-            mainLink = mainLink.Refresh( repo ).ShouldNotBeNull();
+            mainLink = mainLink.Refresh( monitor, repo ).ShouldNotBeNull();
             mainLink.Issue.ShouldBe( BranchLink.IssueKind.Desynchronized );
 
             mainLink = mainLink.SynchronizeAhead( monitor, repo ).ShouldNotBeNull();
@@ -223,7 +223,7 @@ public class BranchLinkTests
             // Cleanup "main" for subsequent tests.
             repo.Checkout( monitor, root ).ShouldBeTrue();
             repo.Repository.Branches.Remove( mainLink.Branch );
-            mainLink.Refresh( repo ).ShouldBeNull();
+            mainLink.Refresh( monitor, repo ).ShouldBeNull();
         }
 
         // Desynchronized and commits in ahead without conflicts: IntegrateAhead then SynchronizeAhead.
@@ -244,7 +244,7 @@ public class BranchLinkTests
             repo.Commit( monitor, "On Base! (3)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Commited );
 
             // Refresh: Desynchronized!
-            mainLink = mainLink.Refresh( repo ).ShouldNotBeNull();
+            mainLink = mainLink.Refresh( monitor, repo ).ShouldNotBeNull();
             mainLink.Issue.ShouldBe( BranchLink.IssueKind.Desynchronized );
 
             mainLink = mainLink.IntegrateAhead( monitor, repo ).ShouldNotBeNull();
@@ -258,7 +258,7 @@ public class BranchLinkTests
             // Cleanup "main" for subsequent tests.
             repo.Checkout( monitor, root ).ShouldBeTrue();
             repo.Repository.Branches.Remove( mainLink.Branch );
-            mainLink.Refresh( repo ).ShouldBeNull();
+            mainLink.Refresh( monitor, repo ).ShouldBeNull();
         }
 
         // When same content is eventually in base and ahead: the link is Useless.
@@ -279,7 +279,7 @@ public class BranchLinkTests
             repo.Commit( monitor, "On Base! (4)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Commited );
 
             // Refresh: the contents are the same. Ahead is useless.
-            mainLink = mainLink.Refresh( repo ).ShouldNotBeNull();
+            mainLink = mainLink.Refresh( monitor, repo ).ShouldNotBeNull();
             mainLink.Issue.ShouldBe( BranchLink.IssueKind.Useless );
 
             // No error.
@@ -292,7 +292,7 @@ public class BranchLinkTests
             // Cleanup "main" for subsequent tests.
             repo.Checkout( monitor, root ).ShouldBeTrue();
             repo.Repository.Branches.Remove( mainLink.Branch );
-            mainLink.Refresh( repo ).ShouldBeNull();
+            mainLink.Refresh( monitor, repo ).ShouldBeNull();
         }
 
         // Synchronization conflict (manual resolution required).
@@ -313,7 +313,7 @@ public class BranchLinkTests
             repo.Commit( monitor, "On Base! (5)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Commited );
 
             // Refresh: Desynchronized!
-            mainLink = mainLink.Refresh( repo ).ShouldNotBeNull();
+            mainLink = mainLink.Refresh( monitor, repo ).ShouldNotBeNull();
             mainLink.Issue.ShouldBe( BranchLink.IssueKind.Desynchronized );
 
             // But there's a merge conflict that must be manually resolved.
@@ -323,7 +323,7 @@ public class BranchLinkTests
             repo.Checkout( monitor, root ).ShouldBeTrue();
             repo.Repository.Branches.Remove( mainLink.Ahead );
             repo.Repository.Branches.Remove( mainLink.Branch );
-            mainLink.Refresh( repo ).ShouldBeNull();
+            mainLink.Refresh( monitor, repo ).ShouldBeNull();
         }
 
     }

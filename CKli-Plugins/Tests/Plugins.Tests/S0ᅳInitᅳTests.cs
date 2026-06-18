@@ -115,9 +115,6 @@ public class S0ᅳInitᅳTests
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue", "--fix" )).ShouldBeTrue();
 
-        // ckli maintenance release-database rebuild
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "maintenance", "release-database", "rebuild" )).ShouldBeTrue();
-
         // ckli branch push stable
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "branch", "push", "stable" )).ShouldBeTrue();
 
