@@ -13,7 +13,6 @@
     <Project Path="../../CKli/StandardPlugins/CKli.HotZone.Plugin/CKli.HotZone.Plugin.csproj" />
     <Project Path="../../CKli/StandardPlugins/CKli.Migration.Plugin/CKli.Migration.Plugin.csproj" />
     <Project Path="../../CKli/StandardPlugins/CKli.Publish.Plugin/CKli.Publish.Plugin.csproj" />
-    <Project Path="../../CKli/StandardPlugins/CKli.ReleaseDatabase.Plugin/CKli.ReleaseDatabase.Plugin.csproj" />
     <Project Path="../../CKli/StandardPlugins/CKli.ShallowSolution.Plugin/CKli.ShallowSolution.Plugin.csproj" />
     <Project Path="../../CKli/StandardPlugins/CKli.VersionTag.Plugin/CKli.VersionTag.Plugin.csproj" />
 </Folder>

@@ -22,30 +22,14 @@ public class S1ᅳInitializedᅳTests
     [Test]
     public async Task CKt_local_fix_Async()
     {
-        Helper.RemoveFileSystemWritePAT();
+        Helper.SetFileSystemWritePAT();
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(initialized)" );
-        var context = remotes.Clone( clonedFolder );
+        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
         var display = (StringScreen)context.Screen;
 
         // cd CK-Core.
         var cktCoreContext = context.ChangeDirectory( "CKt-Core" );
-
-        // From CKt_init:
-        var localNuGetFeed = context.CurrentStackPath.Combine( "$Local/NuGet" );
-        var initialPackages = Directory.EnumerateFiles( localNuGetFeed )
-                                     .Select( p => Path.GetFileName( p ) )
-                                     .Order()
-                                     .ToArray();
-        initialPackages.ShouldBe( [
-                    "CKt.ActivityMonitor.0.1.0.nupkg",
-                    "CKt.Core.1.0.0.nupkg",
-                    "CKt.Monitoring.0.2.3.nupkg",
-                    "CKt.PerfectEvent.0.2.0.nupkg",
-                    "CKt.PerfectEvent.0.2.1.nupkg",
-                    "CKt.PerfectEvent.0.3.0.nupkg",
-                    "CKt.PerfectEvent.0.3.2.nupkg"
-                    ] );
 
         // No v2 yet => "Unable to find any version to fix for 'v2'.".
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
@@ -60,40 +44,28 @@ public class S1ᅳInitializedᅳTests
             (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "start", "v1.0" )).ShouldBeFalse();
             logs.ShouldContain( """
                 The version to fix 'v1.0.0' is the current last stable version.
-                Use the regular 'ckli build/publish' or 'ckli ci build/publish' workflows to produce a fix.
+                Use the regular workflow with 'ckli build/publish' commands to produce a fix.
                 """ );
         }
 
-        // Let's build a v1.1 of CKt-Core. The commit message that starts with "feat:" (conventional commit) triggers
+        // Let's publish a v1.1 of CKt-Core. The commit message that starts with "feat:" (conventional commit) triggers
         // a minor's increment.
-        // We don't need to publish here. The fact that the v1.1 is not published is not relevant for the fix.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "checkout", "dev/stable" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( cktCoreContext.CurrentDirectory, "dev/stable", "feat: some feature." );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "publish" )).ShouldBeTrue();
 
-        // Updates the packages available locally.
-        var afterProductionBuild = Directory.EnumerateFiles( localNuGetFeed )
-                                            .Select( p => Path.GetFileName( p ) )
-                                            .Order()
-                                            .ToArray();
-        afterProductionBuild.Except( initialPackages ).ShouldBe(
-            [
-              "CKt.ActivityMonitor.0.2.0.nupkg",
-              "CKt.Core.1.1.0.nupkg",
-              "CKt.Monitoring.0.3.0.nupkg",
-              "CKt.PerfectEvent.0.4.0.nupkg"
-            ] );
-
-        // Now we can do a: ckli fix start v1.0
+        // Now we can do: ckli fix start v1.0
+        // This applies the Net8 Migration: a "Net8 migrations applied." commit appears on all the branches
+        // (the ci builds start at 1 instead of 0).
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "start", "v1.0" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             Fixing 'v1.0.0' on CKt-Core:
-            0 - CKt-Core            -> 1.0.1 (fix/v1.0) 
-            1 - CKt-ActivityMonitor -> 0.1.1 (fix/v0.1) 
-            2 - CKt-PerfectEvent    -> 0.2.2 (fix/v0.2) 
-            3 - CKt-PerfectEvent    -> 0.3.3 (fix/v0.3) 
-            4 - CKt-Monitoring      -> 0.2.4 (fix/v0.2) 
+            1 - CKt-Core            ⎇fix/v1.0 → v1.0.1 
+            2 - CKt-ActivityMonitor ⎇fix/v0.1 → v0.1.1 
+            3 ╓ CKt-PerfectEvent    ⎇fix/v0.2 → v0.2.2 
+            4 ║ CKt-PerfectEvent    ⎇fix/v0.3 → v0.3.3 
+            5 ╙ CKt-Monitoring      ⎇fix/v0.2 → v0.2.4 
             ❰✓❱
 
             """ );
@@ -102,51 +74,34 @@ public class S1ᅳInitializedᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "info" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             Fixing 'v1.0.0' on CKt-Core:
-            0 - CKt-Core            -> 1.0.1 (fix/v1.0) 
-            1 - CKt-ActivityMonitor -> 0.1.1 (fix/v0.1) 
-            2 - CKt-PerfectEvent    -> 0.2.2 (fix/v0.2) 
-            3 - CKt-PerfectEvent    -> 0.3.3 (fix/v0.3) 
-            4 - CKt-Monitoring      -> 0.2.4 (fix/v0.2) 
+            1 - CKt-Core            ⎇fix/v1.0 → v1.0.1 
+            2 - CKt-ActivityMonitor ⎇fix/v0.1 → v0.1.1 
+            3 ╓ CKt-PerfectEvent    ⎇fix/v0.2 → v0.2.2 
+            4 ║ CKt-PerfectEvent    ⎇fix/v0.3 → v0.3.3 
+            5 ╙ CKt-Monitoring      ⎇fix/v0.2 → v0.2.4 
             ❰✓❱
 
             """ );
 
-        // ckli fix build
-        // This applies the Net8 Migration: there is a change in the code base, so we build the fixes. 
-        using( TestHelper.Monitor.OpenInfo( "First 'ckli fix build' => triggers the Net8 migration (this handles NuGet.config => nuget.config)." ) )
+        // ckli fix build --ci
+        using( TestHelper.Monitor.OpenInfo( """
+            First 'ckli fix build --ci' => triggers the Net8 migration.
+            This handles NuGet.config => nuget.config, removing RepositoryInfo.xml, transforming .sln to .slnx, removing CodeCakeBuilder...
+            """ ) )
         {
-            // ckli fix build
-            // This applies the Net8 Migration: there is a change in the code base, so we build the fixes. 
+            // The first (CKt-Core) is ci.1 and the following ci.2 because of the "Net8 migration applied".
+            // Without this commit they would be ci.0 and ci.1. 
             display.Clear();
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build", "--ci" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
-                  CKt-Core            fix/v1.0  1.0.1-local.fix.2
-                  CKt-ActivityMonitor fix/v0.1  0.1.1-local.fix.2
-                  CKt-PerfectEvent    fix/v0.3  0.2.2-local.fix.3
-                  CKt-PerfectEvent    fix/v0.3  0.3.3-local.fix.3
-                  CKt-Monitoring      fix/v0.2  0.2.4-local.fix.2
+                  CKt-Core            ⎇fix/v1.0  1.0.1--ci.1
+                  CKt-ActivityMonitor ⎇fix/v0.1  0.1.1--ci.2
+                  CKt-PerfectEvent    ⎇fix/v0.2  0.2.2--ci.2
+                  CKt-PerfectEvent    ⎇fix/v0.3  0.3.3--ci.2
+                  CKt-Monitoring      ⎇fix/v0.2  0.2.4--ci.2
                 ❰✓❱
 
                 """ );
-
-            var files = Directory.EnumerateFiles( localNuGetFeed )
-                             .Select( p => Path.GetFileName( p ) )
-                             .Except( afterProductionBuild )
-                             .Order()
-                             .ToArray();
-            // The 2 CKt.PerfectEvent have a commit depth of 3 because:
-            //
-            // 1 - Starting 'fix/v0.3' (this commit can be amended).
-            // 2 - Net8 migration applied.
-            // 3 - Updates: CKt.ActivityMonitor: 0.1.0 -> 0.1.1-local.fix.2
-            //
-            files.ShouldBe( [
-                    "CKt.ActivityMonitor.0.1.1-local.fix.2.nupkg",
-                    "CKt.Core.1.0.1-local.fix.2.nupkg",
-                    "CKt.Monitoring.0.2.4-local.fix.2.nupkg",
-                    "CKt.PerfectEvent.0.2.2-local.fix.3.nupkg",
-                    "CKt.PerfectEvent.0.3.3-local.fix.3.nupkg"
-                    ] );
 
         }
 
@@ -161,22 +116,6 @@ public class S1ᅳInitializedᅳTests
                 logs.ShouldContain( "Useless build for 'CKt-Core/1.0.1-local.fix.2' skipped." );
             }
 
-            var files = Directory.EnumerateFiles( localNuGetFeed )
-                                 .Select( p => Path.GetFileName( p ) )
-                                 .Except( afterProductionBuild )
-                                 .Order()
-                                 .ToArray();
-            files.ShouldBe( [
-                    "CKt.ActivityMonitor.0.1.1-local.fix.2.nupkg",
-                    "CKt.ActivityMonitor.0.1.1-local.fix.3.nupkg",
-                    "CKt.Core.1.0.1-local.fix.2.nupkg",
-                    "CKt.Monitoring.0.2.4-local.fix.2.nupkg",
-                    "CKt.Monitoring.0.2.4-local.fix.3.nupkg",
-                    "CKt.PerfectEvent.0.2.2-local.fix.3.nupkg",
-                    "CKt.PerfectEvent.0.2.2-local.fix.4.nupkg",
-                    "CKt.PerfectEvent.0.3.3-local.fix.3.nupkg",
-                    "CKt.PerfectEvent.0.3.3-local.fix.4.nupkg"
-                ] );
         }
 
         using( TestHelper.Monitor.OpenInfo( "Third 'ckli fix build' (no change in the code base: there's nothing to fix)." ) )

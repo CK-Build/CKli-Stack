@@ -1,8 +1,10 @@
+using CK.Core;
 using CKli;
 using CKli.Core;
 using NUnit.Framework;
 using Shouldly;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using static CK.Testing.MonitorTestHelper;
 
@@ -51,12 +53,12 @@ public partial class S3ᅳSamplePublishedᅳTests
             > Public stack CKt (6 repositories)
             │  <Stack>/CKli-Plugins/Tests/Plugins.Tests/Cloned/coworking_Async/Tim/DuplicateOf-CKt/.PublicStack
             │  file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Stack
-              CKt-Core                      stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Core              
-              CKt-ActivityMonitor           stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-ActivityMonitor   
-              CKt-PerfectEvent              stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-PerfectEvent      
-              CKt-Monitoring                stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Monitoring        
-              Samples/CKt-Sample-Monitoring stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Sample-Monitoring 
-              Samples/CKt-App-Sample        stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-App-Sample        
+              CKt-Core                      ⎇stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Core              
+              CKt-ActivityMonitor           ⎇stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-ActivityMonitor   
+              CKt-PerfectEvent              ⎇stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-PerfectEvent      
+              CKt-Monitoring                ⎇stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Monitoring        
+              Samples/CKt-Sample-Monitoring ⎇stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Sample-Monitoring 
+              Samples/CKt-App-Sample        ⎇stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-App-Sample        
             ❰✓❱
 
             """ );
@@ -545,9 +547,8 @@ public partial class S3ᅳSamplePublishedᅳTests
     }
 
 
-    [TestCase( true )]
-    [TestCase( false )]
-    public async Task with_ci_0_Async( bool useCheckout )
+    [Test]
+    public async Task with_ci_0_Async()
     {
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(sample_published)" );
@@ -685,6 +686,79 @@ public partial class S3ᅳSamplePublishedᅳTests
             ❰✓❱
 
             """ );
+
+    }
+
+
+    [Test]
+    public async Task rebuilding_local()
+    {
+        var clonedFolder = TestHelper.InitializeClonedFolder();
+        var remotes = TestHelper.OpenRemotes( "CKt(sample_published)" );
+        var context = remotes.Clone( clonedFolder,
+                                     ( monitor, stackPath, plugins ) => Helper.ConfigureFakeFeeds( monitor, stackPath.RemoveLastPart(), plugins ) );
+        var display = (StringScreen)context.Screen;
+
+        // This test publishes.
+        Helper.SetFileSystemWritePAT();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            -  CKt-Core                      v1.0.1
+            -  CKt-ActivityMonitor           v0.1.1
+            ╓  CKt-PerfectEvent              v0.3.3
+            ║  CKt-Monitoring                v0.2.4
+            ╙  Samples/CKt-App-Sample        v0.0.0
+            -  Samples/CKt-Sample-Monitoring v0.0.0
+            There is nothing to build across the 6 repositories.
+            Nothing to publish (the 6 repositories are already published)
+            ❰✓❱
+
+            """ );
+
+        // From CKt-PerfectEvent, a simple build ensures that the pivots will be in CI.
+        // Their downstream repositories will also be in CI but not in ci.0 (regular propagation).
+        var perfectEvent = context.ChangeDirectory( "CKt-PerfectEvent" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "checkout", "dev/stable" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( perfectEvent.CurrentDirectory, "dev/stable" );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "build" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+              - →·   CKt-Core                      v1.0.1
+              - →·   CKt-ActivityMonitor           v0.1.1
+            1 ╓  ⊙   CKt-PerfectEvent              v0.3.3 → v0.3.4 🡡 (CodeChange)   
+              ║      CKt-Monitoring                v0.2.4
+              ╙      Samples/CKt-App-Sample        v0.0.0
+            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → v0.0.1 🡡 (UpstreamBuild)
+            Required build for 2 from the 1 pivots out of 6 repositories.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            🡡 2 repositories can be published.
+            ❰✓❱
+
+            """ );
+
+        // The "local/v0.3.4" (and "local/v0.0.1") must be "moved", we must not generate "local/v0.3.5" (and "local/v0.0.2") here.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "checkout", "dev/stable" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( perfectEvent.CurrentDirectory, "dev/stable" );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "build" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+              - →·   CKt-Core                      v1.0.1
+              - →·   CKt-ActivityMonitor           v0.1.1
+            1 ╓  ⊙   CKt-PerfectEvent              v0.3.3 → v0.3.4 🡡 (CodeChange)   
+              ║      CKt-Monitoring                v0.2.4
+              ╙      Samples/CKt-App-Sample        v0.0.0
+            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → v0.0.1 🡡 (UpstreamBuild)
+            Required build for 2 from the 1 pivots out of 6 repositories.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            🡡 2 repositories can be published.
+            ❰✓❱
+
+            """ );
+
 
     }
 

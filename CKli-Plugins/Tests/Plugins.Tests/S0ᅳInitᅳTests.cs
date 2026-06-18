@@ -12,7 +12,6 @@ public class S0ᅳInitᅳTests
 {
     /// <summary>
     /// <see cref="CKli.Net8Migration.Plugin.Net8MigrationPlugin.MigrateNet8"/>
-    /// <see cref="CKli.VersionTag.Plugin.VersionTagPlugin.RebuildReleaseDatabases"/>
     /// </summary>
     /// <returns></returns>
     [Test]

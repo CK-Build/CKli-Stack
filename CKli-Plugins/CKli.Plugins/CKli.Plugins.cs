@@ -24,7 +24,6 @@ public static class Plugins
             typeof(CKli.HotZone.Plugin.HotZonePlugin),
             typeof(CKli.Migration.Plugin.MigrationPlugin),
             typeof(CKli.Publish.Plugin.PublishPlugin),
-            typeof(CKli.ReleaseDatabase.Plugin.ReleaseDatabasePlugin),
             typeof(CKli.ShallowSolution.Plugin.ShallowSolutionPlugin),
             typeof(CKli.VersionTag.Plugin.VersionTagInfo)
             // </AutoSection>
