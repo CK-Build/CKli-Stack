@@ -1,10 +1,8 @@
-using CK.Core;
 using CKli;
 using CKli.Core;
 using NUnit.Framework;
 using Shouldly;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using static CK.Testing.MonitorTestHelper;
 

@@ -61,11 +61,11 @@ public class S1ᅳInitializedᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "start", "v1.0" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             Fixing 'v1.0.0' on CKt-Core:
-            1 - CKt-Core            ⎇fix/v1.0 → v1.0.1 
-            2 - CKt-ActivityMonitor ⎇fix/v0.1 → v0.1.1 
-            3 ╓ CKt-PerfectEvent    ⎇fix/v0.2 → v0.2.2 
-            4 ║ CKt-PerfectEvent    ⎇fix/v0.3 → v0.3.3 
-            5 ╙ CKt-Monitoring      ⎇fix/v0.2 → v0.2.4 
+            1 - CKt-Core            ⎇ fix/v1.0 → v1.0.1 
+            2 - CKt-ActivityMonitor ⎇ fix/v0.1 → v0.1.1 
+            3 ╓ CKt-PerfectEvent    ⎇ fix/v0.2 → v0.2.2 
+            4 ║ CKt-PerfectEvent    ⎇ fix/v0.3 → v0.3.3 
+            5 ╙ CKt-Monitoring      ⎇ fix/v0.2 → v0.2.4 
             ❰✓❱
 
             """ );
@@ -74,11 +74,11 @@ public class S1ᅳInitializedᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "info" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             Fixing 'v1.0.0' on CKt-Core:
-            1 - CKt-Core            ⎇fix/v1.0 → v1.0.1 
-            2 - CKt-ActivityMonitor ⎇fix/v0.1 → v0.1.1 
-            3 ╓ CKt-PerfectEvent    ⎇fix/v0.2 → v0.2.2 
-            4 ║ CKt-PerfectEvent    ⎇fix/v0.3 → v0.3.3 
-            5 ╙ CKt-Monitoring      ⎇fix/v0.2 → v0.2.4 
+            1 - CKt-Core            ⎇ fix/v1.0 → v1.0.1 
+            2 - CKt-ActivityMonitor ⎇ fix/v0.1 → v0.1.1 
+            3 ╓ CKt-PerfectEvent    ⎇ fix/v0.2 → v0.2.2 
+            4 ║ CKt-PerfectEvent    ⎇ fix/v0.3 → v0.3.3 
+            5 ╙ CKt-Monitoring      ⎇ fix/v0.2 → v0.2.4 
             ❰✓❱
 
             """ );
@@ -94,11 +94,11 @@ public class S1ᅳInitializedᅳTests
             display.Clear();
             (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build", "--ci" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
-                  CKt-Core            ⎇fix/v1.0  1.0.1--ci.1
-                  CKt-ActivityMonitor ⎇fix/v0.1  0.1.1--ci.2
-                  CKt-PerfectEvent    ⎇fix/v0.2  0.2.2--ci.2
-                  CKt-PerfectEvent    ⎇fix/v0.3  0.3.3--ci.2
-                  CKt-Monitoring      ⎇fix/v0.2  0.2.4--ci.2
+                  CKt-Core            ⎇ fix/v1.0  1.0.1--ci.1
+                  CKt-ActivityMonitor ⎇ fix/v0.1  0.1.1--ci.2
+                  CKt-PerfectEvent    ⎇ fix/v0.2  0.2.2--ci.2
+                  CKt-PerfectEvent    ⎇ fix/v0.3  0.3.3--ci.2
+                  CKt-Monitoring      ⎇ fix/v0.2  0.2.4--ci.2
                 ❰✓❱
 
                 """ );
