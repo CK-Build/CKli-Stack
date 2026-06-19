@@ -16,7 +16,6 @@
     <HotZone />
     <Migration />
     <Publish />
-    <ReleaseDatabase />
     <ShallowSolution />
     <VersionTag />
   </Plugins>
