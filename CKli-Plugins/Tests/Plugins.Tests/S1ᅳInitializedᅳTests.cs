@@ -108,7 +108,7 @@ public class S1ᅳInitializedᅳTests
         TestHelper.TouchAndCommit( cktCoreContext.CurrentDirectory.Combine( "../CKt-ActivityMonitor/CKt.ActivityMonitor" ),
                                    branchName: "fix/v0.1" );
 
-        using( TestHelper.Monitor.OpenInfo( "Second 'ckli fix build' (CKt.ActivityMonitor has changed)." ) )
+        using( TestHelper.Monitor.OpenInfo( "Second 'ckli fix build' NOT in ci (CKt.ActivityMonitor has changed)." ) )
         {
             using( TestHelper.Monitor.CollectTexts( out var logs ) )
             {
