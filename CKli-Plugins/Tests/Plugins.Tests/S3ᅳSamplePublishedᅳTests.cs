@@ -51,12 +51,12 @@ public partial class S3ᅳSamplePublishedᅳTests
             > Public stack CKt (6 repositories)
             │  <Stack>/CKli-Plugins/Tests/Plugins.Tests/Cloned/coworking_Async/Tim/DuplicateOf-CKt/.PublicStack
             │  file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Stack
-              CKt-Core                      ⎇stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Core              
-              CKt-ActivityMonitor           ⎇stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-ActivityMonitor   
-              CKt-PerfectEvent              ⎇stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-PerfectEvent      
-              CKt-Monitoring                ⎇stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Monitoring        
-              Samples/CKt-Sample-Monitoring ⎇stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Sample-Monitoring 
-              Samples/CKt-App-Sample        ⎇stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-App-Sample        
+              CKt-Core                      ⎇ stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Core              
+              CKt-ActivityMonitor           ⎇ stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-ActivityMonitor   
+              CKt-PerfectEvent              ⎇ stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-PerfectEvent      
+              CKt-Monitoring                ⎇ stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Monitoring        
+              Samples/CKt-Sample-Monitoring ⎇ stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-Sample-Monitoring 
+              Samples/CKt-App-Sample        ⎇ stable ↑0↓0 file:///<Stack>/CKli-Plugins/Tests/Plugins.Tests/Remotes/bare/CKt(sample_published)/CKt-App-Sample        
             ❰✓❱
 
             """ );
@@ -160,7 +160,7 @@ public partial class S3ᅳSamplePublishedᅳTests
 
         // Tim ckli pulls, but before he creates the dev/stable branch. This is useless and the
         // issue below reflects this.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, tim, "checkout", "dev/stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, tim, "branch", "switch", "dev/stable" )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, timPerfectEvent, "pull" )).ShouldBeTrue();
 
         timDisplay.Clear();
@@ -186,7 +186,7 @@ public partial class S3ᅳSamplePublishedᅳTests
     {
         if( useCheckout )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "checkout", "dev/stable" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "branch", "switch", "dev/stable" )).ShouldBeTrue();
         }
         else
         {
@@ -514,7 +514,7 @@ public partial class S3ᅳSamplePublishedᅳTests
         // With the "standard" Directory.Build.props:
         // - <Project>/Doc/Package.md is required in any packable project.
         // - Common/Package.icon is required when packing.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "checkout", "dev/stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "branch", "switch", "dev/stable" )).ShouldBeTrue();
 
         Directory.CreateDirectory( inAppSample.CurrentDirectory.Combine( "CKt.SomeApp/Doc" ) );
         File.WriteAllText( inAppSample.CurrentDirectory.Combine( "CKt.SomeApp/Doc/Package.md" ), """
@@ -718,7 +718,7 @@ public partial class S3ᅳSamplePublishedᅳTests
         // From CKt-PerfectEvent, a simple build ensures that the pivots will be in CI.
         // Their downstream repositories will also be in CI but not in ci.0 (regular propagation).
         var perfectEvent = context.ChangeDirectory( "CKt-PerfectEvent" );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "checkout", "dev/stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "branch", "switch", "dev/stable" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( perfectEvent.CurrentDirectory, "dev/stable" );
 
         display.Clear();
@@ -738,7 +738,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             """ );
 
         // The "local/v0.3.4" (and "local/v0.0.1") must be "moved", we must not generate "local/v0.3.5" (and "local/v0.0.2") here.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "checkout", "dev/stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "branch", "switch", "dev/stable" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( perfectEvent.CurrentDirectory, "dev/stable" );
 
         display.Clear();

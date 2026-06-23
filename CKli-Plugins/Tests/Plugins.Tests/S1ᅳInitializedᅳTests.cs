@@ -50,7 +50,7 @@ public class S1ᅳInitializedᅳTests
 
         // Let's publish a v1.1 of CKt-Core. The commit message that starts with "feat:" (conventional commit) triggers
         // a minor's increment.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "checkout", "dev/stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "branch", "switch", "dev/stable" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( cktCoreContext.CurrentDirectory, "dev/stable", "feat: some feature." );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "publish" )).ShouldBeTrue();
 
@@ -192,7 +192,7 @@ public class S1ᅳInitializedᅳTests
             var inSampleMonitoring = inSampleFolder.ChangeDirectory( "CKt-Sample-Monitoring" );
             Directory.Exists( inSampleMonitoring.CurrentDirectory ).ShouldBeTrue();
 
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleMonitoring, "checkout", "dev/stable" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleMonitoring, "branch", "switch", "dev/stable" )).ShouldBeTrue();
 
             var path = inSampleMonitoring.CurrentDirectory.AppendPart( "CKt.Sample.Monitoring" );
             Directory.CreateDirectory( path );
@@ -244,7 +244,7 @@ public class S1ᅳInitializedᅳTests
             var inSampleApp = inSampleFolder.ChangeDirectory( "CKt-App-Sample" );
             Directory.Exists( inSampleApp.CurrentDirectory ).ShouldBeTrue();
 
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleApp, "checkout", "dev/stable" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleApp, "branch", "switch", "dev/stable" )).ShouldBeTrue();
 
             var path = inSampleApp.CurrentDirectory.AppendPart( "CKt.SomeApp" );
             Directory.CreateDirectory( path );
@@ -293,7 +293,7 @@ public class S1ᅳInitializedᅳTests
         #endregion
 
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "checkout", "dev/stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "branch", "switch", "dev/stable" )).ShouldBeTrue();
 
         // The nuget.config can be fixed with a dirty folder (no need to pre-commit here).
         //
@@ -341,8 +341,8 @@ public class S1ᅳInitializedᅳTests
             2 -  CKt-ActivityMonitor           v0.1.0      → v0.1.1--ci.4 🡡 (UpstreamBuild, CodeChange)             
             3 ╓  CKt-PerfectEvent              v0.3.2      → v0.3.3--ci.4 🡡 (UpstreamBuild, CodeChange)             
             4 ║  CKt-Monitoring                v0.2.3      → v0.2.4--ci.4 🡡 (UpstreamBuild, CodeChange)             
-            5 ╙  Samples/CKt-App-Sample        v0.0.0+fake → v0.0.0--ci.3 🡡 (UpstreamBuild, FakeVersion, CodeChange)
-            6 -  Samples/CKt-Sample-Monitoring v0.0.0+fake → v0.0.0--ci.3 🡡 (UpstreamBuild, FakeVersion, CodeChange)
+            5 ╙  Samples/CKt-App-Sample        v0.0.0+fake → v0.0.0--ci.2 🡡 (UpstreamBuild, FakeVersion, CodeChange)
+            6 -  Samples/CKt-Sample-Monitoring v0.0.0+fake → v0.0.0--ci.2 🡡 (UpstreamBuild, FakeVersion, CodeChange)
             Required build for 6 repositories across the 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
             🡡 6 repositories can be published.
@@ -358,8 +358,8 @@ public class S1ᅳInitializedᅳTests
             -  CKt-ActivityMonitor           v0.1.1--ci.4 🡡
             ╓  CKt-PerfectEvent              v0.3.3--ci.4 🡡
             ║  CKt-Monitoring                v0.2.4--ci.4 🡡
-            ╙  Samples/CKt-App-Sample        v0.0.0--ci.3 🡡
-            -  Samples/CKt-Sample-Monitoring v0.0.0--ci.3 🡡
+            ╙  Samples/CKt-App-Sample        v0.0.0--ci.2 🡡
+            -  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 🡡
             There is nothing to build across the 6 repositories.
             🡡 6 repositories can be published.
             ❰✓❱
@@ -375,8 +375,8 @@ public class S1ᅳInitializedᅳTests
             -  CKt-ActivityMonitor           v0.1.1--ci.4 🡡
             ╓  CKt-PerfectEvent              v0.3.3--ci.4 🡡
             ║  CKt-Monitoring                v0.2.4--ci.4 🡡
-            ╙  Samples/CKt-App-Sample        v0.0.0--ci.3 🡡
-            -  Samples/CKt-Sample-Monitoring v0.0.0--ci.3 🡡
+            ╙  Samples/CKt-App-Sample        v0.0.0--ci.2 🡡
+            -  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 🡡
             There is nothing to build across the 6 repositories.
             🡡 6 repositories must be published.
             ❰✓❱
@@ -399,21 +399,21 @@ public class S1ᅳInitializedᅳTests
                                     "ckt.core@1.0.1--ci.3",
                                     "ckt.monitoring@0.2.4--ci.4",
                                     "ckt.perfectevent@0.3.3--ci.4",
-                                    "ckt.sample.monitoring@0.0.0--ci.3",
-                                    "ckt.someapp@0.0.0--ci.3"], ignoreOrder: true );
+                                    "ckt.sample.monitoring@0.0.0--ci.2",
+                                    "ckt.someapp@0.0.0--ci.2"], ignoreOrder: true );
 
         // The FileSystemHostingProvider received the asset files.
         var appRemoteReleases = Path.Combine( TestHelper.CKliRemotesPath, "bare", remotes.FullName, "CKt-App-Sample", "Releases" );
         Directory.GetFiles( appRemoteReleases, "*", SearchOption.AllDirectories )
                  .Select( p => new NormalizedPath( p ) )
                  .Select( p => p.RemoveParts( 0, p.Parts.Count - 2 ).ToString() )
-                 .ShouldBe( ["v0.0.0--ci.3/ZipDemo.zip"] );
+                 .ShouldBe( ["v0.0.0--ci.2/ZipDemo.zip"] );
 
         var sampleRemoteReleases = Path.Combine( TestHelper.CKliRemotesPath, "bare", remotes.FullName, "CKt-Sample-Monitoring", "Releases" );
         Directory.GetFiles( sampleRemoteReleases, "*", SearchOption.AllDirectories )
                  .Select( p => new NormalizedPath( p ) )
                  .Select( p => p.RemoveParts( 0, p.Parts.Count - 2 ).ToString() )
-                 .ShouldBe( ["v0.0.0--ci.3/Install-0.0.0--ci.3.txt"] );
+                 .ShouldBe( ["v0.0.0--ci.2/Install-0.0.0--ci.2.txt"] );
 
         // The "PublishState.bin" has been removed.
         File.Exists( context.CurrentStackPath.Combine( "$Local/PublishState.bin" ) ).ShouldBeFalse();
