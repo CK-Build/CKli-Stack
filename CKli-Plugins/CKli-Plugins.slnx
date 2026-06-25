@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Solution Items/">
+    <File Path="../../CKli/CompileAndInstallLocalCKli.ps1" />
     <File Path=".editorconfig" />
     <File Path="Directory.Build.props" />
     <File Path="nuget.config" />
@@ -15,7 +16,7 @@
     <Project Path="../../CKli/StandardPlugins/CKli.Publish.Plugin/CKli.Publish.Plugin.csproj" />
     <Project Path="../../CKli/StandardPlugins/CKli.ShallowSolution.Plugin/CKli.ShallowSolution.Plugin.csproj" />
     <Project Path="../../CKli/StandardPlugins/CKli.VersionTag.Plugin/CKli.VersionTag.Plugin.csproj" />
-</Folder>
+  </Folder>
 
   <Folder Name="/CKli (Project References)/">
     <Project Path="../../CKli/CKli.Core/CKli.Core.csproj" />
@@ -27,7 +28,6 @@
   <Folder Name="/Tests/">
     <Project Path="Tests/Plugins.Tests/Plugins.Tests.csproj" />
   </Folder>
-
   <Project Path="CKli.Plugins/CKli.Plugins.csproj" />
 
 </Solution>
