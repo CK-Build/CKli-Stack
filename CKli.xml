@@ -1,4 +1,4 @@
-<CKli>
+<CKli MinCKliVersion="0.10.0--ci.28">
   <Plugins CompileMode="Debug">
     <ArtifactHandler>
       <NuGet>
