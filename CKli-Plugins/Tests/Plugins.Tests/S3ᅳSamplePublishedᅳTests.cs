@@ -186,7 +186,7 @@ public partial class S3ᅳSamplePublishedᅳTests
     {
         if( useCheckout )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "branch", "switch", "dev/stable" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "branch", "switch", "dev/stable", "-o" )).ShouldBeTrue();
         }
         else
         {
@@ -394,6 +394,9 @@ public partial class S3ᅳSamplePublishedᅳTests
         var directoryPropsContent = File.ReadAllText( ckliRoot.AppendPart( "Directory.Build.props" ) );
         File.WriteAllText( commonFolder.AppendPart( "Directory.Build.props" ), directoryPropsContent );
 
+        // The "real" .slnx file has no impact here as all the .slnx exist already.
+        File.WriteAllText( commonFolder.AppendPart( "[InitOnly]$SolutionName$.slnx" ), "<Solution></Solution>" );
+
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             > CKt-Core (1)
@@ -473,6 +476,9 @@ public partial class S3ᅳSamplePublishedᅳTests
 
             """ );
 
+        // Let's fix for CKt-Core
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context.ChangeDirectory( "CKt-Core" ), "issue", "--fix" )).ShouldBeTrue();
+
         // Test with different case and space.
         File.Delete( initOnlyFilePath );
         initOnlyFilePath = commonFolder.AppendPart( " [ iNItonlY ]Justfortest.txt" );
@@ -482,8 +488,8 @@ public partial class S3ᅳSamplePublishedᅳTests
         display.ToString().ShouldBe( """
             > CKt-Core (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
-            │ │ > File 'Justfortest.txt' must be created.
+            │ │ > Branch: stable (1 content issue)
+            │ │ │ > File must be moved: JustForTest.txt → Justfortest.txt (case differ)
             > CKt-ActivityMonitor (1)
             │ > Content issues.
             │ │ Branch: stable (1 content issue)
@@ -718,7 +724,7 @@ public partial class S3ᅳSamplePublishedᅳTests
         // From CKt-PerfectEvent, a simple build ensures that the pivots will be in CI.
         // Their downstream repositories will also be in CI but not in ci.0 (regular propagation).
         var perfectEvent = context.ChangeDirectory( "CKt-PerfectEvent" );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "branch", "switch", "dev/stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "branch", "switch", "dev/stable", "--force-open" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( perfectEvent.CurrentDirectory, "dev/stable" );
 
         display.Clear();
@@ -737,8 +743,9 @@ public partial class S3ᅳSamplePublishedᅳTests
 
             """ );
 
-        // The "local/v0.3.4" (and "local/v0.0.1") must be "moved", we must not generate "local/v0.3.5" (and "local/v0.0.2") here.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "branch", "switch", "dev/stable" )).ShouldBeTrue();
+        // The "local/v0.3.4" (and "local/v0.0.1") must be "moved", we must not generate "local/v0.3.5"
+        // (and "local/v0.0.2" of CKt-Sample-Monitoring) here.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "branch", "switch", "dev/stable", "-o" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( perfectEvent.CurrentDirectory, "dev/stable" );
 
         display.Clear();
