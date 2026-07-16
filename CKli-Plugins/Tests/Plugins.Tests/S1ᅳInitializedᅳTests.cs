@@ -55,8 +55,6 @@ public class S1ᅳInitializedᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "publish" )).ShouldBeTrue();
 
         // Now we can do: ckli fix start v1.0
-        // This applies the Net8 Migration: a "Net8 migrations applied." commit appears on all the branches
-        // (the ci builds start at 1 instead of 0).
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "start", "v1.0" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
@@ -115,7 +113,6 @@ public class S1ᅳInitializedᅳTests
                 (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build" )).ShouldBeTrue();
                 logs.ShouldContain( "Useless build for 'CKt-Core/1.0.1-local.fix.2' skipped." );
             }
-
         }
 
         using( TestHelper.Monitor.OpenInfo( "Third 'ckli fix build' (no change in the code base: there's nothing to fix)." ) )

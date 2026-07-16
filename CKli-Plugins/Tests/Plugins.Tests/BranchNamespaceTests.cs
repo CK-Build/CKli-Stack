@@ -3,7 +3,6 @@ using CKli.BranchModel.Plugin;
 using NUnit.Framework;
 using Shouldly;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Plugins.Tests;
 
@@ -92,6 +91,49 @@ public class BranchNamespaceTests
     [Test]
     public void explo_updates()
     {
+        var def = new BranchNamespace( null, "stable -> zulu => romeo |> delta |✋ alpha", [] );
+        def.GetExplo().Select( e => e.ToString() ).Concatenate( "" ).ShouldBe( "" );
 
+        var (ns, b) = def.AddOrUpdateExplo( "explo/v-next" );
+        b.Parent.ShouldNotBeNull().Name.ShouldBe( "alpha" );
+        ns.ToString().ShouldBe( """
+            stable -> zulu => romeo |> delta |✋ alpha
+            <Explo Name="explo/v-next" Parent="alpha" />
+            """ );
+
+        ns = ns.Remove( b );
+        ns.ToString().ShouldBe( "stable -> zulu => romeo |> delta |✋ alpha" );
+
+        (ns, b) = ns.AddOrUpdateExplo( "explo/v-next", BranchLinkType.Release, ns.FindRequired( "romeo" ) );
+        b.LinkType.ShouldBe( BranchLinkType.Release );
+        b.Parent.ShouldNotBeNull().Name.ShouldBe( "romeo" );
+        ns.ToString().ShouldBe( """
+            stable -> zulu => romeo |> delta |✋ alpha
+            <Explo Name="explo/v-next" Link="Release" Parent="romeo" />
+            """ );
+
+        (ns, b) = ns.AddOrUpdateExplo( "explo/again", BranchLinkType.Manual, b );
+        b.LinkType.ShouldBe( BranchLinkType.Manual );
+        b.Parent.ShouldNotBeNull().Name.ShouldBe( "explo/v-next" );
+        ns.ToString().ShouldBe( """
+            stable -> zulu => romeo |> delta |✋ alpha
+            <Explo Name="explo/v-next" Link="Release" Parent="romeo">
+              <Explo Name="explo/again" Link="Manual" />
+            </Explo>
+            """ );
+
+        ns = ns.Remove( ns.FindRequired( "romeo" ) );
+        ns.ToString().ShouldBe( """
+            stable -> zulu |> delta |✋ alpha
+            <Explo Name="explo/v-next" Link="Release" Parent="zulu">
+              <Explo Name="explo/again" Link="Manual" />
+            </Explo>
+            """ );
+
+        ns = ns.Remove( ns.FindRequired( "explo/v-next" ) );
+        ns.ToString().ShouldBe( """
+            stable -> zulu |> delta |✋ alpha
+            <Explo Name="explo/again" Link="Manual" Parent="zulu" />
+            """ );
     }
 }

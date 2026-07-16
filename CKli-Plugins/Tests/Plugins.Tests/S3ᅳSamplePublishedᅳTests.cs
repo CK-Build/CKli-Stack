@@ -186,7 +186,7 @@ public partial class S3ᅳSamplePublishedᅳTests
     {
         if( useCheckout )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "branch", "switch", "dev/stable", "-o" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "branch", "switch", "dev/stable", "-c" )).ShouldBeTrue();
         }
         else
         {
@@ -724,7 +724,7 @@ public partial class S3ᅳSamplePublishedᅳTests
         // From CKt-PerfectEvent, a simple build ensures that the pivots will be in CI.
         // Their downstream repositories will also be in CI but not in ci.0 (regular propagation).
         var perfectEvent = context.ChangeDirectory( "CKt-PerfectEvent" );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "branch", "switch", "dev/stable", "--force-open" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "branch", "switch", "dev/stable", "--create" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( perfectEvent.CurrentDirectory, "dev/stable" );
 
         display.Clear();
@@ -745,7 +745,7 @@ public partial class S3ᅳSamplePublishedᅳTests
 
         // The "local/v0.3.4" (and "local/v0.0.1") must be "moved", we must not generate "local/v0.3.5"
         // (and "local/v0.0.2" of CKt-Sample-Monitoring) here.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "branch", "switch", "dev/stable", "-o" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, perfectEvent, "branch", "switch", "dev/stable", "-c" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( perfectEvent.CurrentDirectory, "dev/stable" );
 
         display.Clear();
