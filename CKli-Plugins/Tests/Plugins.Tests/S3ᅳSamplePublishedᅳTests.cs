@@ -767,5 +767,33 @@ public partial class S3ᅳSamplePublishedᅳTests
 
     }
 
+    [Test]
+    public async Task romeo_loves_juliet_Async()
+    {
+        var clonedFolder = TestHelper.InitializeClonedFolder();
+        var remotes = TestHelper.OpenRemotes( "CKt(sample_published)" );
+        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var display = (StringScreen)context.Screen;
+
+        // Let's open "romeo" in CKt-PerfectEvent and build it: this propagates to downstream
+        // repositories (here: Samples/CKt-Sample-Monitoring).
+
+        var inPerfectEvent = context.ChangeDirectory( "CKt-PerfectEvent" );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "branch", "open", "romeo" )).ShouldBeTrue();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "status" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "CKt-PerfectEvent ⎇ dev/romeo (untracked)" );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+
+            """ );
+
+    }
+
+
 
 }
