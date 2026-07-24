@@ -134,6 +134,7 @@ public partial class S3ᅳSamplePublishedᅳTests
         // Bob ckli pulls. Its "dev/stable" is tracking the "refs/remotes/origin/dev/stable" (because Tim has pushed in ci).
         (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "pull" )).ShouldBeTrue();
 
+        // Bob doesn't need to synchronize the "stable' branch into the "dev/stable": the pull dit it because the remote "dev/stable" now exists.
         bobDisplay.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "issue" )).ShouldBeTrue();
         bobDisplay.ToString().ShouldBe( """
@@ -141,7 +142,9 @@ public partial class S3ᅳSamplePublishedᅳTests
 
         """ );
 
-        // Bob publishes a non CI version here (with its "Bob-work.txt" contribution), also from CK-PerfectEvent.
+        // Bob publishes a non CI version here (with its "Bob-work.txt" contribution that is a "fix!:" => breaking change but
+        // since we are in 0.X.Y version, only the Minor is incremented). From CK-PerfectEvent, the change propagates to the
+        // CK-Sample-Monitoring.
         bobDisplay.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, bobPerfectEvent, "publish" )).ShouldBeTrue();
         bobDisplay.ToString().ShouldBe( """
@@ -786,9 +789,81 @@ public partial class S3ᅳSamplePublishedᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "status" )).ShouldBeTrue();
         display.ToString().ShouldContain( "CKt-PerfectEvent ⎇ dev/romeo (untracked)" );
 
+        // Building from the "romeo" has... nothing to build.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
+            - →·   CKt-Core                      v1.0.1
+            - →·   CKt-ActivityMonitor           v0.1.1
+            ╓  ⊙   CKt-PerfectEvent              v0.3.3
+            ║      CKt-Monitoring                v0.2.4
+            ╙      Samples/CKt-App-Sample        v0.0.0
+            -  ·→  Samples/CKt-Sample-Monitoring v0.0.0
+            There is nothing to build from the 1 pivots out of 6 repositories.
+            (Using '*build' may detect required builds in upstreams repositories.)
+            Nothing to publish (the 6 repositories are already published)
+            ❰✓❱
+
+            """ );
+
+        // But if we ask for a --ci.0, then it works: a romeo prerelease must be produced and this
+        // will create the romeo branch to appear in the downstream repositories (here CKt-Sample-Monitoring).
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build", "--ci.0", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+              - →·   CKt-Core                      v1.0.1
+              - →·   CKt-ActivityMonitor           v0.1.1
+            1 ╓  ⊙   CKt-PerfectEvent              v0.3.3 → v0.3.4-romeo.0.ci.0 🡡 (CI0)          
+              ║      CKt-Monitoring                v0.2.4
+              ╙      Samples/CKt-App-Sample        v0.0.0
+            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → v0.0.1-romeo.0.ci.1 🡡 (UpstreamBuild)
+            Required build for 2 from the 1 pivots out of 6 repositories.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            🡡 2 repositories can be published.
+            ❰✓❱
+
+            """ );
+
+        // Instead of working with the ci.0 here, we touch the CKt-PerfectEvent to have fixed packages.
+        TestHelper.TouchAndCommit( inPerfectEvent.CurrentDirectory, branchName: null );
+
+        // We obtain 2 "real" first romeo prerelease packages.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+              - →·   CKt-Core                      v1.0.1
+              - →·   CKt-ActivityMonitor           v0.1.1
+            1 ╓  ⊙   CKt-PerfectEvent              v0.3.3 → v0.3.4-romeo 🡡 (CodeChange)   
+              ║      CKt-Monitoring                v0.2.4
+              ╙      Samples/CKt-App-Sample        v0.0.0
+            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → v0.0.1-romeo 🡡 (UpstreamBuild)
+            Required build for 2 from the 1 pivots out of 6 repositories.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            🡡 2 repositories can be published.
+            ❰✓❱
+
+            """ );
+
+        // Touch again to trigger a Minor change followed by 2 fixes: the "feat:" commit belongs to the "head commits"
+        // of the TagCommitTree (and must be found).
+        TestHelper.TouchAndCommit( inPerfectEvent.CurrentDirectory, branchName: null, commitMessage: "feat: Some feature." );
+        TestHelper.TouchAndCommit( inPerfectEvent.CurrentDirectory, branchName: null, commitMessage: "fix 1" );
+        TestHelper.TouchAndCommit( inPerfectEvent.CurrentDirectory, branchName: null, commitMessage: "fix 2" );
+
+        // Time to really build the romeo packages.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+              - →·   CKt-Core                      v1.0.1
+              - →·   CKt-ActivityMonitor           v0.1.1
+            1 ╓  ⊙   CKt-PerfectEvent              v0.3.3 → v0.4.0-romeo 🡡 (CodeChange)   
+              ║      CKt-Monitoring                v0.2.4
+              ╙      Samples/CKt-App-Sample        v0.0.0
+            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → v0.1.0-romeo 🡡 (UpstreamBuild)
+            Required build for 2 from the 1 pivots out of 6 repositories.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            🡡 2 repositories can be published.
+            ❰✓❱
 
             """ );
 
