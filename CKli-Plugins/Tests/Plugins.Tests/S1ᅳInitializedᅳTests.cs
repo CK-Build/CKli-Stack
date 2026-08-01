@@ -43,7 +43,7 @@ public class S1ᅳInitializedᅳTests
         {
             (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "start", "v1.0" )).ShouldBeFalse();
             logs.ShouldContain( """
-                The version to fix 'v1.0.0' is the current last stable version.
+                The version to fix 'v1.0.0' is in the "hot zone" (the last published stable version is 'v1.0.0').
                 Use the regular workflow with 'ckli build/publish' commands to produce a fix.
                 """ );
         }
@@ -148,6 +148,34 @@ public class S1ᅳInitializedᅳTests
 
             """ );
     }
+
+    [Test]
+    public async Task with_ci_0_on_fake_Async()
+    {
+        var clonedFolder = TestHelper.InitializeClonedFolder();
+        var remotes = TestHelper.OpenRemotes( "CKt(initialized)" );
+        var context = remotes.Clone( clonedFolder );
+        var display = (StringScreen)context.Screen;
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci.0", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 -  CKt-Core                      v1.0.1 → 🡡/v1.0.2--ci.0 (CI0)          
+            2 -  CKt-ActivityMonitor           v0.1.1 → 🡡/v0.1.2--ci.1 (UpstreamBuild)
+            3 ╓  CKt-PerfectEvent              v0.3.3 → 🡡/v0.3.4--ci.1 (UpstreamBuild)
+            4 ║  CKt-Monitoring                v0.2.4 → 🡡/v0.2.5--ci.1 (UpstreamBuild)
+            5 ╙  Samples/CKt-App-Sample        v0.0.0 → 🡡/v0.0.1--ci.1 (UpstreamBuild)
+            6 -  Samples/CKt-Sample-Monitoring v0.0.0 → 🡡/v0.0.1--ci.1 (UpstreamBuild)
+            Required build for 6 repositories across the 6 repositories.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            🡡 6 repositories can be published.
+            ❰✓❱
+
+            """ );
+
+    }
+
+
 
     [Test]
     public async Task CKt_add_sample_and_ci_Async()
