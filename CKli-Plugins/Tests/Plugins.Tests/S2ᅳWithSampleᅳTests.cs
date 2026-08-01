@@ -748,6 +748,7 @@ public class S2ᅳWithSampleᅳTests
         // To be able to push to the FakeFeeds.
         Helper.SetFileSystemWritePAT();
 
+        display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """

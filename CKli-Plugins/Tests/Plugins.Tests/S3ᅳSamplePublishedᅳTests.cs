@@ -643,7 +643,6 @@ public partial class S3ᅳSamplePublishedᅳTests
 
     }
 
-
     [Test]
     public async Task with_ci_0_Async()
     {
