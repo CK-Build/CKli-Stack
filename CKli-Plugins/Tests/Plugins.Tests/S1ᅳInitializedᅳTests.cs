@@ -20,7 +20,7 @@ public class S1ᅳInitializedᅳTests
     /// </summary>
     /// <returns></returns>
     [Test]
-    public async Task CKt_local_fix_Async()
+    public async Task local_fix_Async()
     {
         Helper.SetFileSystemWritePAT();
         var clonedFolder = TestHelper.InitializeClonedFolder();
@@ -107,33 +107,28 @@ public class S1ᅳInitializedᅳTests
                                    branchName: "fix/v0.1" );
 
         using( TestHelper.Monitor.OpenInfo( "Second 'ckli fix build' NOT in ci (CKt.ActivityMonitor has changed)." ) )
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            using( TestHelper.Monitor.CollectTexts( out var logs ) )
-            {
-                (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build" )).ShouldBeTrue();
-                logs.ShouldContain( "Useless build for 'CKt-Core/1.0.1-local.fix.2' skipped." );
-            }
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build" )).ShouldBeTrue();
         }
 
         using( TestHelper.Monitor.OpenInfo( "Third 'ckli fix build' (no change in the code base: there's nothing to fix)." ) )
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            // ckli fix build
-            using( TestHelper.Monitor.CollectTexts( out var logs ) )
-            {
-                (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build" )).ShouldBeTrue();
-                logs.ShouldContain( "Useless build for 'CKt-Core/1.0.1-local.fix.2' skipped." );
-                logs.ShouldContain( "Useless build for 'CKt-ActivityMonitor/0.1.1-local.fix.3' skipped." );
-                logs.ShouldContain( "Useless build for 'CKt-PerfectEvent/0.2.2-local.fix.4' skipped." );
-                logs.ShouldContain( "Useless build for 'CKt-PerfectEvent/0.3.3-local.fix.4' skipped." );
-                logs.ShouldContain( "Useless build for 'CKt-Monitoring/0.2.4-local.fix.3' skipped." );
-            }
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build" )).ShouldBeTrue();
+            logs.ShouldContain( "Useless build for 'CKt-Core/1.0.1' skipped." );
+            logs.ShouldContain( "Useless build for 'CKt-ActivityMonitor/0.1.1' skipped." );
+            logs.ShouldContain( "Useless build for 'CKt-PerfectEvent/0.2.2' skipped." );
+            logs.ShouldContain( "Useless build for 'CKt-PerfectEvent/0.3.3' skipped." );
+            logs.ShouldContain( "Useless build for 'CKt-Monitoring/0.2.4' skipped." );
         }
 
         // ckli fix cancel
         (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "cancel" )).ShouldBeTrue();
 
         // ckli fix start v1.0
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "start", "v1.0" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "start", "v1.0" )).ShouldBeFalse();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "start", "v1.0", "--move-branch" )).ShouldBeTrue();
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "info" )).ShouldBeTrue();

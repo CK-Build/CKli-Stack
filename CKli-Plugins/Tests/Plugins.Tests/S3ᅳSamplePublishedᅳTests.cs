@@ -4,7 +4,6 @@ using NUnit.Framework;
 using Shouldly;
 using System.IO;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using static CK.Testing.MonitorTestHelper;
 
 namespace Plugins.Tests;
