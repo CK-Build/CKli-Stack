@@ -841,10 +841,10 @@ public partial class S3ᅳSamplePublishedᅳTests
         display.ToString().ShouldBe( """
               - →·   CKt-Core                      v1.0.1 
               - →·   CKt-ActivityMonitor           v0.1.1 
-            1 ╓  ⊙   CKt-PerfectEvent              -0.3.4- → 🡡/v0.3.4 (CodeChange)   
+            1 ╓  ⊙   CKt-PerfectEvent              v0.3.4- → 🡡/v0.3.4 (CodeChange)   
               ║      CKt-Monitoring                v0.2.4 
               ╙      Samples/CKt-App-Sample        v0.0.0 
-            2 -  ·→  Samples/CKt-Sample-Monitoring -0.0.1- → 🡡/v0.0.1 (UpstreamBuild)
+            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.1- → 🡡/v0.0.1 (UpstreamBuild)
             Required build for 2 from the 1 pivots out of 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
             🡡 2 repositories can be published.

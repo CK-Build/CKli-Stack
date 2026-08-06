@@ -173,7 +173,7 @@ public class BranchLinkTests
             // Commit in the base branch: we never commit in the base branch, there's no API for this.
             repo.Checkout( monitor, mainLink.Branch ).ShouldBeTrue();
             TouchFile( repo );
-            repo.Commit( monitor, "On Base! (1)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Commited );
+            repo.Commit( monitor, "On Base! (1)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Committed );
 
             // Refresh.
             mainLink = mainLink.Refresh( monitor, repo ).ShouldNotBeNull();
@@ -206,7 +206,7 @@ public class BranchLinkTests
             // Commit in the base branch: we never commit in the base branch, there's no API for this.
             repo.Checkout( monitor, mainLink.Branch ).ShouldBeTrue();
             TouchFile( repo, "Two" );
-            repo.Commit( monitor, "On Base! (2)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Commited );
+            repo.Commit( monitor, "On Base! (2)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Committed );
 
             // Refresh: Desynchronized!
             mainLink = mainLink.Refresh( monitor, repo ).ShouldNotBeNull();
@@ -241,7 +241,7 @@ public class BranchLinkTests
             // Commit in the base branch: we never commit in the base branch, there's no API for this.
             repo.Checkout( monitor, mainLink.Branch ).ShouldBeTrue();
             TouchFile( repo, "Two" );
-            repo.Commit( monitor, "On Base! (3)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Commited );
+            repo.Commit( monitor, "On Base! (3)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Committed );
 
             // Refresh: Desynchronized!
             mainLink = mainLink.Refresh( monitor, repo ).ShouldNotBeNull();
@@ -276,7 +276,7 @@ public class BranchLinkTests
             // Commit in the base branch: we never commit in the base branch, there's no API for this.
             repo.Checkout( monitor, mainLink.Branch ).ShouldBeTrue();
             TouchFile( repo, content: "Kif Kif" );
-            repo.Commit( monitor, "On Base! (4)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Commited );
+            repo.Commit( monitor, "On Base! (4)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Committed );
 
             // Refresh: the contents are the same. Ahead is useless.
             mainLink = mainLink.Refresh( monitor, repo ).ShouldNotBeNull();
@@ -310,7 +310,7 @@ public class BranchLinkTests
             // Commit in the base branch: we never commit in the base branch, there's no API for this.
             repo.Checkout( monitor, mainLink.Branch ).ShouldBeTrue();
             TouchFile( repo );
-            repo.Commit( monitor, "On Base! (5)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Commited );
+            repo.Commit( monitor, "On Base! (5)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Committed );
 
             // Refresh: Desynchronized!
             mainLink = mainLink.Refresh( monitor, repo ).ShouldNotBeNull();
