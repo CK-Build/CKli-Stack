@@ -19,9 +19,11 @@ public partial class S3ᅳSamplePublishedᅳTests
         var remotes = TestHelper.OpenRemotes( "CKt(sample_published)" );
 
         // Shares the "FakeFeed/" folder in the cloned folder.
-        var bob = remotes.Clone( clonedFolder.Path.AppendPart( "Bob" ),
-                                 allowDuplicateStack: false,
-                                 ( monitor, stackPath, plugins ) => Helper.ConfigureFakeFeeds( monitor, stackPath.RemoveLastPart(), plugins ) );
+        var bob = await remotes.CloneAsync( clonedFolder.Path.AppendPart( "Bob" ),
+                                            allowDuplicateStack: false,
+                                            ( monitor, stackPath, plugins )
+                                                => Helper.ConfigureFakeFeeds( monitor, stackPath.RemoveLastPart(), plugins ) )
+                               .ConfigureAwait( false );
         var bobDisplay = (StringScreen)bob.Screen;
 
 
@@ -83,9 +85,10 @@ public partial class S3ᅳSamplePublishedᅳTests
             """ );
 
         // Tim clones a repository without any issue.
-        var tim = remotes.Clone( clonedFolder.Path.AppendPart( "Tim" ),
-                                 allowDuplicateStack: true,
-                                 ( monitor, stackPath, plugins ) => Helper.ConfigureFakeFeeds( monitor, stackPath.RemoveLastPart(), plugins ) );
+        var tim = await remotes.CloneAsync( clonedFolder.Path.AppendPart( "Tim" ),
+                                            allowDuplicateStack: true,
+                                            ( monitor, stackPath, plugins ) => Helper.ConfigureFakeFeeds( monitor, stackPath.RemoveLastPart(), plugins ) )
+                               .ConfigureAwait( false );
         var timDisplay = (StringScreen)tim.Screen;
 
         timDisplay.Clear();
@@ -264,7 +267,7 @@ public partial class S3ᅳSamplePublishedᅳTests
     {
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(sample_published)" );
-        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         // Let's deprecate the current CKt-PerfectEvent v0.3.3 package (in 30.days).
@@ -345,7 +348,7 @@ public partial class S3ᅳSamplePublishedᅳTests
     {
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(sample_published)" );
-        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         // Let's deprecate the current CKt-PerfectEvent v0.3.3 package (in 30.days).
@@ -378,7 +381,7 @@ public partial class S3ᅳSamplePublishedᅳTests
     {
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(sample_published)" );
-        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         var activityMonitor = context.ChangeDirectory( "CKt-ActivityMonitor" );
@@ -462,7 +465,7 @@ public partial class S3ᅳSamplePublishedᅳTests
     {
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(sample_published)" );
-        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         var ckliRoot = TestHelper.SolutionFolder.RemoveLastPart().AppendPart( "CKli" );
@@ -647,7 +650,7 @@ public partial class S3ᅳSamplePublishedᅳTests
     {
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(sample_published)" );
-        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         // This test publishes.
@@ -789,7 +792,7 @@ public partial class S3ᅳSamplePublishedᅳTests
     {
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(sample_published)" );
-        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         // This test publishes.
@@ -860,7 +863,7 @@ public partial class S3ᅳSamplePublishedᅳTests
     {
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(sample_published)" );
-        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         // Let's open "romeo" in CKt-PerfectEvent and build it: this propagates to downstream
@@ -953,7 +956,4 @@ public partial class S3ᅳSamplePublishedᅳTests
             """ );
 
     }
-
-
-
 }

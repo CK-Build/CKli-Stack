@@ -18,7 +18,7 @@ public class S2ᅳWithSampleᅳTests
     {
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(with_sample)" );
-        var context = remotes.Clone( clonedFolder );
+        var context = await remotes.CloneAsync( clonedFolder ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         // From stack root (or if --all is specified): all solutions are pivots <==> none of them is.
@@ -286,7 +286,7 @@ public class S2ᅳWithSampleᅳTests
 
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(with_sample)" );
-        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         var inPerfectEvent = context.ChangeDirectory( "CKt-PerfectEvent" );
@@ -555,7 +555,7 @@ public class S2ᅳWithSampleᅳTests
 
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(with_sample)" );
-        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         // Same context as CKt_with_sample_ci_build_and_жbuild_Async test above...
@@ -691,7 +691,7 @@ public class S2ᅳWithSampleᅳTests
 
         var nonPackableSample = mode == "NonPackableSample";
         var clonedFolder = TestHelper.InitializeClonedFolder( $"CKt_publish_with_sample-{mode}" );
-        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         display.Clear();

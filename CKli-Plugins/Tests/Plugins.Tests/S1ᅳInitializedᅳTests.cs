@@ -25,7 +25,7 @@ public class S1ᅳInitializedᅳTests
         Helper.SetFileSystemWritePAT();
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(initialized)" );
-        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         // cd CK-Core.
@@ -255,7 +255,7 @@ public class S1ᅳInitializedᅳTests
     {
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(initialized)" );
-        var context = remotes.Clone( clonedFolder );
+        var context = await remotes.CloneAsync( clonedFolder ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         var cktCore = context.ChangeDirectory( "CKt-Core" );
@@ -391,7 +391,7 @@ public class S1ᅳInitializedᅳTests
         Helper.SetFileSystemWritePAT();
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(initialized)" );
-        var context = remotes.Clone( clonedFolder, Helper.ConfigureFakeFeeds );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         var inSampleFolder = context.ChangeDirectory( "Samples" );
