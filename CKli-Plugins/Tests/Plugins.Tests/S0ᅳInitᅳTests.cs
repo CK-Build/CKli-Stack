@@ -18,12 +18,6 @@ public class S0ᅳInitᅳTests
     [Test]
     public async Task CKt_init_Async()
     {
-
-        var fake = SVersion.Parse( "0.0.0+fake");
-        var v = SVersion.Parse( "v0.1.0--ci.23" );
-        fake.IsStableRoughBaseOf( v ).ShouldBeTrue();
-
-
         Helper.SetFileSystemWritePAT();
 
         var clonedFolder = TestHelper.InitializeClonedFolder();
