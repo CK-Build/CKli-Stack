@@ -531,11 +531,7 @@ public class S1ᅳInitializedᅳTests
         // The nuget.config can be fixed with a dirty folder (no need to pre-commit here).
         // => Creates the missing nuget.config file and updated the feed urls in existing ones:
         //    this is the work of the ArtifactHandlerPlugin plugin and the BranchModel/HotBranch/ContentIssue.
-        //
-        // But the "Missing initial version." requires a clean working folder.
-        // 
-        // ... so we commit.
-
+        //    The "Missing initial version." also doesn't require a clean working folder.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
@@ -570,8 +566,7 @@ public class S1ᅳInitializedᅳTests
             ❰✓❱
 
             """ );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleFolder, "commit", "Initialized CKt-Sample-Monitoring and CKt-App-Sample." )).ShouldBeTrue();
-
+        // This will fix and commit.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue", "--fix" )).ShouldBeTrue();
 
         // No more issue.
