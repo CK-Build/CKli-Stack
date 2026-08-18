@@ -42,15 +42,15 @@ public class S2ᅳWithSampleᅳTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-        1 -  CKt-Core                      v1.0.0      → 🡡/v1.0.1 (CodeChange)                            
-        2 -  CKt-ActivityMonitor           v0.1.0      → 🡡/v0.1.1 (UpstreamBuild, CodeChange)             
-        3 ╓  CKt-PerfectEvent              v0.3.2      → 🡡/v0.3.3 (UpstreamBuild, CodeChange)             
-        4 ║  CKt-Monitoring                v0.2.3      → 🡡/v0.2.4 (UpstreamBuild, CodeChange)             
-        5 ╙  Samples/CKt-App-Sample        v0.0.0+fake → 🡡/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)
-        6 -  Samples/CKt-Sample-Monitoring v0.0.0+fake → 🡡/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)
+        1 -  CKt-Core                      v1.0.0      → ⏚/v1.0.1 (CodeChange)                            
+        2 -  CKt-ActivityMonitor           v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)             
+        3 ╓  CKt-PerfectEvent              v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)             
+        4 ║  CKt-Monitoring                v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)             
+        5 ╙  Samples/CKt-App-Sample        v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)
+        6 -  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)
         Required build for 6 repositories across the 6 repositories.
         (No dependency updates other than the ones from the upstreams are needed.)
-        🡡 6 repositories must be published.
+        ⏚ 6 repositories must be published.
         ❰✓❱
         
         """ );
@@ -67,15 +67,15 @@ public class S2ᅳWithSampleᅳTests
         display.ToString().ShouldBe( """
           - →·   CKt-Core                      v1.0.0     
           - →·   CKt-ActivityMonitor           v0.1.0     
-        1 ╓  ⊙   CKt-PerfectEvent              v0.3.2      → 🡡/v0.3.3 (DependencyUpdate, CodeChange)             
-                                                                       U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
+        1 ╓  ⊙   CKt-PerfectEvent              v0.3.2      → ⏚/v0.3.3 (DependencyUpdate, CodeChange)             
+                                                                      U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
           ║      CKt-Monitoring                v0.2.3     
-        2 ╙      Samples/CKt-App-Sample        v0.0.0+fake → 🡡/v0.0.0 (FakeVersion, DependencyUpdate, CodeChange)
-                                                                       U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
-        3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → 🡡/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)   
+        2 ╙      Samples/CKt-App-Sample        v0.0.0+fake → ⏚/v0.0.0 (FakeVersion, DependencyUpdate, CodeChange)
+                                                                      U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
+        3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)   
         Required build for 3 from the 1 pivots out of 6 repositories.
         U 2 updates from upstreams (not using '*publish' here).
-        🡡 3 repositories must be published.
+        ⏚ 3 repositories must be published.
         ❰✓❱
         
         """ );
@@ -92,15 +92,15 @@ public class S2ᅳWithSampleᅳTests
             display.Clear();
             (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
-            1 -  CKt-Core                      v1.0.1--ci.4 → 🡡/v1.0.1--ci.5 (CodeChange)               
-            2 -  CKt-ActivityMonitor           v0.1.1--ci.5 → 🡡/v0.1.1--ci.6 (UpstreamBuild)            
-            3 ╓  CKt-PerfectEvent              v0.3.3--ci.5 → 🡡/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
-            4 ║  CKt-Monitoring                v0.2.4--ci.5 → 🡡/v0.2.4--ci.6 (UpstreamBuild)            
-            5 ╙  Samples/CKt-App-Sample        v0.0.0--ci.2 → 🡡/v0.0.0--ci.3 (UpstreamBuild)            
-            6 -  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → 🡡/v0.0.0--ci.3 (UpstreamBuild)            
+            1 -  CKt-Core                      v1.0.1--ci.4 → ⏚/v1.0.1--ci.5 (CodeChange)               
+            2 -  CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
+            3 ╓  CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
+            4 ║  CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
+            5 ╙  Samples/CKt-App-Sample        v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
+            6 -  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
             Required build for 6 repositories across the 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            🡡 6 repositories can be published.
+            ⏚ 6 repositories can be published.
             ❰✓❱
             
             """ );
@@ -169,13 +169,13 @@ public class S2ᅳWithSampleᅳTests
             display.ToString().ShouldBe( """
               - →·   CKt-Core                      v1.0.1--ci.4
               - →·   CKt-ActivityMonitor           v0.1.1--ci.5
-            1 ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.5 → 🡡/v0.3.3--ci.6 (CodeChange)   
+            1 ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.6 (CodeChange)   
               ║      CKt-Monitoring                v0.2.4--ci.5
               ╙      Samples/CKt-App-Sample        v0.0.0--ci.2
-            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → 🡡/v0.0.0--ci.3 (UpstreamBuild)
+            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)
             Required build for 2 from the 1 pivots out of 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            🡡 2 repositories can be published.
+            ⏚ 2 repositories can be published.
             ❰✓❱
             
             """ );
@@ -188,15 +188,15 @@ public class S2ᅳWithSampleᅳTests
             display.Clear();
             (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "*build", "--ci", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
-            1 -  CKt-Core                      v1.0.1--ci.4 → 🡡/v1.0.1--ci.5 (CodeChange)               
-            2 -  CKt-ActivityMonitor           v0.1.1--ci.5 → 🡡/v0.1.1--ci.6 (UpstreamBuild)            
-            3 ╓  CKt-PerfectEvent              v0.3.3--ci.5 → 🡡/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
-            4 ║  CKt-Monitoring                v0.2.4--ci.5 → 🡡/v0.2.4--ci.6 (UpstreamBuild)            
-            5 ╙  Samples/CKt-App-Sample        v0.0.0--ci.2 → 🡡/v0.0.0--ci.3 (UpstreamBuild)            
-            6 -  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → 🡡/v0.0.0--ci.3 (UpstreamBuild)            
+            1 -  CKt-Core                      v1.0.1--ci.4 → ⏚/v1.0.1--ci.5 (CodeChange)               
+            2 -  CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
+            3 ╓  CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
+            4 ║  CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
+            5 ╙  Samples/CKt-App-Sample        v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
+            6 -  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
             Required build for 6 repositories across the 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            🡡 6 repositories can be published.
+            ⏚ 6 repositories can be published.
             ❰✓❱
             
             """ );
@@ -206,15 +206,15 @@ public class S2ᅳWithSampleᅳTests
             var inSample = context.ChangeDirectory( "Samples" );
             (await CKliCommands.ExecAsync( TestHelper.Monitor, inSample, "*build", "--ci", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
-            1 - →·   CKt-Core                      v1.0.1--ci.4 → 🡡/v1.0.1--ci.5 (CodeChange)               
-            2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → 🡡/v0.1.1--ci.6 (UpstreamBuild)            
-            3 ╓ →·   CKt-PerfectEvent              v0.3.3--ci.5 → 🡡/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
-            4 ║ →·   CKt-Monitoring                v0.2.4--ci.5 → 🡡/v0.2.4--ci.6 (UpstreamBuild)            
-            5 ╙  ⊙   Samples/CKt-App-Sample        v0.0.0--ci.2 → 🡡/v0.0.0--ci.3 (UpstreamBuild)            
-            6 -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → 🡡/v0.0.0--ci.3 (UpstreamBuild)            
+            1 - →·   CKt-Core                      v1.0.1--ci.4 → ⏚/v1.0.1--ci.5 (CodeChange)               
+            2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
+            3 ╓ →·   CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
+            4 ║ →·   CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
+            5 ╙  ⊙   Samples/CKt-App-Sample        v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
+            6 -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
             Required build for 6 from the 2 pivots out of 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            🡡 6 repositories can be published.
+            ⏚ 6 repositories can be published.
             ❰✓❱
             
             """ );
@@ -225,15 +225,15 @@ public class S2ᅳWithSampleᅳTests
             var inSampleMonitoring = inSample.ChangeDirectory( "CKt-Sample-Monitoring" );
             (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleMonitoring, "*build", "--ci", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
-            1 - →·   CKt-Core                      v1.0.1--ci.4 → 🡡/v1.0.1--ci.5 (CodeChange)               
-            2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → 🡡/v0.1.1--ci.6 (UpstreamBuild)            
-            3 ╓ →·   CKt-PerfectEvent              v0.3.3--ci.5 → 🡡/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
-            4 ║ →·   CKt-Monitoring                v0.2.4--ci.5 → 🡡/v0.2.4--ci.6 (UpstreamBuild)            
-            5 ╙      Samples/CKt-App-Sample        v0.0.0--ci.2 → 🡡/v0.0.0--ci.3 (UpstreamBuild)            
-            6 -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → 🡡/v0.0.0--ci.3 (UpstreamBuild)            
+            1 - →·   CKt-Core                      v1.0.1--ci.4 → ⏚/v1.0.1--ci.5 (CodeChange)               
+            2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
+            3 ╓ →·   CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
+            4 ║ →·   CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
+            5 ╙      Samples/CKt-App-Sample        v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
+            6 -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
             Required build for 6 from the 1 pivots out of 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            🡡 6 repositories can be published.
+            ⏚ 6 repositories can be published.
             ❰✓❱
 
             """ );
@@ -244,15 +244,15 @@ public class S2ᅳWithSampleᅳTests
             var inAppSample = inSample.ChangeDirectory( "CKt-App-Sample" );
             (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "*build", "--ci", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
-            1 - →·   CKt-Core                      v1.0.1--ci.4 → 🡡/v1.0.1--ci.5 (CodeChange)               
-            2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → 🡡/v0.1.1--ci.6 (UpstreamBuild)            
-            3 ╓      CKt-PerfectEvent              v0.3.3--ci.5 → 🡡/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
-            4 ║      CKt-Monitoring                v0.2.4--ci.5 → 🡡/v0.2.4--ci.6 (UpstreamBuild)            
-            5 ╙  ⊙   Samples/CKt-App-Sample        v0.0.0--ci.2 → 🡡/v0.0.0--ci.3 (UpstreamBuild)            
-            6 -      Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → 🡡/v0.0.0--ci.3 (UpstreamBuild)            
+            1 - →·   CKt-Core                      v1.0.1--ci.4 → ⏚/v1.0.1--ci.5 (CodeChange)               
+            2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
+            3 ╓      CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
+            4 ║      CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
+            5 ╙  ⊙   Samples/CKt-App-Sample        v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
+            6 -      Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
             Required build for 6 from the 1 pivots out of 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            🡡 6 repositories can be published.
+            ⏚ 6 repositories can be published.
             ❰✓❱
 
             """ );
@@ -262,15 +262,15 @@ public class S2ᅳWithSampleᅳTests
             display.Clear();
             (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*build", "--ci", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
-            1 - →·   CKt-Core                      v1.0.1--ci.4 → 🡡/v1.0.1--ci.5 (CodeChange)               
-            2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → 🡡/v0.1.1--ci.6 (UpstreamBuild)            
-            3 ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.5 → 🡡/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
-            4 ║      CKt-Monitoring                v0.2.4--ci.5 → 🡡/v0.2.4--ci.6 (UpstreamBuild)            
-            5 ╙      Samples/CKt-App-Sample        v0.0.0--ci.2 → 🡡/v0.0.0--ci.3 (UpstreamBuild)            
-            6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → 🡡/v0.0.0--ci.3 (UpstreamBuild)            
+            1 - →·   CKt-Core                      v1.0.1--ci.4 → ⏚/v1.0.1--ci.5 (CodeChange)               
+            2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
+            3 ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
+            4 ║      CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
+            5 ╙      Samples/CKt-App-Sample        v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
+            6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
             Required build for 6 from the 1 pivots out of 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            🡡 6 repositories can be published.
+            ⏚ 6 repositories can be published.
             ❰✓❱
             
             """ );
@@ -302,15 +302,15 @@ public class S2ᅳWithSampleᅳTests
         display.ToString().ShouldBe( """
                       - →·   CKt-Core                      v1.0.0     
                       - →·   CKt-ActivityMonitor           v0.1.0     
-                    1 ╓  ⊙   CKt-PerfectEvent              v0.3.2      → 🡡/v0.3.3 (DependencyUpdate, CodeChange)             
-                                                                                   U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
+                    1 ╓  ⊙   CKt-PerfectEvent              v0.3.2      → ⏚/v0.3.3 (DependencyUpdate, CodeChange)             
+                                                                                  U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
                       ║      CKt-Monitoring                v0.2.3     
-                    2 ╙      Samples/CKt-App-Sample        v0.0.0+fake → 🡡/v0.0.0 (FakeVersion, DependencyUpdate, CodeChange)
-                                                                                   U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
-                    3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → 🡡/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)   
+                    2 ╙      Samples/CKt-App-Sample        v0.0.0+fake → ⏚/v0.0.0 (FakeVersion, DependencyUpdate, CodeChange)
+                                                                                  U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
+                    3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)   
                     Required build for 3 from the 1 pivots out of 6 repositories.
                     U 2 updates from upstreams (not using '*publish' here).
-                    🡡 3 repositories must be published.
+                    ⏚ 3 repositories must be published.
                     ❰✓❱
         
                     """ );
@@ -322,7 +322,7 @@ public class S2ᅳWithSampleᅳTests
         //     CKt-Sample-Monitoring must be built (v0.0.0+fake → v0.0.0).
         //
 
-        // Bug in CKt-Sample-Monitoring.
+        // Bug in CKt-Sample-Monitoring (the checked out branch is "dev/stable").
         var inSampleMonitoring = context.ChangeDirectory( "Samples/CKt-Sample-Monitoring" );
         File.WriteAllText( inSampleMonitoring.CurrentDirectory.Combine( "CKt.Sample.Monitoring/Bug.cs" ), "I'm not a valid C# file at all." );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleMonitoring, "commit", "Added bug file." )).ShouldBeTrue();
@@ -334,15 +334,15 @@ public class S2ᅳWithSampleᅳTests
               """
                 - →·   CKt-Core                      v1.0.0     
                 - →·   CKt-ActivityMonitor           v0.1.0     
-              1 ╓  ⊙   CKt-PerfectEvent              v0.3.2      → 🡡/v0.3.3 (DependencyUpdate, CodeChange)             
-                                                                             U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
+              1 ╓  ⊙   CKt-PerfectEvent              v0.3.2      → ⏚/v0.3.3 (DependencyUpdate, CodeChange)             
+                                                                            U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
                 ║      CKt-Monitoring                v0.2.3     
-              2 ╙      Samples/CKt-App-Sample        v0.0.0+fake → 🡡/v0.0.0 (FakeVersion, DependencyUpdate, CodeChange)
-                                                                             U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
-              3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → 🡡/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)   
+              2 ╙      Samples/CKt-App-Sample        v0.0.0+fake → ⏚/v0.0.0 (FakeVersion, DependencyUpdate, CodeChange)
+                                                                            U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
+              3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)   
               Required build for 3 from the 1 pivots out of 6 repositories.
               U 2 updates from upstreams (not using '*publish' here).
-              🡡 3 repositories must be published.
+              ⏚ 3 repositories must be published.
               ❌ Failed
           
               """ );
@@ -363,13 +363,13 @@ public class S2ᅳWithSampleᅳTests
               """
                 - →·   CKt-Core                      v1.0.0     
                 - →·   CKt-ActivityMonitor           v0.1.0     
-                ╓  ⊙   CKt-PerfectEvent              🡡/v0.3.3  
+                ╓  ⊙   CKt-PerfectEvent              ⏚/v0.3.3   
                 ║      CKt-Monitoring                v0.2.3     
-                ╙      Samples/CKt-App-Sample        🡡/v0.0.0  
-              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → 🡡/v0.0.0 (FakeVersion, CodeChange)
+                ╙      Samples/CKt-App-Sample        ⏚/v0.0.0   
+              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (FakeVersion, CodeChange)
               Required build for 1 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 3 repositories must be published.
+              ⏚ 3 repositories must be published.
               ❰✓❱
           
               """ );
@@ -429,15 +429,15 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
-              1 - →·   CKt-Core                      v1.0.0 → 🡡/v1.0.1 (CodeChange)               
-              2 - →·   CKt-ActivityMonitor           v0.1.0 → 🡡/v0.2.0 (UpstreamBuild, CodeChange)
-              3 ╓  ⊙   CKt-PerfectEvent              v0.3.3 → 🡡/v0.4.0 (UpstreamBuild)            
-              4 ║      CKt-Monitoring                v0.2.3 → 🡡/v0.3.0 (UpstreamBuild, CodeChange)
-              5 ╙      Samples/CKt-App-Sample        v0.0.0 → 🡡/v0.1.0 (UpstreamBuild, CodeChange)
-              6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → 🡡/v0.1.0 (UpstreamBuild)            
+              1 - →·   CKt-Core                      v1.0.0 → ⏚/v1.0.1 (CodeChange)               
+              2 - →·   CKt-ActivityMonitor           v0.1.0 → ⏚/v0.2.0 (UpstreamBuild, CodeChange)
+              3 ╓  ⊙   CKt-PerfectEvent              v0.3.3 → ⏚/v0.4.0 (UpstreamBuild)            
+              4 ║      CKt-Monitoring                v0.2.3 → ⏚/v0.3.0 (UpstreamBuild, CodeChange)
+              5 ╙      Samples/CKt-App-Sample        v0.0.0 → ⏚/v0.1.0 (UpstreamBuild, CodeChange)
+              6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.1.0 (UpstreamBuild)            
               Required build for 6 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 6 repositories must be published.
+              ⏚ 6 repositories must be published.
               ❰✓❱
           
               """ );
@@ -460,13 +460,13 @@ public class S2ᅳWithSampleᅳTests
               """
                 - →·   CKt-Core                      v1.0.1
                 - →·   CKt-ActivityMonitor           v0.2.0
-              1 ╓  ⊙   CKt-PerfectEvent              v0.4.0 → 🡡/v0.5.0 (CodeChange)               
+              1 ╓  ⊙   CKt-PerfectEvent              v0.4.0 → ⏚/v0.5.0 (CodeChange)               
                 ║      CKt-Monitoring                v0.3.0
                 ╙      Samples/CKt-App-Sample        v0.1.0
-              2 -  ·→  Samples/CKt-Sample-Monitoring v0.1.0 → 🡡/v0.2.0 (UpstreamBuild, CodeChange)
+              2 -  ·→  Samples/CKt-Sample-Monitoring v0.1.0 → ⏚/v0.2.0 (UpstreamBuild, CodeChange)
               Required build for 2 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 2 repositories must be published.
+              ⏚ 2 repositories must be published.
               ❰✓❱
           
               """ );
@@ -482,13 +482,13 @@ public class S2ᅳWithSampleᅳTests
               """
                 - →·   CKt-Core                      v1.0.1
                 - →·   CKt-ActivityMonitor           v0.2.0
-              1 ╓  ⊙   CKt-PerfectEvent              v0.4.0 → 🡡/v0.5.0 (CodeChange)   
+              1 ╓  ⊙   CKt-PerfectEvent              v0.4.0 → ⏚/v0.5.0 (CodeChange)   
                 ║      CKt-Monitoring                v0.3.0
                 ╙      Samples/CKt-App-Sample        v0.1.0
-              2 -  ·→  Samples/CKt-Sample-Monitoring v0.1.0 → 🡡/v0.2.0 (UpstreamBuild)
+              2 -  ·→  Samples/CKt-Sample-Monitoring v0.1.0 → ⏚/v0.2.0 (UpstreamBuild)
               Required build for 2 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 2 repositories must be published.
+              ⏚ 2 repositories must be published.
               ❰✓❱
           
               """ );
@@ -535,13 +535,13 @@ public class S2ᅳWithSampleᅳTests
               """
                 - →·   CKt-Core                      v1.0.1
                 - →·   CKt-ActivityMonitor           v0.2.0
-              1 ╓  ⊙   CKt-PerfectEvent              v0.5.0 → 🡡/v0.5.1--ci.0 (CI0)          
+              1 ╓  ⊙   CKt-PerfectEvent              v0.5.0 → ⏚/v0.5.1--ci.0 (CI0)          
                 ║      CKt-Monitoring                v0.3.0
                 ╙      Samples/CKt-App-Sample        v0.1.0
-              2 -  ·→  Samples/CKt-Sample-Monitoring v0.2.0 → 🡡/v0.2.1--ci.1 (UpstreamBuild)
+              2 -  ·→  Samples/CKt-Sample-Monitoring v0.2.0 → ⏚/v0.2.1--ci.1 (UpstreamBuild)
               Required build for 2 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 2 repositories can be published.
+              ⏚ 2 repositories can be published.
               ❰✓❱
           
               """ );
@@ -582,13 +582,13 @@ public class S2ᅳWithSampleᅳTests
               """
                 - →·   CKt-Core                      v1.0.1--ci.4
                 - →·   CKt-ActivityMonitor           v0.1.1--ci.5
-              1 ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.5 → 🡡/v0.3.3--ci.6 (CodeChange)               
+              1 ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.6 (CodeChange)               
                 ║      CKt-Monitoring                v0.2.4--ci.5
                 ╙      Samples/CKt-App-Sample        v0.0.0--ci.2
-              2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → 🡡/v0.0.0--ci.4 (UpstreamBuild, CodeChange)
+              2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.4 (UpstreamBuild, CodeChange)
               Required build for 2 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 2 repositories must be published.
+              ⏚ 2 repositories must be published.
               ❌ Failed
           
               """ );
@@ -602,15 +602,15 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--ci", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
-                - →·   CKt-Core                      v1.0.1--ci.4   
-                - →·   CKt-ActivityMonitor           v0.1.1--ci.5   
-                ╓  ⊙   CKt-PerfectEvent              🡡/v0.3.3--ci.6
-                ║      CKt-Monitoring                v0.2.4--ci.5   
-                ╙      Samples/CKt-App-Sample        v0.0.0--ci.2   
-              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2    → 🡡/v0.0.0--ci.5 (UpstreamVersion, CodeChange)
+                - →·   CKt-Core                      v1.0.1--ci.4  
+                - →·   CKt-ActivityMonitor           v0.1.1--ci.5  
+                ╓  ⊙   CKt-PerfectEvent              ⏚/v0.3.3--ci.6
+                ║      CKt-Monitoring                v0.2.4--ci.5  
+                ╙      Samples/CKt-App-Sample        v0.0.0--ci.2  
+              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2   → ⏚/v0.0.0--ci.5 (UpstreamVersion, CodeChange)
               Required build for 1 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 2 repositories must be published.
+              ⏚ 2 repositories must be published.
               ❰✓❱
           
               """ );
@@ -624,15 +624,15 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--ci", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
-                - →·   CKt-Core                      v1.0.1--ci.4   
-                - →·   CKt-ActivityMonitor           v0.1.1--ci.5   
-                ╓  ⊙   CKt-PerfectEvent              🡡/v0.3.3--ci.6
-                ║      CKt-Monitoring                v0.2.4--ci.5   
-                ╙      Samples/CKt-App-Sample        v0.0.0--ci.2   
-              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2    → 🡡/v0.0.0--ci.5 (UpstreamVersion, CodeChange)
+                - →·   CKt-Core                      v1.0.1--ci.4  
+                - →·   CKt-ActivityMonitor           v0.1.1--ci.5  
+                ╓  ⊙   CKt-PerfectEvent              ⏚/v0.3.3--ci.6
+                ║      CKt-Monitoring                v0.2.4--ci.5  
+                ╙      Samples/CKt-App-Sample        v0.0.0--ci.2  
+              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2   → ⏚/v0.0.0--ci.5 (UpstreamVersion, CodeChange)
               Required build for 1 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 2 repositories must be published.
+              ⏚ 2 repositories must be published.
               ❰✓❱
           
               """ );
@@ -647,15 +647,15 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--ci", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
-                - →·   CKt-Core                      v1.0.1--ci.4   
-                - →·   CKt-ActivityMonitor           v0.1.1--ci.5   
-                ╓  ⊙   CKt-PerfectEvent              🡡/v0.3.3--ci.6
-                ║      CKt-Monitoring                v0.2.4--ci.5   
-                ╙      Samples/CKt-App-Sample        v0.0.0--ci.2   
-              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2    → 🡡/v0.0.0--ci.5 (UpstreamVersion, CodeChange)
+                - →·   CKt-Core                      v1.0.1--ci.4  
+                - →·   CKt-ActivityMonitor           v0.1.1--ci.5  
+                ╓  ⊙   CKt-PerfectEvent              ⏚/v0.3.3--ci.6
+                ║      CKt-Monitoring                v0.2.4--ci.5  
+                ╙      Samples/CKt-App-Sample        v0.0.0--ci.2  
+              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2   → ⏚/v0.0.0--ci.5 (UpstreamVersion, CodeChange)
               Required build for 1 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 2 repositories must be published.
+              ⏚ 2 repositories must be published.
               ❰✓❱
           
               """ );
@@ -664,15 +664,15 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*build", "--ci" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
-                - →·   CKt-Core                      v1.0.1--ci.4 
-              1 - →·   CKt-ActivityMonitor           v0.1.1--ci.5  → 🡡/v0.1.1--ci.6 (CodeChange)               
-              2 ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.6- → 🡡/v0.3.3--ci.7 (UpstreamBuild)            
-              3 ║      CKt-Monitoring                v0.2.4--ci.5  → 🡡/v0.2.4--ci.6 (UpstreamBuild)            
-              4 ╙      Samples/CKt-App-Sample        v0.0.0--ci.2  → 🡡/v0.0.0--ci.4 (UpstreamBuild, CodeChange)
-              5 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2  → 🡡/v0.0.0--ci.6 (UpstreamBuild, CodeChange)
+                - →·   CKt-Core                      v1.0.1--ci.4  
+              1 - →·   CKt-ActivityMonitor           v0.1.1--ci.5   → ⏚/v0.1.1--ci.6 (CodeChange)               
+              2 ╓  ⊙   CKt-PerfectEvent              (v0.3.3--ci.6) → ⏚/v0.3.3--ci.7 (UpstreamBuild)            
+              3 ║      CKt-Monitoring                v0.2.4--ci.5   → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
+              4 ╙      Samples/CKt-App-Sample        v0.0.0--ci.2   → ⏚/v0.0.0--ci.4 (UpstreamBuild, CodeChange)
+              5 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2   → ⏚/v0.0.0--ci.6 (UpstreamBuild, CodeChange)
               Required build for 5 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 5 repositories can be published.
+              ⏚ 5 repositories can be published.
               ❰✓❱
           
               """ );
@@ -756,15 +756,15 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
-              1 - →·   CKt-Core                      v1.0.0      → 🡡/v1.0.1 (CodeChange)                            
-              2 - →·   CKt-ActivityMonitor           v0.1.0      → 🡡/v0.1.1 (UpstreamBuild, CodeChange)             
-              3 ╓  ⊙   CKt-PerfectEvent              v0.3.2      → 🡡/v0.3.3 (UpstreamBuild, CodeChange)             
-              4 ║      CKt-Monitoring                v0.2.3      → 🡡/v0.2.4 (UpstreamBuild, CodeChange)             
-              5 ╙      Samples/CKt-App-Sample        v0.0.0+fake → 🡡/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)
-              6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → 🡡/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)
+              1 - →·   CKt-Core                      v1.0.0      → ⏚/v1.0.1 (CodeChange)                            
+              2 - →·   CKt-ActivityMonitor           v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)             
+              3 ╓  ⊙   CKt-PerfectEvent              v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)             
+              4 ║      CKt-Monitoring                v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)             
+              5 ╙      Samples/CKt-App-Sample        v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)
+              6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)
               Required build for 6 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              🡡 6 repositories must be published.
+              ⏚ 6 repositories must be published.
               ❰✓❱
           
               """ );
