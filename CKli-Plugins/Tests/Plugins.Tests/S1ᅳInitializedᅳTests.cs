@@ -277,7 +277,6 @@ public class S1ᅳInitializedᅳTests
             4 ╙  CKt-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.4 (UpstreamBuild, CodeChange)
             Required build for 4 repositories across the 4 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 4 repositories can be published.
             ❰✓❱
 
             """ );
@@ -291,7 +290,6 @@ public class S1ᅳInitializedᅳTests
             4 ╙  CKt-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.4 (UpstreamBuild, CodeChange)
             Required build for 4 repositories across the 4 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 4 repositories can be published.
             ❰✓❱
 
             """ );
@@ -306,7 +304,6 @@ public class S1ᅳInitializedᅳTests
             4 ╙  CKt-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.4 (UpstreamBuild, CodeChange)
             Required build for 4 repositories across the 4 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 4 repositories can be published.
             ❰✓❱
 
             """ );
@@ -325,7 +322,6 @@ public class S1ᅳInitializedᅳTests
             4 ╙  CKt-Monitoring      v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)
             Required build for 4 repositories across the 4 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 4 repositories can be published.
             ❰✓❱
 
             """ );
@@ -342,7 +338,6 @@ public class S1ᅳInitializedᅳTests
             4 ╙  CKt-Monitoring      (v0.2.4) → ⏚/v0.2.4--ci.6 (UpstreamBuild)
             Required build for 4 repositories across the 4 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 4 repositories can be published.
             ❰✓❱
 
             """ );
@@ -360,7 +355,6 @@ public class S1ᅳInitializedᅳTests
             4 ╙  CKt-Monitoring      (v0.2.4--ci.6) → ⏚/v0.2.4--ci.7 (UpstreamBuild)
             Required build for 4 repositories across the 4 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 4 repositories can be published.
             ❰✓❱
 
             """ );
@@ -374,7 +368,6 @@ public class S1ᅳInitializedᅳTests
             4 ╙  CKt-Monitoring      v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)
             Required build for 4 repositories across the 4 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 4 repositories can be published.
             ❰✓❱
 
             """ );
@@ -589,7 +582,6 @@ public class S1ᅳInitializedᅳTests
             6 -  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0--ci.2 (UpstreamBuild, FakeVersion, CodeChange)
             Required build for 6 repositories across the 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 6 repositories can be published.
             ❰✓❱
 
             """ );
@@ -605,7 +597,6 @@ public class S1ᅳInitializedᅳTests
             ╙  Samples/CKt-App-Sample        ⏚/v0.0.0--ci.2
             -  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.2
             There is nothing to build across the 6 repositories.
-            ⏚ 6 repositories can be published.
             ❰✓❱
             
             """ );
@@ -622,7 +613,6 @@ public class S1ᅳInitializedᅳTests
             ╙  Samples/CKt-App-Sample        ⏚/v0.0.0--ci.2
             -  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.2
             There is nothing to build across the 6 repositories.
-            ⏚ 6 repositories must be published.
             ❰✓❱
             
             """ );

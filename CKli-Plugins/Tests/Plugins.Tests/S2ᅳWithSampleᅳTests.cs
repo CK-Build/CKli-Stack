@@ -33,7 +33,6 @@ public class S2ᅳWithSampleᅳTests
         ╙  Samples/CKt-App-Sample        v0.0.0--ci.2
         -  Samples/CKt-Sample-Monitoring v0.0.0--ci.2
         There is nothing to build across the 6 repositories.
-        Nothing to publish (the 6 repositories are already published)
         ❰✓❱
         
         """ );
@@ -50,7 +49,6 @@ public class S2ᅳWithSampleᅳTests
         6 -  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)
         Required build for 6 repositories across the 6 repositories.
         (No dependency updates other than the ones from the upstreams are needed.)
-        ⏚ 6 repositories must be published.
         ❰✓❱
         
         """ );
@@ -75,7 +73,6 @@ public class S2ᅳWithSampleᅳTests
         3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)   
         Required build for 3 from the 1 pivots out of 6 repositories.
         U 2 updates from upstreams (not using '*publish' here).
-        ⏚ 3 repositories must be published.
         ❰✓❱
         
         """ );
@@ -100,7 +97,6 @@ public class S2ᅳWithSampleᅳTests
             6 -  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
             Required build for 6 repositories across the 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 6 repositories can be published.
             ❰✓❱
             
             """ );
@@ -120,7 +116,6 @@ public class S2ᅳWithSampleᅳTests
             -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.2
             There is nothing to build from the 2 pivots out of 6 repositories.
             (Using '*build' may detect required builds in upstreams repositories.)
-            Nothing to publish (the 6 repositories are already published)
             ❰✓❱
             
             """ );
@@ -139,7 +134,6 @@ public class S2ᅳWithSampleᅳTests
             -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.2
             There is nothing to build from the 1 pivots out of 6 repositories.
             (Using '*build' may detect required builds in upstreams repositories.)
-            Nothing to publish (the 6 repositories are already published)
             ❰✓❱
 
             """ );
@@ -157,7 +151,6 @@ public class S2ᅳWithSampleᅳTests
             -      Samples/CKt-Sample-Monitoring v0.0.0--ci.2
             There is nothing to build from the 1 pivots out of 6 repositories.
             (Using '*build' may detect required builds in upstreams repositories.)
-            Nothing to publish (the 6 repositories are already published)
             ❰✓❱
 
             """ );
@@ -175,7 +168,6 @@ public class S2ᅳWithSampleᅳTests
             2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)
             Required build for 2 from the 1 pivots out of 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 2 repositories can be published.
             ❰✓❱
             
             """ );
@@ -196,7 +188,6 @@ public class S2ᅳWithSampleᅳTests
             6 -  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
             Required build for 6 repositories across the 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 6 repositories can be published.
             ❰✓❱
             
             """ );
@@ -214,7 +205,6 @@ public class S2ᅳWithSampleᅳTests
             6 -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
             Required build for 6 from the 2 pivots out of 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 6 repositories can be published.
             ❰✓❱
             
             """ );
@@ -233,7 +223,6 @@ public class S2ᅳWithSampleᅳTests
             6 -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
             Required build for 6 from the 1 pivots out of 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 6 repositories can be published.
             ❰✓❱
 
             """ );
@@ -252,7 +241,6 @@ public class S2ᅳWithSampleᅳTests
             6 -      Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
             Required build for 6 from the 1 pivots out of 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 6 repositories can be published.
             ❰✓❱
 
             """ );
@@ -270,7 +258,6 @@ public class S2ᅳWithSampleᅳTests
             6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
             Required build for 6 from the 1 pivots out of 6 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 6 repositories can be published.
             ❰✓❱
             
             """ );
@@ -310,7 +297,6 @@ public class S2ᅳWithSampleᅳTests
                     3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)   
                     Required build for 3 from the 1 pivots out of 6 repositories.
                     U 2 updates from upstreams (not using '*publish' here).
-                    ⏚ 3 repositories must be published.
                     ❰✓❱
         
                     """ );
@@ -342,7 +328,6 @@ public class S2ᅳWithSampleᅳTests
               3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)   
               Required build for 3 from the 1 pivots out of 6 repositories.
               U 2 updates from upstreams (not using '*publish' here).
-              ⏚ 3 repositories must be published.
               ❌ Failed
           
               """ );
@@ -369,7 +354,6 @@ public class S2ᅳWithSampleᅳTests
               1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (FakeVersion, CodeChange)
               Required build for 1 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              ⏚ 3 repositories must be published.
               ❰✓❱
           
               """ );
@@ -393,7 +377,6 @@ public class S2ᅳWithSampleᅳTests
               -  ·→  Samples/CKt-Sample-Monitoring v0.0.0
               There is nothing to build from the 1 pivots out of 6 repositories.
               (Using '*publish' may detect required builds in upstreams repositories.)
-              Nothing to publish (the 6 repositories are already published)
               ❰✓❱
           
               """ );
@@ -417,7 +400,6 @@ public class S2ᅳWithSampleᅳTests
               -  ·→  Samples/CKt-Sample-Monitoring v0.0.0
               There is nothing to build from the 1 pivots out of 6 repositories.
               (Using '*publish' may detect required builds in upstreams repositories.)
-              Nothing to publish (the 6 repositories are already published)
               ❰✓❱
           
               """ );
@@ -437,7 +419,6 @@ public class S2ᅳWithSampleᅳTests
               6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.1.0 (UpstreamBuild)            
               Required build for 6 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              ⏚ 6 repositories must be published.
               ❰✓❱
           
               """ );
@@ -466,7 +447,6 @@ public class S2ᅳWithSampleᅳTests
               2 -  ·→  Samples/CKt-Sample-Monitoring v0.1.0 → ⏚/v0.2.0 (UpstreamBuild, CodeChange)
               Required build for 2 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              ⏚ 2 repositories must be published.
               ❰✓❱
           
               """ );
@@ -488,7 +468,6 @@ public class S2ᅳWithSampleᅳTests
               2 -  ·→  Samples/CKt-Sample-Monitoring v0.1.0 → ⏚/v0.2.0 (UpstreamBuild)
               Required build for 2 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              ⏚ 2 repositories must be published.
               ❰✓❱
           
               """ );
@@ -507,7 +486,6 @@ public class S2ᅳWithSampleᅳTests
               -  ·→  Samples/CKt-Sample-Monitoring v0.2.0
               There is nothing to build from the 1 pivots out of 6 repositories.
               (Using '*build' may detect required builds in upstreams repositories.)
-              Nothing to publish (the 6 repositories are already published)
               ❰✓❱
           
               """ );
@@ -523,7 +501,6 @@ public class S2ᅳWithSampleᅳTests
               -  ·→  Samples/CKt-Sample-Monitoring v0.2.0
               There is nothing to build from the 1 pivots out of 6 repositories.
               (Using '*build' may detect required builds in upstreams repositories.)
-              Nothing to publish (the 6 repositories are already published)
               ❰✓❱
           
               """ );
@@ -541,7 +518,6 @@ public class S2ᅳWithSampleᅳTests
               2 -  ·→  Samples/CKt-Sample-Monitoring v0.2.0 → ⏚/v0.2.1--ci.1 (UpstreamBuild)
               Required build for 2 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              ⏚ 2 repositories can be published.
               ❰✓❱
           
               """ );
@@ -588,7 +564,6 @@ public class S2ᅳWithSampleᅳTests
               2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.4 (UpstreamBuild, CodeChange)
               Required build for 2 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              ⏚ 2 repositories must be published.
               ❌ Failed
           
               """ );
@@ -610,7 +585,6 @@ public class S2ᅳWithSampleᅳTests
               1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2   → ⏚/v0.0.0--ci.5 (UpstreamVersion, CodeChange)
               Required build for 1 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              ⏚ 2 repositories must be published.
               ❰✓❱
           
               """ );
@@ -632,7 +606,6 @@ public class S2ᅳWithSampleᅳTests
               1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2   → ⏚/v0.0.0--ci.5 (UpstreamVersion, CodeChange)
               Required build for 1 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              ⏚ 2 repositories must be published.
               ❰✓❱
           
               """ );
@@ -655,7 +628,6 @@ public class S2ᅳWithSampleᅳTests
               1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2   → ⏚/v0.0.0--ci.5 (UpstreamVersion, CodeChange)
               Required build for 1 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              ⏚ 2 repositories must be published.
               ❰✓❱
           
               """ );
@@ -672,7 +644,6 @@ public class S2ᅳWithSampleᅳTests
               5 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2   → ⏚/v0.0.0--ci.6 (UpstreamBuild, CodeChange)
               Required build for 5 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              ⏚ 5 repositories can be published.
               ❰✓❱
           
               """ );
@@ -764,7 +735,6 @@ public class S2ᅳWithSampleᅳTests
               6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)
               Required build for 6 from the 1 pivots out of 6 repositories.
               (No dependency updates other than the ones from the upstreams are needed.)
-              ⏚ 6 repositories must be published.
               ❰✓❱
           
               """ );

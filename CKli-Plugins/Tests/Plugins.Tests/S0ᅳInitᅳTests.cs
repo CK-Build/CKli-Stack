@@ -1,4 +1,3 @@
-using CK.Core;
 using CKli;
 using CKli.Core;
 using NUnit.Framework;
@@ -128,7 +127,6 @@ public class S0ᅳInitᅳTests
             4 ╙  CKt-Monitoring      v0.2.3 → ⏚/v0.2.4--ci.4 (UpstreamBuild, CodeChange)
             Required build for 4 repositories across the 4 repositories.
             (No dependency updates other than the ones from the upstreams are needed.)
-            ⏚ 4 repositories can be published.
             ❰✓❱
 
             """ );
