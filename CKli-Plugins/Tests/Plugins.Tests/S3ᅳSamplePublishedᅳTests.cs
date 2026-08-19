@@ -469,7 +469,7 @@ public partial class S3ᅳSamplePublishedᅳTests
         File.WriteAllText( commonFolder.AppendPart( "Directory.Build.props" ), directoryPropsContent );
 
         // The "real" .slnx file has no impact here as all the .slnx exist already.
-        File.WriteAllText( commonFolder.AppendPart( "[InitOnly]$SolutionName$.slnx" ), "<Solution></Solution>" );
+        File.WriteAllText( commonFolder.AppendPart( "[InitOnly]$RepositoryName$.slnx" ), "<Solution></Solution>" );
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
@@ -606,8 +606,8 @@ public partial class S3ᅳSamplePublishedᅳTests
         // - Common/Package.icon is required when packing.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "branch", "switch", "dev/stable" )).ShouldBeTrue();
 
-        Directory.CreateDirectory( inAppSample.CurrentDirectory.Combine( "CKt.SomeApp/Doc" ) );
-        File.WriteAllText( inAppSample.CurrentDirectory.Combine( "CKt.SomeApp/Doc/Package.md" ), """
+        Directory.CreateDirectory( inAppSample.CurrentDirectory.Combine( "CKt.SomeApp/docs" ) );
+        File.WriteAllText( inAppSample.CurrentDirectory.Combine( "CKt.SomeApp/docs/Package.md" ), """
             This package is a fake to test [CKli](https://github.com/CK-Build/CKli).
             """ );
 
