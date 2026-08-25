@@ -77,7 +77,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             4 ║  CKt-Monitoring                v0.2.4 → ⏚/v0.2.5 (UpstreamBuild, CodeChange)
             5 ╙  Samples/CKt-App-Sample        v0.0.0 → ⏚/v0.0.1 (UpstreamBuild, CodeChange)
             6 -  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.0.1 (UpstreamBuild, CodeChange)
-            Required build for 6 repositories across the 6 repositories.
+            Required build for 6 repositories across the 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
             
@@ -136,7 +136,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.5
               ╙      Samples/CKt-App-Sample        v0.0.1
             2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.1 → ⏚/v0.0.2 (UpstreamBuild)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -176,7 +176,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.5
               ╙      Samples/CKt-App-Sample        v0.0.1
             2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.2 → ⏚/v0.0.3--ci.1 (UpstreamBuild)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -205,7 +205,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.5
               ╙      Samples/CKt-App-Sample        v0.0.1
             2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.2 → ⏚/v0.1.0 (UpstreamBuild, CodeChange)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -281,7 +281,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.4           
               ╙      Samples/CKt-App-Sample        v0.0.0           
             2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+deprecated → ⏚/v0.0.1 (UpstreamBuild, DeprecatedVersion)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -330,7 +330,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.4           
               ╙      Samples/CKt-App-Sample        v0.0.0           
             2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+deprecated → ⏚/v0.0.1 (UpstreamBuild, DeprecatedVersion)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -345,8 +345,6 @@ public partial class S3ᅳSamplePublishedᅳTests
         var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
-        // Let's deprecate the current CKt-PerfectEvent v0.3.3 package (in 30.days).
-        // => This propagates to downstream repositories (here: Samples/CKt-Sample-Monitoring).
         var inPerfectEvent = context.ChangeDirectory( "CKt-PerfectEvent" );
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "exec", "git", "tag", "v5.4.3+fake" )).ShouldBeTrue();
@@ -360,7 +358,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.4     
               ╙      Samples/CKt-App-Sample        v0.0.0     
             2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0      → ⏚/v0.0.1 (UpstreamBuild)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -391,7 +389,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║  CKt-Monitoring                v0.2.4
               ╙  Samples/CKt-App-Sample        v0.0.0
             2 -  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
-            Required build for 2 repositories across the 6 repositories.
+            Required build for 2 repositories across the 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -406,7 +404,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║  CKt-Monitoring                v0.2.4
               ╙  Samples/CKt-App-Sample        v0.0.0
             2 -  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.0.1 (UpstreamBuild, CodeChange)
-            Required build for 2 repositories across the 6 repositories.
+            Required build for 2 repositories across the 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -424,7 +422,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.4
               ╙      Samples/CKt-App-Sample        v0.0.0
             2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.1 → ⏚/v0.0.2 (UpstreamBuild)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -439,12 +437,11 @@ public partial class S3ᅳSamplePublishedᅳTests
             3 ║      CKt-Monitoring                v0.2.4 → ⏚/v0.2.5 (UpstreamBuild)            
             4 ╙      Samples/CKt-App-Sample        v0.0.0 → ⏚/v0.0.1 (UpstreamBuild)            
             5 -  ·→  Samples/CKt-Sample-Monitoring v0.0.1 → ⏚/v0.0.2 (UpstreamBuild)            
-            Required build for 5 from the 1 pivots out of 6 repositories.
+            Required build for 5 from the single pivot out of 6 repositories and 5 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
             """ );
-
 
     }
 
@@ -625,7 +622,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.4
             1 ╙  ⊙   Samples/CKt-App-Sample        v0.0.0 → ⏚/v0.0.1 (CodeChange)
               -      Samples/CKt-Sample-Monitoring v0.0.0
-            Required build for 1 from the 1 pivots out of 6 repositories.
+            Required build for 1 from the single pivot out of 6 repositories and 1 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
             
@@ -655,7 +652,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             4 ║  CKt-Monitoring                v0.2.4 → ⏚/v0.2.5--ci.1 (UpstreamBuild)
             5 ╙  Samples/CKt-App-Sample        v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
             6 -  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
-            Required build for 6 repositories across the 6 repositories.
+            Required build for 6 repositories across the 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -674,7 +671,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.4
               ╙      Samples/CKt-App-Sample        v0.0.0
             2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -691,7 +688,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             4 ║      CKt-Monitoring                v0.2.4 → ⏚/v0.2.5--ci.1 (UpstreamBuild)
             5 ╙      Samples/CKt-App-Sample        v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
             6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
-            Required build for 6 from the 1 pivots out of 6 repositories.
+            Required build for 6 from the single pivot out of 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -707,7 +704,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             4 ║      CKt-Monitoring                v0.2.4 → ⏚/v0.2.5--ci.1 (UpstreamBuild)
             5 ╙      Samples/CKt-App-Sample        v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
             6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
-            Required build for 6 from the 1 pivots out of 6 repositories.
+            Required build for 6 from the single pivot out of 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -723,7 +720,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             ║      CKt-Monitoring                v0.2.5--ci.1
             ╙      Samples/CKt-App-Sample        v0.0.1--ci.1
             -  ·→  Samples/CKt-Sample-Monitoring v0.0.1--ci.1
-            There is nothing to build from the 1 pivots out of 6 repositories.
+            There is nothing to build from the single pivot out of 6 repositories and nothing to publish.
             ❰✓❱
 
             """ );
@@ -738,7 +735,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             ║      CKt-Monitoring                v0.2.5--ci.1
             ╙      Samples/CKt-App-Sample        v0.0.1--ci.1
             -  ·→  Samples/CKt-Sample-Monitoring v0.0.1--ci.1
-            There is nothing to build from the 1 pivots out of 6 repositories.
+            There is nothing to build from the single pivot out of 6 repositories and nothing to publish.
             ❰✓❱
 
             """ );
@@ -759,7 +756,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             3 ║  CKt-Monitoring                v0.2.4 → ⏚/v0.2.5 (UpstreamBuild, CodeChange)    
             4 ╙  Samples/CKt-App-Sample        v0.0.0 → ⏚/v0.0.1 (UpstreamBuild, CodeChange)    
             5 -  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.0.1 (UpstreamBuild, CodeChange)    
-            Required build for 5 repositories across the 6 repositories.
+            Required build for 5 repositories across the 6 repositories and 5 can be published.
             U 1 updates from upstreams (not using '*publish' here).
             ❰✓❱
 
@@ -788,7 +785,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             ║  CKt-Monitoring                v0.2.4
             ╙  Samples/CKt-App-Sample        v0.0.0
             -  Samples/CKt-Sample-Monitoring v0.0.0
-            There is nothing to build across the 6 repositories.
+            There is nothing to build across the 6 repositories and nothing to publish.
             ❰✓❱
 
             """ );
@@ -807,7 +804,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.4
               ╙      Samples/CKt-App-Sample        v0.0.0
             2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.0.1 (UpstreamBuild)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -827,7 +824,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.4  
               ╙      Samples/CKt-App-Sample        v0.0.0  
             2 -  ·→  Samples/CKt-Sample-Monitoring (v0.0.1) → ⏚/v0.0.1 (UpstreamBuild)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -865,7 +862,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             ║      CKt-Monitoring                v0.2.4
             ╙      Samples/CKt-App-Sample        v0.0.0
             -  ·→  Samples/CKt-Sample-Monitoring v0.0.0
-            There is nothing to build from the 1 pivots out of 6 repositories.
+            There is nothing to build from the single pivot out of 6 repositories and nothing to publish.
             (Using '*build' may detect required builds in upstreams repositories.)
             ❰✓❱
 
@@ -882,7 +879,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.4
               ╙      Samples/CKt-App-Sample        v0.0.0
             2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.0.1-romeo.0.ci.1 (UpstreamBuild)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -901,7 +898,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.4
               ╙      Samples/CKt-App-Sample        v0.0.0
             2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.0.1-romeo (UpstreamBuild)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -923,7 +920,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.4
               ╙      Samples/CKt-App-Sample        v0.0.0
             2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.1.0-romeo (UpstreamBuild)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -947,7 +944,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             ║      CKt-Monitoring                v0.2.4        
             ╙      Samples/CKt-App-Sample        v0.0.0        
             -  ·→  Samples/CKt-Sample-Monitoring ⏚/v0.1.0-romeo
-            There is nothing to build from the 1 pivots out of 6 repositories.
+            There is nothing to build from the single pivot out of 6 repositories but 2 can be published.
             (Using '*build' may detect required builds in upstreams repositories.)
             ❰✓❱
 
@@ -963,7 +960,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             ║      CKt-Monitoring                v0.2.4        
             ╙      Samples/CKt-App-Sample        v0.0.0        
             -  ·→  Samples/CKt-Sample-Monitoring ⏚/v0.1.0-romeo
-            There is nothing to build from the 1 pivots out of 6 repositories.
+            There is nothing to build from the single pivot out of 6 repositories but 2 can be published.
             (Using '*build' may detect required builds in upstreams repositories.)
             ❰✓❱
 
@@ -980,7 +977,7 @@ public partial class S3ᅳSamplePublishedᅳTests
               ║      CKt-Monitoring                v0.2.4        
               ╙      Samples/CKt-App-Sample        v0.0.0        
             2 -  ·→  Samples/CKt-Sample-Monitoring (v0.1.0-romeo) → ⏚/v0.1.0-romeo.0.ci.2 (UpstreamBuild)
-            Required build for 2 from the 1 pivots out of 6 repositories.
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -996,7 +993,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             3 ║      CKt-Monitoring                v0.2.4         → ⏚/v0.2.5-romeo (UpstreamBuild)
             4 ╙      Samples/CKt-App-Sample        v0.0.0         → ⏚/v0.0.1-romeo (UpstreamBuild)
             5 -  ·→  Samples/CKt-Sample-Monitoring (v0.1.0-romeo) → ⏚/v0.1.0-romeo (UpstreamBuild)
-            Required build for 5 from the 1 pivots out of 6 repositories.
+            Required build for 5 from the single pivot out of 6 repositories and 5 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -1012,7 +1009,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             3 ║      CKt-Monitoring                v0.2.4         → ⏚/v0.2.5-romeo.0.ci.1 (UpstreamBuild)
             4 ╙      Samples/CKt-App-Sample        v0.0.0         → ⏚/v0.0.1-romeo.0.ci.1 (UpstreamBuild)
             5 -  ·→  Samples/CKt-Sample-Monitoring (v0.1.0-romeo) → ⏚/v0.1.0-romeo.0.ci.2 (UpstreamBuild)
-            Required build for 5 from the 1 pivots out of 6 repositories.
+            Required build for 5 from the single pivot out of 6 repositories and 5 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -1028,7 +1025,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             3 ║      CKt-Monitoring                v0.2.4         → ⏚/v0.2.5-romeo.0.ci.1 (UpstreamBuild)
             4 ╙      Samples/CKt-App-Sample        v0.0.0         → ⏚/v0.0.1-romeo.0.ci.1 (UpstreamBuild)
             5 -  ·→  Samples/CKt-Sample-Monitoring (v0.1.0-romeo) → ⏚/v0.1.0-romeo.0.ci.2 (UpstreamBuild)
-            Required build for 5 from the 1 pivots out of 6 repositories.
+            Required build for 5 from the single pivot out of 6 repositories and 5 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -1044,7 +1041,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             3 ║      CKt-Monitoring                v0.2.4 → ⏚/v0.2.5-romeo (UpstreamBuild, CodeChange)
             4 ╙      Samples/CKt-App-Sample        v0.0.0 → ⏚/v0.0.1-romeo (UpstreamBuild, CodeChange)
             5 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.1.0-romeo (UpstreamBuild, CodeChange)
-            Required build for 5 from the 1 pivots out of 6 repositories.
+            Required build for 5 from the single pivot out of 6 repositories and 5 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 

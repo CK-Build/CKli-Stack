@@ -275,7 +275,7 @@ public class S1ᅳInitializedᅳTests
             2 -  CKt-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.4 (UpstreamBuild, CodeChange)
             3 ╓  CKt-PerfectEvent    v0.3.2      → ⏚/v0.3.3--ci.4 (UpstreamBuild, CodeChange)
             4 ╙  CKt-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.4 (UpstreamBuild, CodeChange)
-            Required build for 4 repositories across the 4 repositories.
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -288,7 +288,7 @@ public class S1ᅳInitializedᅳTests
             2 -  CKt-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.4 (UpstreamBuild, CodeChange)
             3 ╓  CKt-PerfectEvent    v0.3.2      → ⏚/v0.3.3--ci.4 (UpstreamBuild, CodeChange)
             4 ╙  CKt-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.4 (UpstreamBuild, CodeChange)
-            Required build for 4 repositories across the 4 repositories.
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -302,7 +302,7 @@ public class S1ᅳInitializedᅳTests
             2 -  CKt-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.4 (UpstreamBuild, CodeChange)
             3 ╓  CKt-PerfectEvent    v0.3.2      → ⏚/v0.3.3--ci.4 (UpstreamBuild, CodeChange)
             4 ╙  CKt-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.4 (UpstreamBuild, CodeChange)
-            Required build for 4 repositories across the 4 repositories.
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -320,7 +320,7 @@ public class S1ᅳInitializedᅳTests
             2 -  CKt-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)
             3 ╓  CKt-PerfectEvent    v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)
             4 ╙  CKt-Monitoring      v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)
-            Required build for 4 repositories across the 4 repositories.
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -336,7 +336,7 @@ public class S1ᅳInitializedᅳTests
             2 -  CKt-ActivityMonitor (v0.1.1) → ⏚/v0.1.1--ci.6 (UpstreamBuild)
             3 ╓  CKt-PerfectEvent    (v0.3.3) → ⏚/v0.3.3--ci.6 (UpstreamBuild)
             4 ╙  CKt-Monitoring      (v0.2.4) → ⏚/v0.2.4--ci.6 (UpstreamBuild)
-            Required build for 4 repositories across the 4 repositories.
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -353,7 +353,7 @@ public class S1ᅳInitializedᅳTests
             2 -  CKt-ActivityMonitor (v0.1.1--ci.6) → ⏚/v0.1.1--ci.7 (UpstreamBuild)
             3 ╓  CKt-PerfectEvent    (v0.3.3--ci.6) → ⏚/v0.3.3--ci.7 (UpstreamBuild)
             4 ╙  CKt-Monitoring      (v0.2.4--ci.6) → ⏚/v0.2.4--ci.7 (UpstreamBuild)
-            Required build for 4 repositories across the 4 repositories.
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -366,7 +366,7 @@ public class S1ᅳInitializedᅳTests
             2 -  CKt-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)
             3 ╓  CKt-PerfectEvent    v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)
             4 ╙  CKt-Monitoring      v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)
-            Required build for 4 repositories across the 4 repositories.
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -580,7 +580,7 @@ public class S1ᅳInitializedᅳTests
             4 ║  CKt-Monitoring                v0.2.3      → ⏚/v0.2.4--ci.5 (UpstreamBuild, CodeChange)             
             5 ╙  Samples/CKt-App-Sample        v0.0.0+fake → ⏚/v0.0.0--ci.2 (UpstreamBuild, FakeVersion, CodeChange)
             6 -  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0--ci.2 (UpstreamBuild, FakeVersion, CodeChange)
-            Required build for 6 repositories across the 6 repositories.
+            Required build for 6 repositories across the 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
@@ -596,7 +596,7 @@ public class S1ᅳInitializedᅳTests
             ║  CKt-Monitoring                ⏚/v0.2.4--ci.5
             ╙  Samples/CKt-App-Sample        ⏚/v0.0.0--ci.2
             -  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.2
-            There is nothing to build across the 6 repositories.
+            There is nothing to build across the 6 repositories but 6 can be published.
             ❰✓❱
             
             """ );
@@ -612,7 +612,7 @@ public class S1ᅳInitializedᅳTests
             ║  CKt-Monitoring                ⏚/v0.2.4--ci.5
             ╙  Samples/CKt-App-Sample        ⏚/v0.0.0--ci.2
             -  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.2
-            There is nothing to build across the 6 repositories.
+            There is nothing to build across the 6 repositories but 6 can be published.
             ❰✓❱
             
             """ );
