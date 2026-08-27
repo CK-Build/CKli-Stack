@@ -21,4 +21,5 @@
   </Plugins>
   <Repository Url="https://github.com/CK-Build/CKli" />
   <Repository Url="https://github.com/CK-Build/CK-SVersion" />
+  <Repository Url="https://github.com/CK-Build/CK-Packaging-Model" />
 </CKli>
