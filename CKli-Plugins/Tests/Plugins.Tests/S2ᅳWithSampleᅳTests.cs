@@ -671,27 +671,27 @@ public class S2ᅳWithSampleᅳTests
             """
             > CKt-Core (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-ActivityMonitor (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-PerfectEvent (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-Monitoring (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > Samples/CKt-Sample-Monitoring (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > Samples/CKt-App-Sample (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             ❰✓❱
 

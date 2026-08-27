@@ -530,29 +530,29 @@ public class S1ᅳInitializedᅳTests
         display.ToString().ShouldBe( """
             > CKt-Core (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-ActivityMonitor (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-PerfectEvent (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-Monitoring (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > Samples/CKt-Sample-Monitoring (2)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be created.
             │ > Missing initial version.
             │ │ This can be fixed by creating a 'v0.0.0+fake' on 'stable' branch.
             > Samples/CKt-App-Sample (2)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be created.
             │ > Missing initial version.
             │ │ This can be fixed by creating a 'v0.0.0+fake' on 'stable' branch.

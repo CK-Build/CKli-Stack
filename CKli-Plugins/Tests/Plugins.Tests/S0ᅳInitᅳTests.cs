@@ -58,7 +58,7 @@ public class S0ᅳInitᅳTests
             │ │ - 'dev/stable' is merged into 'stable'.
             │ │ It can be deleted.
             │ > Content issues.
-            │ │ > Branch: stable (1 content issue)
+            │ │ > Branch: dev/stable (1 content issue)
             │ │ │ > File must be moved: NuGet.config → nuget.config (case differ)
             │ > 1 lightweight tags must be transformed to annotated tags.
             │ │ v1.0.0
@@ -72,7 +72,7 @@ public class S0ᅳInitᅳTests
             │ │ - 'dev/stable' is merged into 'stable'.
             │ │ It can be deleted.
             │ > Content issues.
-            │ │ > Branch: stable (1 content issue)
+            │ │ > Branch: dev/stable (1 content issue)
             │ │ │ > File must be moved: NuGet.config → nuget.config (case differ)
             │ > 1 lightweight tags must be transformed to annotated tags.
             │ │ v0.1.0
@@ -86,7 +86,7 @@ public class S0ᅳInitᅳTests
             │ │ - 'dev/stable' is merged into 'stable'.
             │ │ It can be deleted.
             │ > Content issues.
-            │ │ > Branch: stable (1 content issue)
+            │ │ > Branch: dev/stable (1 content issue)
             │ │ │ > File must be moved: NuGet.config → nuget.config (case differ)
             │ > 4 lightweight tags must be transformed to annotated tags.
             │ │ v0.2.0, v0.2.1, v0.3.0, v0.3.2
@@ -100,7 +100,7 @@ public class S0ᅳInitᅳTests
             │ │ - 'dev/stable' is merged into 'stable'.
             │ │ It can be deleted.
             │ > Content issues.
-            │ │ > Branch: stable (1 content issue)
+            │ │ > Branch: dev/stable (1 content issue)
             │ │ │ > File must be moved: NuGet.config → nuget.config (case differ)
             │ > 1 lightweight tags must be transformed to annotated tags.
             │ │ v0.2.3

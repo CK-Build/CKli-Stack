@@ -464,6 +464,8 @@ public partial class S3ᅳSamplePublishedᅳTests
 
         var directoryPropsContent = File.ReadAllText( ckliRoot.AppendPart( "Directory.Build.props" ) );
         File.WriteAllText( commonFolder.AppendPart( "Directory.Build.props" ), directoryPropsContent );
+        var directoryTargetsContent = File.ReadAllText( ckliRoot.AppendPart( "Directory.Build.targets" ) );
+        File.WriteAllText( commonFolder.AppendPart( "Directory.Build.targets" ), directoryTargetsContent );
 
         // The "real" .slnx file has no impact here as all the .slnx exist already.
         File.WriteAllText( commonFolder.AppendPart( "[InitOnly]$RepositoryName$.slnx" ), "<Solution></Solution>" );
@@ -472,44 +474,54 @@ public partial class S3ᅳSamplePublishedᅳTests
         display.ToString().ShouldBe( """
             > CKt-Core (1)
             │ > Content issues.
-            │ │ Branch: stable (3 content issues)
-            │ │ > File 'global.json' must be created.
+            │ │ Branch: stable (4 content issues)
+            │ │ > 2 files must be created:
+            │ │ - Directory.Build.targets
+            │ │ - global.json
             │ │ > 2 files must be updated:
             │ │ - nuget.config
             │ │ - Directory.Build.props
             > CKt-ActivityMonitor (1)
             │ > Content issues.
-            │ │ Branch: stable (3 content issues)
-            │ │ > File 'global.json' must be created.
+            │ │ Branch: stable (4 content issues)
+            │ │ > 2 files must be created:
+            │ │ - Directory.Build.targets
+            │ │ - global.json
             │ │ > 2 files must be updated:
             │ │ - nuget.config
             │ │ - Directory.Build.props
             > CKt-PerfectEvent (1)
             │ > Content issues.
-            │ │ Branch: stable (3 content issues)
-            │ │ > File 'global.json' must be created.
+            │ │ Branch: stable (4 content issues)
+            │ │ > 2 files must be created:
+            │ │ - Directory.Build.targets
+            │ │ - global.json
             │ │ > 2 files must be updated:
             │ │ - nuget.config
             │ │ - Directory.Build.props
             > CKt-Monitoring (1)
             │ > Content issues.
-            │ │ Branch: stable (3 content issues)
-            │ │ > File 'global.json' must be created.
+            │ │ Branch: stable (4 content issues)
+            │ │ > 2 files must be created:
+            │ │ - Directory.Build.targets
+            │ │ - global.json
             │ │ > 2 files must be updated:
             │ │ - nuget.config
             │ │ - Directory.Build.props
             > Samples/CKt-Sample-Monitoring (1)
             │ > Content issues.
-            │ │ Branch: stable (3 content issues)
-            │ │ > 2 files must be created:
+            │ │ Branch: stable (4 content issues)
+            │ │ > 3 files must be created:
             │ │ - Directory.Build.props
+            │ │ - Directory.Build.targets
             │ │ - global.json
             │ │ > File 'nuget.config' must be updated.
             > Samples/CKt-App-Sample (1)
             │ > Content issues.
-            │ │ Branch: stable (3 content issues)
-            │ │ > 2 files must be created:
+            │ │ Branch: stable (4 content issues)
+            │ │ > 3 files must be created:
             │ │ - Directory.Build.props
+            │ │ - Directory.Build.targets
             │ │ - global.json
             │ │ > File 'nuget.config' must be updated.
             ❰✓❱
@@ -531,27 +543,27 @@ public partial class S3ᅳSamplePublishedᅳTests
         display.ToString().ShouldBe( """
             > CKt-Core (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'JustForTest.txt' must be created.
             > CKt-ActivityMonitor (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'JustForTest.txt' must be created.
             > CKt-PerfectEvent (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'JustForTest.txt' must be created.
             > CKt-Monitoring (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'JustForTest.txt' must be created.
             > Samples/CKt-Sample-Monitoring (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'JustForTest.txt' must be created.
             > Samples/CKt-App-Sample (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'JustForTest.txt' must be created.
             ❰✓❱
 
@@ -569,27 +581,27 @@ public partial class S3ᅳSamplePublishedᅳTests
         display.ToString().ShouldBe( """
             > CKt-Core (1)
             │ > Content issues.
-            │ │ > Branch: stable (1 content issue)
+            │ │ > Branch: dev/stable (1 content issue)
             │ │ │ > File must be moved: JustForTest.txt → Justfortest.txt (case differ)
             > CKt-ActivityMonitor (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'Justfortest.txt' must be created.
             > CKt-PerfectEvent (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'Justfortest.txt' must be created.
             > CKt-Monitoring (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'Justfortest.txt' must be created.
             > Samples/CKt-Sample-Monitoring (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'Justfortest.txt' must be created.
             > Samples/CKt-App-Sample (1)
             │ > Content issues.
-            │ │ Branch: stable (1 content issue)
+            │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'Justfortest.txt' must be created.
             ❰✓❱
 
