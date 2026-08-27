@@ -125,7 +125,7 @@ public class S0ᅳInitᅳTests
             2 -  CKt-ActivityMonitor v0.1.0 → ⏚/v0.1.1--ci.4 (UpstreamBuild, CodeChange)
             3 ╓  CKt-PerfectEvent    v0.3.2 → ⏚/v0.3.3--ci.4 (UpstreamBuild, CodeChange)
             4 ╙  CKt-Monitoring      v0.2.3 → ⏚/v0.2.4--ci.4 (UpstreamBuild, CodeChange)
-            Required build for 4 repositories across the 4 repositories.
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
