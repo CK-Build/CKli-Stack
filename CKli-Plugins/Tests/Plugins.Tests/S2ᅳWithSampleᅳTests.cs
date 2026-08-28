@@ -787,6 +787,126 @@ public class S2ᅳWithSampleᅳTests
 
     }
 
+    /// <summary>
+    /// A repository that is out of the pivots scope is skipped even when its sources reference packages produced by
+    /// this World in versions that have been superseded (these 'U' updates are "skippable", see the canSkip in
+    /// Roadmap.BuildSolution.Initialize).
+    /// <para>
+    /// This must NOT abort the build: since the repository is not built, nothing it produces enters the build and the
+    /// publication is unaffected. The pending updates are warned about, rendered on its (not built) row and left
+    /// pending.
+    /// </para>
+    /// <para>
+    /// The misalignment then survives the publication: only a build of that repository resolves it. This is what the
+    /// second part of this test exhibits, from the stack root where nothing is skippable: the very same pending 'U'
+    /// update becomes a MustBuildReason.DependencyUpdate.
+    /// </para>
+    /// </summary>
+    [Test]
+    public async Task skipped_repository_keeps_its_pending_updates_Async()
+    {
+        Helper.SetFileSystemWritePAT();
+
+        var clonedFolder = TestHelper.InitializeClonedFolder();
+        var remotes = TestHelper.OpenRemotes( "CKt(with_sample)" );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var display = (StringScreen)context.Screen;
+
+        var inPerfectEvent = context.ChangeDirectory( "CKt-PerfectEvent" );
+
+        // CKt-Monitoring is out of the CKt-PerfectEvent pivot scope (it is neither a pivot, nor an upstream nor a
+        // downstream of it): a "publish" from CKt-PerfectEvent skips it.
+        //
+        // A CI build reads the solutions from their "dev/" branch, where CKt-Monitoring references the CI aligned
+        // CKt.ActivityMonitor v0.1.1--ci.5. We commit the superseded stable v0.1.0 there: its sources now reference
+        // a package produced by this World in a version that is not the one this World offers, while its last CI
+        // build tag remains aligned (so this is not detected as a MustBuildReason.UpstreamVersion).
+        var inMonitoring = context.ChangeDirectory( "CKt-Monitoring" );
+        TestHelper.TouchAndCommit( inMonitoring.CurrentDirectory.AppendPart( "CKt.Monitoring" ),
+                                   branchName: "dev/stable",
+                                   commitMessage: "Misaligned CKt.ActivityMonitor reference.",
+                                   fileContent: """
+                                        <Project Sdk="Microsoft.NET.Sdk">
+
+                                            <PropertyGroup>
+                                                <TargetFramework>net8.0</TargetFramework>
+                                                <Nullable>enable</Nullable>
+                                                <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+                                            </PropertyGroup>
+
+                                            <ItemGroup>
+                                                <PackageReference Include="CKt.ActivityMonitor" Version="0.1.0" />
+                                            </ItemGroup>
+
+                                        </Project>
+                                        """,
+                                   fileName: "CKt.Monitoring.csproj" );
+
+        // Touch the pivot so that this CI publication has something to actually build and publish: the misalignment
+        // of the skipped CKt-Monitoring must not prevent it.
+        TestHelper.TouchAndCommit( context.CurrentDirectory.AppendPart( "CKt-PerfectEvent" ), branchName: null );
+
+        // The publication succeeds: the skipped CKt-Monitoring only warns about its pending updates.
+        display.Clear();
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--ci", "--branch", "stable" )).ShouldBeTrue();
+            logs.ShouldContain( """
+                'CKt-Monitoring (stable)' is skipped but its sources require dependency updates.
+                Nothing it produces enters this build. Build it explicitly (or use a '*build') to align its sources.
+                CKt.ActivityMonitor: 0.1.0 → 0.1.1--ci.5
+                """ );
+        }
+        display.ToString().ShouldBe( """
+              - →·   CKt-Core                      v1.0.1--ci.4
+              - →·   CKt-ActivityMonitor           v0.1.1--ci.5
+            1 ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.6                          (CodeChange)   
+              ║      CKt-Monitoring                v0.2.4--ci.5 U CKt.ActivityMonitor: 0.1.0 → 0.1.1--ci.5
+              ╙      Samples/CKt-App-Sample        v0.0.0--ci.2
+            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3                          (UpstreamBuild)
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
+            U 1 update from upstreams.
+            ❰✓❱
+
+            """ );
+
+        // The misalignment explicitly survived the publication. From the stack root every solution is a pivot
+        // (<==> none of them is): nothing is skippable anymore, so the very same pending 'U' update now becomes a
+        // DependencyUpdate build reason and CKt-Monitoring is built, which aligns its sources.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--ci", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+              -  CKt-Core                      v1.0.1--ci.4
+              -  CKt-ActivityMonitor           v0.1.1--ci.5
+              ╓  CKt-PerfectEvent              v0.3.3--ci.6
+            1 ║  CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.7 (DependencyUpdate, CodeChange)            
+                                                                             U CKt.ActivityMonitor: 0.1.0 → 0.1.1--ci.5
+              ╙  Samples/CKt-App-Sample        v0.0.0--ci.2
+            2 -  Samples/CKt-Sample-Monitoring v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)                           
+            Required build for 2 repositories across the 6 repositories and 2 can be published.
+            U 1 update from upstreams.
+            ❰✓❱
+
+            """ );
+
+        // A *build from the CKt-PerfectEvent produces the same result. 
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*build", "--ci", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+              -  CKt-Core                      v1.0.1--ci.4
+              -  CKt-ActivityMonitor           v0.1.1--ci.5
+              ╓  CKt-PerfectEvent              v0.3.3--ci.6
+            1 ║  CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.7 (DependencyUpdate, CodeChange)            
+                                                                             U CKt.ActivityMonitor: 0.1.0 → 0.1.1--ci.5
+              ╙  Samples/CKt-App-Sample        v0.0.0--ci.2
+            2 -  Samples/CKt-Sample-Monitoring v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)                           
+            Required build for 2 repositories from the single pivot and 2 can be published.
+            U 1 update from upstreams.
+            ❰✓❱
+
+            """ );
+    }
+
     [Explicit]
     [Test]
     public async Task REMOTES_CKt_with_sample_to_sample_published_Async()
