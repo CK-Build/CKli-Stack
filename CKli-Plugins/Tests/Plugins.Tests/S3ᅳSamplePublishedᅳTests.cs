@@ -769,7 +769,7 @@ public partial class S3ᅳSamplePublishedᅳTests
             4 ╙  Samples/CKt-App-Sample        v0.0.0 → ⏚/v0.0.1 (UpstreamBuild, CodeChange)    
             5 -  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.0.1 (UpstreamBuild, CodeChange)    
             Required build for 5 repositories across the 6 repositories and 5 can be published.
-            U 1 updates from upstreams (not using '*publish' here).
+            U 1 update from upstreams.
             ❰✓❱
 
             """ );

@@ -72,7 +72,7 @@ public class S2ᅳWithSampleᅳTests
                                                                       U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
         3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)   
         Required build for 3 from the single pivot out of 6 repositories and 3 can be published.
-        U 2 updates from upstreams (not using '*publish' here).
+        U 2 updates from upstreams.
         ❰✓❱
         
         """ );
@@ -296,7 +296,7 @@ public class S2ᅳWithSampleᅳTests
                                                                                   U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
                     3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)   
                     Required build for 3 from the single pivot out of 6 repositories and 3 can be published.
-                    U 2 updates from upstreams (not using '*publish' here).
+                    U 2 updates from upstreams.
                     ❰✓❱
         
                     """ );
@@ -327,7 +327,7 @@ public class S2ᅳWithSampleᅳTests
                                                                             U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
               3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)   
               Required build for 3 from the single pivot out of 6 repositories and 3 can be published.
-              U 2 updates from upstreams (not using '*publish' here).
+              U 2 updates from upstreams.
               ❌ Failed
           
               """ );
