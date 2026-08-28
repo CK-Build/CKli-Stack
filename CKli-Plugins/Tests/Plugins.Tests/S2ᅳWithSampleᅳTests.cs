@@ -889,18 +889,19 @@ public class S2ᅳWithSampleᅳTests
 
             """ );
 
-        // A *build from the CKt-PerfectEvent produces the same result. 
+        // A *build from the CKt-PerfectEvent produces the same build plan as the root build above.
+        // Note that the pivot indicators are still here: *build prevents skipping, not pivots.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*build", "--ci", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              -  CKt-Core                      v1.0.1--ci.4
-              -  CKt-ActivityMonitor           v0.1.1--ci.5
-              ╓  CKt-PerfectEvent              v0.3.3--ci.6
-            1 ║  CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.7 (DependencyUpdate, CodeChange)            
-                                                                             U CKt.ActivityMonitor: 0.1.0 → 0.1.1--ci.5
-              ╙  Samples/CKt-App-Sample        v0.0.0--ci.2
-            2 -  Samples/CKt-Sample-Monitoring v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)                           
-            Required build for 2 repositories from the single pivot and 2 can be published.
+              - →·   CKt-Core                      v1.0.1--ci.4
+              - →·   CKt-ActivityMonitor           v0.1.1--ci.5
+              ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.6
+            1 ║      CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.7 (DependencyUpdate, CodeChange)            
+                                                                                 U CKt.ActivityMonitor: 0.1.0 → 0.1.1--ci.5
+              ╙      Samples/CKt-App-Sample        v0.0.0--ci.2
+            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)                           
+            Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             U 1 update from upstreams.
             ❰✓❱
 
