@@ -6,7 +6,7 @@ Git repository — a CKli **Stack**: the control-plane repository that defines a
 (`ckli`) whose own source code it happens to contain.
 
 For the general Stack / World / Repo model, see the
-[**CKli.Core README**](../CKli/CKli.Core/README.md#core-concepts-stack--world--repo). This document is
+[**CKli.Core README**](https://github.com/CK-Build/CKli/blob/stable/CKli.Core/README.md#core-concepts-stack--world--repo). This document is
 about what's specifically inside *this* Stack, and is meant as the entry point into the rest of the
 documentation set below.
 
@@ -53,8 +53,8 @@ the branch/version machinery both workflows resolve dependencies through, `Versi
 `ArtifactHandler` track releases and artifacts, `Build`, `HotZone` and `Publish` implement the two
 workflows themselves, and `CommonFiles`/`Migration` are supporting, maintenance-oriented concerns.
 
-See **[`HotZone-Workflow.md`](../CKli/StandardPlugins/HotZone-Workflow.md)** and
-**[`Fix-Workflow.md`](../CKli/StandardPlugins/Fix-Workflow.md)** for the full explanation of each
+See **[`HotZone-Workflow.md`](https://github.com/CK-Build/CKli/blob/stable/StandardPlugins/HotZone-Workflow.md)** and
+**[`Fix-Workflow.md`](https://github.com/CK-Build/CKli/blob/stable/StandardPlugins/Fix-Workflow.md)** for the full explanation of each
 workflow, including the correctness invariant each one relies on — this is the best starting point for
 understanding *why* the Standard Plugins are shaped the way they are.
 
@@ -78,25 +78,25 @@ understanding *why* the Standard Plugins are shaped the way they are.
 A guide to every README in this Stack, roughly host-tool-first then plugins:
 
 **The CKli tool** (`../CKli/`, repo `CK-Build/CKli`):
-- [`CKli` — command reference](../CKli/README.md) — the `ckli` CLI itself: `clone`, `pull`, `push`, `plugin ...`, `tag ...`, etc.
-- [`CKli.Core`](../CKli/CKli.Core/README.md) — the core library: Stack/World/Repo model, Git hosting providers, the plugin system, command dispatch.
-- [`CKli.Loader`](../CKli/CKli.Loader/README.md) — the collectible `AssemblyLoadContext` used to hot-load and unload compiled plugin assemblies.
-- [`CKli.Plugins.Core`](../CKli/CKli.Plugins.Core/README.md) — the shared contract/runtime library between `CKli.Core` and plugin assemblies (reflection-based and compiled/generated discovery).
-- [`CKli.Testing`](../CKli/CKli.Testing/README.md) — test helpers for exercising real `ckli` commands against fake local Git remotes.
+- [`CKli` — command reference](https://github.com/CK-Build/CKli/blob/stable/README.md) — the `ckli` CLI itself: `clone`, `pull`, `push`, `plugin ...`, `tag ...`, etc.
+- [`CKli.Core`](https://github.com/CK-Build/CKli/blob/stable/CKli.Core/README.md) — the core library: Stack/World/Repo model, Git hosting providers, the plugin system, command dispatch.
+- [`CKli.Loader`](https://github.com/CK-Build/CKli/blob/stable/CKli.Loader/README.md) — the collectible `AssemblyLoadContext` used to hot-load and unload compiled plugin assemblies.
+- [`CKli.Plugins.Core`](https://github.com/CK-Build/CKli/blob/stable/CKli.Plugins.Core/README.md) — the shared contract/runtime library between `CKli.Core` and plugin assemblies (reflection-based and compiled/generated discovery).
+- [`CKli.Testing`](https://github.com/CK-Build/CKli/blob/stable/CKli.Testing/README.md) — test helpers for exercising real `ckli` commands against fake local Git remotes.
 
 **The 9 Standard Plugins** (`../CKli/StandardPlugins/`), and the harness that builds/tests them here:
-- [`HotZone-Workflow.md`](../CKli/StandardPlugins/HotZone-Workflow.md) — the regular `build`/`publish` workflow and its branch-compatibility invariant. **Start here** to understand why the plugins below exist.
-- [`Fix-Workflow.md`](../CKli/StandardPlugins/Fix-Workflow.md) — the `fix start`/`fix build`/`fix publish` workflow for patching a superseded release.
+- [`HotZone-Workflow.md`](https://github.com/CK-Build/CKli/blob/stable/StandardPlugins/HotZone-Workflow.md) — the regular `build`/`publish` workflow and its branch-compatibility invariant. **Start here** to understand why the plugins below exist.
+- [`Fix-Workflow.md`](https://github.com/CK-Build/CKli/blob/stable/StandardPlugins/Fix-Workflow.md) — the `fix start`/`fix build`/`fix publish` workflow for patching a superseded release.
 - [`CKli-Plugins`](CKli-Plugins/README.md) — this World's `{WorldName}-Plugins` solution: what it's for and how it's wired, with links to each plugin below.
-  - [`CKli.ArtifactHandler.Plugin`](../CKli/StandardPlugins/CKli.ArtifactHandler.Plugin/README.md)
-  - [`CKli.BranchModel.Plugin`](../CKli/StandardPlugins/CKli.BranchModel.Plugin/README.md)
-  - [`CKli.Build.Plugin`](../CKli/StandardPlugins/CKli.Build.Plugin/README.md)
-  - [`CKli.CommonFiles.Plugin`](../CKli/StandardPlugins/CKli.CommonFiles.Plugin/README.md)
-  - [`CKli.HotZone.Plugin`](../CKli/StandardPlugins/CKli.HotZone.Plugin/README.md)
-  - [`CKli.Migration.Plugin`](../CKli/StandardPlugins/CKli.Migration.Plugin/README.md)
-  - [`CKli.Publish.Plugin`](../CKli/StandardPlugins/CKli.Publish.Plugin/README.md)
-  - [`CKli.ShallowSolution.Plugin`](../CKli/StandardPlugins/CKli.ShallowSolution.Plugin/README.md)
-  - [`CKli.VersionTag.Plugin`](../CKli/StandardPlugins/CKli.VersionTag.Plugin/README.md)
+  - [`CKli.ArtifactHandler.Plugin`](https://github.com/CK-Build/CKli/blob/stable/StandardPlugins/CKli.ArtifactHandler.Plugin/README.md)
+  - [`CKli.BranchModel.Plugin`](https://github.com/CK-Build/CKli/blob/stable/StandardPlugins/CKli.BranchModel.Plugin/README.md)
+  - [`CKli.Build.Plugin`](https://github.com/CK-Build/CKli/blob/stable/StandardPlugins/CKli.Build.Plugin/README.md)
+  - [`CKli.CommonFiles.Plugin`](https://github.com/CK-Build/CKli/blob/stable/StandardPlugins/CKli.CommonFiles.Plugin/README.md)
+  - [`CKli.HotZone.Plugin`](https://github.com/CK-Build/CKli/blob/stable/StandardPlugins/CKli.HotZone.Plugin/README.md)
+  - [`CKli.Migration.Plugin`](https://github.com/CK-Build/CKli/blob/stable/StandardPlugins/CKli.Migration.Plugin/README.md)
+  - [`CKli.Publish.Plugin`](https://github.com/CK-Build/CKli/blob/stable/StandardPlugins/CKli.Publish.Plugin/README.md)
+  - [`CKli.ShallowSolution.Plugin`](https://github.com/CK-Build/CKli/blob/stable/StandardPlugins/CKli.ShallowSolution.Plugin/README.md)
+  - [`CKli.VersionTag.Plugin`](https://github.com/CK-Build/CKli/blob/stable/StandardPlugins/CKli.VersionTag.Plugin/README.md)
 - [`CKli-Plugins/Common`](CKli-Plugins/Common/README.md) — why that folder exists (MSBuild props resolution for the plugin solution).
 
 Start with `CKli.Core`'s README for the concepts (Stack/World/Repo, plugins, commands); everything else
