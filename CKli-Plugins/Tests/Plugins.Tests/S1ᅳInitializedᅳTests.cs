@@ -22,7 +22,7 @@ public class S1ᅳInitializedᅳTests
     [Test]
     public async Task local_fix_Async()
     {
-        Helper.SetFileSystemWritePAT();
+        TestHelper.SetFileSystemWritePAT();
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(initialized)" );
         var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );

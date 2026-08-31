@@ -269,7 +269,7 @@ public class S2ᅳWithSampleᅳTests
     [Test]
     public async Task intermediate_build_error_Async()
     {
-        Helper.SetFileSystemWritePAT();
+        TestHelper.SetFileSystemWritePAT();
 
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(with_sample)" );
@@ -527,7 +527,7 @@ public class S2ᅳWithSampleᅳTests
     [Test]
     public async Task intermediate_ci_build_error_Async()
     {
-        Helper.SetFileSystemWritePAT();
+        TestHelper.SetFileSystemWritePAT();
 
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(with_sample)" );
@@ -721,7 +721,7 @@ public class S2ᅳWithSampleᅳTests
         }
 
         // To be able to push to the FakeFeeds.
-        Helper.SetFileSystemWritePAT();
+        TestHelper.SetFileSystemWritePAT();
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish" )).ShouldBeTrue();
@@ -805,7 +805,7 @@ public class S2ᅳWithSampleᅳTests
     [Test]
     public async Task skipped_repository_keeps_its_pending_updates_Async()
     {
-        Helper.SetFileSystemWritePAT();
+        TestHelper.SetFileSystemWritePAT();
 
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(with_sample)" );
@@ -825,7 +825,7 @@ public class S2ᅳWithSampleᅳTests
         TestHelper.TouchAndCommit( inMonitoring.CurrentDirectory.AppendPart( "CKt.Monitoring" ),
                                    branchName: "dev/stable",
                                    commitMessage: "Misaligned CKt.ActivityMonitor reference.",
-                                   fileContent: """
+                                   fileContent: _ => """
                                         <Project Sdk="Microsoft.NET.Sdk">
 
                                             <PropertyGroup>

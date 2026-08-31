@@ -651,7 +651,7 @@ public partial class S3ᅳSamplePublishedᅳTests
         var display = (StringScreen)context.Screen;
 
         // This test publishes.
-        Helper.SetFileSystemWritePAT();
+        TestHelper.SetFileSystemWritePAT();
 
         // The ci.0 is generated for all unchanged repos... But only rank 0 repositories are actually concerned
         // (the ones without upstreams) can be CI0 because the other ones are de facto UpstreamBuild.
@@ -786,7 +786,7 @@ public partial class S3ᅳSamplePublishedᅳTests
         var display = (StringScreen)context.Screen;
 
         // This test publishes.
-        Helper.SetFileSystemWritePAT();
+        TestHelper.SetFileSystemWritePAT();
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build" )).ShouldBeTrue();

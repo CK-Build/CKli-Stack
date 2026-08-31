@@ -17,7 +17,7 @@ public class S0ᅳInitᅳTests
     [Test]
     public async Task CKt_init_Async()
     {
-        Helper.SetFileSystemWritePAT();
+        TestHelper.SetFileSystemWritePAT();
 
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(init)" );
