@@ -9,6 +9,7 @@
   <Folder Name="/CKli (Project References)/StandardPlugins/">
     <Project Path="../../CKli/StandardPlugins/CKli.ArtifactHandler.Plugin/CKli.ArtifactHandler.Plugin.csproj" />
     <Project Path="../../CKli/StandardPlugins/CKli.BranchModel.Plugin/CKli.BranchModel.Plugin.csproj" />
+    <Project Path="../../CKli/StandardPlugins/CKli.Build.Plugin.Testing/CKli.Build.Plugin.Testing.csproj" />
     <Project Path="../../CKli/StandardPlugins/CKli.Build.Plugin/CKli.Build.Plugin.csproj" />
     <Project Path="../../CKli/StandardPlugins/CKli.CommonFiles.Plugin/CKli.CommonFiles.Plugin.csproj" />
     <Project Path="../../CKli/StandardPlugins/CKli.HotZone.Plugin/CKli.HotZone.Plugin.csproj" />

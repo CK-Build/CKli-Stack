@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\CKli\CKli.Testing\CKli.Testing.csproj" />
+    <ProjectReference Include="..\..\..\..\CKli\StandardPlugins\CKli.Build.Plugin.Testing\CKli.Build.Plugin.Testing.csproj" />
     <ProjectReference Include="..\..\CKli.Plugins\CKli.Plugins.csproj" />
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,7 @@
 using CK.Core;
 using CKli;
 using CKli.ArtifactHandler.Plugin;
+using CKli.BranchModel.Plugin;
 using CKli.Core;
 using NUnit.Framework;
 using Shouldly;
@@ -376,12 +377,144 @@ public class S1ᅳInitializedᅳTests
 
     }
 
+    [Test]
+    public async Task BETTER_version_bump_and_ci_0_on_fake_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync().ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var context = world.WorldRoot;
+        var display = stack.Screen;
+
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
+        var rMonitor = await world.CreateRepoAsync( "X-ActivityMonitor", "v0.1.0" ).ConfigureAwait( false );
+        var rPerfectEvent = await world.CreateRepoAsync( "X-PerfectEvent", "v0.3.2" ).ConfigureAwait( false );
+        var rMonitoring = await world.CreateRepoAsync( "X-Monitoring", "v0.2.3" ).ConfigureAwait( false );
+
+        rMonitor.AddOrUpdateReference( rCore, "v1.0.0" );
+        rPerfectEvent.AddOrUpdateReference( rMonitor, "v0.1.0" );
+        rMonitoring.AddOrUpdateReference( rMonitor, "v0.1.0" );
+
+        // Published version is v1.0.0.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "bump", "v0.1.0" )).ShouldBeFalse( "No way!" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "bump", "v1.0.0" )).ShouldBeFalse( "No way!" );
+
+        // Ok!
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "bump", "v4.3.2" )).ShouldBeTrue();
+
+        // Because we start from a +fake, --ci.0 is the same as --ci.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci.0", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 -  X-Core            v4.3.2+fake → ⏚/v4.3.2--ci.0 (FakeVersion)              
+            2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.2 (UpstreamBuild, CodeChange)
+            3 ╓  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3--ci.2 (UpstreamBuild, CodeChange)
+            4 ╙  X-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.2 (UpstreamBuild, CodeChange)
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 -  X-Core            v4.3.2+fake → ⏚/v4.3.2--ci.0 (FakeVersion)              
+            2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.2 (UpstreamBuild, CodeChange)
+            3 ╓  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3--ci.2 (UpstreamBuild, CodeChange)
+            4 ╙  X-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.2 (UpstreamBuild, CodeChange)
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+
+        // Building this in CI: the CKt-Core TagCommit is the ci.0 that has an associated FakeVersion.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 -  X-Core            v4.3.2+fake → ⏚/v4.3.2--ci.0 (FakeVersion)              
+            2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.2 (UpstreamBuild, CodeChange)
+            3 ╓  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3--ci.2 (UpstreamBuild, CodeChange)
+            4 ╙  X-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.2 (UpstreamBuild, CodeChange)
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+
+        // Because we have NOT published the v4.3.2, we can bump to v3.0.0.
+        // => This destroys the "local/v4.3.2--ci.0" release and deletes the "v4.3.2+fake" tag.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "bump", "v3.0.0" )).ShouldBeTrue();
+
+        // Building stable.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 -  X-Core            v3.0.0+fake → ⏚/v3.0.0 (FakeVersion)              
+            2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)
+            3 ╓  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)
+            4 ╙  X-Monitoring      v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+
+        // Building --ci.0.
+        // The CKt-Core TagCommit is the "local/v3.0.0" with the associated FakeVersion "v3.0.0+fake".
+        // The "local/v3.0.0" is deleted by the new "local/v3.0.0--ci.0".
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci.0" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 -  X-Core            (v3.0.0) → ⏚/v3.0.0--ci.0 (CI0)          
+            2 -  X-ActivityMonitor (v0.1.1) → ⏚/v0.1.1--ci.4 (UpstreamBuild)
+            3 ╓  X-PerfectEvent    (v0.3.3) → ⏚/v0.3.3--ci.4 (UpstreamBuild)
+            4 ╙  X-Monitoring      (v0.2.4) → ⏚/v0.2.4--ci.4 (UpstreamBuild)
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+
+        // Because we have NOT published the v3.0.0, we can bump to v2.0.0.
+        // => This destroys the "v3.0.0--ci.0" and deletes the "v3.0.0+fake".
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "bump", "v2.0.0" )).ShouldBeTrue();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci.0" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 -  X-Core            v2.0.0+fake    → ⏚/v2.0.0--ci.0 (FakeVersion)  
+            2 -  X-ActivityMonitor (v0.1.1--ci.4) → ⏚/v0.1.1--ci.5 (UpstreamBuild)
+            3 ╓  X-PerfectEvent    (v0.3.3--ci.4) → ⏚/v0.3.3--ci.5 (UpstreamBuild)
+            4 ╙  X-Monitoring      (v0.2.4--ci.4) → ⏚/v0.2.4--ci.5 (UpstreamBuild)
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 -  X-Core            v2.0.0+fake → ⏚/v2.0.0 (FakeVersion)              
+            2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)
+            3 ╓  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)
+            4 ╙  X-Monitoring      v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)
+            Required build for 4 repositories across the 4 repositories and 4 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+    }
+
 
 
     [Test]
     public async Task CKt_add_sample_and_ci_Async()
     {
-        Helper.SetFileSystemWritePAT();
+        TestHelper.SetFileSystemWritePAT();
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(initialized)" );
         var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
@@ -391,27 +524,58 @@ public class S1ᅳInitializedᅳTests
 
         var newRepo1 = TestHelper.CKliRemotesPath.AppendPart( "bare" ).Combine( "CKt(initialized)/CKt-Sample-Monitoring" );
         var newRepoUrl1 = $"file://{newRepo1}";
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleFolder, "repo", "create", newRepoUrl1 )).ShouldBeTrue();
-
-        var newRepo2 = TestHelper.CKliRemotesPath.AppendPart( "bare" ).Combine( "CKt(initialized)/CKt-App-Sample" );
-        var newRepoUrl2 = $"file://{newRepo2}";
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleFolder, "repo", "create", newRepoUrl2 )).ShouldBeTrue();
-
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleFolder, "repo", "create", newRepoUrl1 )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            > Samples/CKt-Sample-Monitoring (1)
-            │ > Missing root branch 'stable'.
-            │ │ Can be fixed by creating it from 'main'.
-            > Samples/CKt-App-Sample (1)
-            │ > Missing root branch 'stable'.
-            │ │ Can be fixed by creating it from 'main'.
+            > Samples/CKt-Sample-Monitoring (2)
+            │ > Content issues.
+            │ │ Branch: dev/stable (1 content issue)
+            │ │ > File 'nuget.config' must be created.
+            │ > Missing initial version.
+            │ │ This can be fixed by creating a 'v0.0.0+fake' on 'stable' branch.
             ❰✓❱
 
             """ );
-        // This one can be fixed with a dirty folder (no need to commit). 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleFolder, "issue", "--fix" )).ShouldBeTrue();
+
+        var newRepo2 = TestHelper.CKliRemotesPath.AppendPart( "bare" ).Combine( "CKt(initialized)/CKt-App-Sample" );
+        var newRepoUrl2 = $"file://{newRepo2}";
         display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleFolder, "repo", "create", newRepoUrl2 )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            > Samples/CKt-App-Sample (2)
+            │ > Content issues.
+            │ │ Branch: dev/stable (1 content issue)
+            │ │ > File 'nuget.config' must be created.
+            │ > Missing initial version.
+            │ │ This can be fixed by creating a 'v0.0.0+fake' on 'stable' branch.
+            ❰✓❱
+
+            """ );
+
+        // The issues are in the other (old) repos! (The local fake feed paths have changed.)
+        // The "ckli repo create" has "ckli issue --fix" in the CKt-App-Sample.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            > CKt-Core (1)
+            │ > Content issues.
+            │ │ Branch: dev/stable (1 content issue)
+            │ │ > File 'nuget.config' must be updated.
+            > CKt-ActivityMonitor (1)
+            │ > Content issues.
+            │ │ Branch: dev/stable (1 content issue)
+            │ │ > File 'nuget.config' must be updated.
+            > CKt-PerfectEvent (1)
+            │ > Content issues.
+            │ │ Branch: dev/stable (1 content issue)
+            │ │ > File 'nuget.config' must be updated.
+            > CKt-Monitoring (1)
+            │ > Content issues.
+            │ │ Branch: dev/stable (1 content issue)
+            │ │ > File 'nuget.config' must be updated.
+            ❰✓❱
+
+            """ );
 
         #region Initializing Samples/CKt-Sample-Monitoring
         {
@@ -462,6 +626,9 @@ public class S1ᅳInitializedᅳTests
                 File.WriteAllText( $"Assets/Install-{args[0]}.txt", $"I'm the install manual of CKt-Sample-Monitoring version '{args[0]}'." );
                 """ );
             File.WriteAllText( deployFolder.AppendPart( ".gitignore" ), "Assets/" );
+
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleMonitoring, "commit", "Setup the CKt.Sample.Monitoring repo." )).ShouldBeTrue();
+
         }
         #endregion
 
@@ -515,13 +682,14 @@ public class S1ᅳInitializedᅳTests
                 
                 """ );
             File.WriteAllText( deployFolder.AppendPart( ".gitignore" ), "Assets/" );
+
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleApp, "commit", "Setup the CKt-App-Sample repo." )).ShouldBeTrue();
         }
         #endregion
 
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "branch", "switch", "dev/stable" )).ShouldBeTrue();
 
-        // The nuget.config can be fixed with a dirty folder (no need to pre-commit here).
         // => Creates the missing nuget.config file and updated the feed urls in existing ones:
         //    this is the work of the ArtifactHandlerPlugin plugin and the BranchModel/HotBranch/ContentIssue.
         //    The "Missing initial version." also doesn't require a clean working folder.
@@ -544,18 +712,6 @@ public class S1ᅳInitializedᅳTests
             │ > Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
-            > Samples/CKt-Sample-Monitoring (2)
-            │ > Content issues.
-            │ │ Branch: dev/stable (1 content issue)
-            │ │ > File 'nuget.config' must be created.
-            │ > Missing initial version.
-            │ │ This can be fixed by creating a 'v0.0.0+fake' on 'stable' branch.
-            > Samples/CKt-App-Sample (2)
-            │ > Content issues.
-            │ │ Branch: dev/stable (1 content issue)
-            │ │ > File 'nuget.config' must be created.
-            │ > Missing initial version.
-            │ │ This can be fixed by creating a 'v0.0.0+fake' on 'stable' branch.
             ❰✓❱
 
             """ );
@@ -578,8 +734,8 @@ public class S1ᅳInitializedᅳTests
             2 -  CKt-ActivityMonitor           v0.1.0      → ⏚/v0.1.1--ci.5 (UpstreamBuild, CodeChange)             
             3 ╓  CKt-PerfectEvent              v0.3.2      → ⏚/v0.3.3--ci.5 (UpstreamBuild, CodeChange)             
             4 ║  CKt-Monitoring                v0.2.3      → ⏚/v0.2.4--ci.5 (UpstreamBuild, CodeChange)             
-            5 ╙  Samples/CKt-App-Sample        v0.0.0+fake → ⏚/v0.0.0--ci.2 (UpstreamBuild, FakeVersion, CodeChange)
-            6 -  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0--ci.2 (UpstreamBuild, FakeVersion, CodeChange)
+            5 ╙  Samples/CKt-App-Sample        v0.0.0+fake → ⏚/v0.0.0--ci.3 (UpstreamBuild, FakeVersion, CodeChange)
+            6 -  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0--ci.3 (UpstreamBuild, FakeVersion, CodeChange)
             Required build for 6 repositories across the 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -594,8 +750,8 @@ public class S1ᅳInitializedᅳTests
             -  CKt-ActivityMonitor           ⏚/v0.1.1--ci.5
             ╓  CKt-PerfectEvent              ⏚/v0.3.3--ci.5
             ║  CKt-Monitoring                ⏚/v0.2.4--ci.5
-            ╙  Samples/CKt-App-Sample        ⏚/v0.0.0--ci.2
-            -  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.2
+            ╙  Samples/CKt-App-Sample        ⏚/v0.0.0--ci.3
+            -  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.3
             There is nothing to build across the 6 repositories but 6 can be published.
             ❰✓❱
             
@@ -610,8 +766,8 @@ public class S1ᅳInitializedᅳTests
             -  CKt-ActivityMonitor           ⏚/v0.1.1--ci.5
             ╓  CKt-PerfectEvent              ⏚/v0.3.3--ci.5
             ║  CKt-Monitoring                ⏚/v0.2.4--ci.5
-            ╙  Samples/CKt-App-Sample        ⏚/v0.0.0--ci.2
-            -  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.2
+            ╙  Samples/CKt-App-Sample        ⏚/v0.0.0--ci.3
+            -  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.3
             There is nothing to build across the 6 repositories but 6 can be published.
             ❰✓❱
             
@@ -619,7 +775,7 @@ public class S1ᅳInitializedᅳTests
 
         var (nugetOrgFeed, sosFeed) = Helper.GetFakeFeedPaths( clonedFolder.Path );
 
-        // CI build: nuget.org is not concerned: out fake nuget.org oly contains the canary package.
+        // CI build: nuget.org is not concerned: our fake nuget.org oly contains the canary package.
         Directory.GetDirectories( nugetOrgFeed ).Select( p => Path.GetFileName( p ) ).ShouldBe( ["ck.canarypackage"] );
 
         // The other feed has the packages.
@@ -633,21 +789,21 @@ public class S1ᅳInitializedᅳTests
                                     "ckt.core@1.0.1--ci.4",
                                     "ckt.monitoring@0.2.4--ci.5",
                                     "ckt.perfectevent@0.3.3--ci.5",
-                                    "ckt.sample.monitoring@0.0.0--ci.2",
-                                    "ckt.someapp@0.0.0--ci.2"], ignoreOrder: true );
+                                    "ckt.sample.monitoring@0.0.0--ci.3",
+                                    "ckt.someapp@0.0.0--ci.3"], ignoreOrder: true );
 
         // The FileSystemHostingProvider received the asset files.
         var appRemoteReleases = Path.Combine( TestHelper.CKliRemotesPath, "bare", remotes.FullName, "CKt-App-Sample", "Releases" );
         Directory.GetFiles( appRemoteReleases, "*", SearchOption.AllDirectories )
                  .Select( p => new NormalizedPath( p ) )
                  .Select( p => p.RemoveParts( 0, p.Parts.Count - 2 ).ToString() )
-                 .ShouldBe( ["v0.0.0--ci.2/ZipDemo.zip"] );
+                 .ShouldBe( ["v0.0.0--ci.3/ZipDemo.zip"] );
 
         var sampleRemoteReleases = Path.Combine( TestHelper.CKliRemotesPath, "bare", remotes.FullName, "CKt-Sample-Monitoring", "Releases" );
         Directory.GetFiles( sampleRemoteReleases, "*", SearchOption.AllDirectories )
                  .Select( p => new NormalizedPath( p ) )
                  .Select( p => p.RemoveParts( 0, p.Parts.Count - 2 ).ToString() )
-                 .ShouldBe( ["v0.0.0--ci.2/Install-0.0.0--ci.2.txt"] );
+                 .ShouldBe( ["v0.0.0--ci.3/Install-0.0.0--ci.3.txt"] );
 
         // The "PublishState.bin" has been removed.
         File.Exists( context.CurrentStackPath.Combine( "$Local/PublishState.bin" ) ).ShouldBeFalse();
