@@ -388,13 +388,13 @@ public class S1ᅳInitializedᅳTests
 
 
         var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
-        var rMonitor = await world.CreateRepoAsync( "X-ActivityMonitor", "v0.1.0" ).ConfigureAwait( false );
+        var rActivityMonitor = await world.CreateRepoAsync( "X-ActivityMonitor", "v0.1.0" ).ConfigureAwait( false );
         var rPerfectEvent = await world.CreateRepoAsync( "X-PerfectEvent", "v0.3.2" ).ConfigureAwait( false );
         var rMonitoring = await world.CreateRepoAsync( "X-Monitoring", "v0.2.3" ).ConfigureAwait( false );
 
-        rMonitor.AddOrUpdateReference( rCore, "v1.0.0" );
-        rPerfectEvent.AddOrUpdateReference( rMonitor, "v0.1.0" );
-        rMonitoring.AddOrUpdateReference( rMonitor, "v0.1.0" );
+        rActivityMonitor.AddOrUpdateReference( rCore, "v1.0.0" );
+        rPerfectEvent.AddOrUpdateReference( rActivityMonitor, "v0.1.0" );
+        rMonitoring.AddOrUpdateReference( rActivityMonitor, "v0.1.0" );
 
         // Published version is v1.0.0.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "bump", "v0.1.0" )).ShouldBeFalse( "No way!" );
@@ -447,6 +447,7 @@ public class S1ᅳInitializedᅳTests
         // Because we have NOT published the v4.3.2, we can bump to v3.0.0.
         // => This destroys the "local/v4.3.2--ci.0" release and deletes the "v4.3.2+fake" tag.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "bump", "v3.0.0" )).ShouldBeTrue();
+
 
         // Building stable.
         display.Clear();
