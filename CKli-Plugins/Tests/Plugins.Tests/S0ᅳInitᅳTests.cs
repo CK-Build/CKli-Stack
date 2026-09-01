@@ -5,7 +5,7 @@ using Shouldly;
 using System.Threading.Tasks;
 using static CK.Testing.MonitorTestHelper;
 
-namespace Plugins.Tests;
+namespace Plugins.Tests.Integration;
 
 [TestFixture]
 public class S0ᅳInitᅳTests
