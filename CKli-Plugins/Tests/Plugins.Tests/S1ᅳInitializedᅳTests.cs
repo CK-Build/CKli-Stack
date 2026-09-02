@@ -14,6 +14,95 @@ namespace Plugins.Tests.Integration;
 
 public class S1ᅳInitializedᅳTests
 {
+    [Explicit]
+    [TestCase( "PublishCI" )]
+    [TestCase( "" )]
+    public async Task adding_a_GitHub_remote_repo_Async( string mode )
+    {
+        TestHelper.SetFileSystemWritePAT();
+        var clonedFolder = TestHelper.InitializeClonedFolder();
+        var remotes = TestHelper.OpenRemotes( "CKt(initialized)" );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var display = (StringScreen)context.Screen;
+
+        var gitHubProvider = Helper.GetGitHubHostingProvider();
+        await gitHubProvider.DeleteRepositoryAsync( TestHelper.Monitor, "CK-Build/Test-Repo-Create" ).ConfigureAwait( false );
+
+        try
+        {
+            // Add the remote repository to the fully local stack.
+            display.Clear();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "repo", "create", "https://github.com/CK-Build/Test-Repo-Create" ).ConfigureAwait( false )).ShouldBeTrue();
+            display.ToString().ShouldBe( """
+            > Test-Repo-Create (2)
+            │ > Content issues.
+            │ │ Branch: dev/stable (1 content issue)
+            │ │ > File 'nuget.config' must be created.
+            │ > Missing initial version.
+            │ │ This can be fixed by creating a 'v0.0.0+fake' on 'stable' branch.
+            ❰✓❱
+
+            """ );
+            var testRepo = context.ChangeDirectory( "Test-Repo-Create" );
+            Directory.Exists( testRepo.CurrentDirectory ).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "branch", "switch", "dev/stable" ).ConfigureAwait( false )).ShouldBeTrue();
+            var path = testRepo.CurrentDirectory.AppendPart( "SomeApp" );
+            Directory.CreateDirectory( path );
+            File.WriteAllText( path.AppendPart( "SomeApp.csproj" ), """
+            <Project Sdk="Microsoft.NET.Sdk">
+                <PropertyGroup>
+                    <TargetFramework>net8.0</TargetFramework>
+                    <Nullable>enable</Nullable>
+                    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+                </PropertyGroup>
+            </Project>
+
+            """ );
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "exec", "dotnet", "new", "sln" ).ConfigureAwait( false )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "exec", "dotnet", "sln", "add", "SomeApp/SomeApp.csproj" ).ConfigureAwait( false )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "commit", "Added project." ).ConfigureAwait( false )).ShouldBeTrue();
+            display.Clear();
+            if( mode == "PublishCI" )
+            {
+                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--ci" ).ConfigureAwait( false )).ShouldBeTrue();
+                display.ToString().ShouldBe( """
+                      ╓      CKt-Core            v1.0.0     
+                    1 ╙  ⊙   Test-Repo-Create    v0.0.0+fake → ⏚/v0.0.0--ci.2 (FakeVersion, CodeChange)
+                      -      CKt-ActivityMonitor v0.1.0     
+                      ╓      CKt-PerfectEvent    v0.3.2     
+                      ╙      CKt-Monitoring      v0.2.3     
+                    Required build for 1 from the single pivot out of 5 repositories and 1 can be published.
+                    (No dependency updates other than the ones from the upstreams are needed.)
+                    ❰✓❱
+
+                    """ );
+            }
+            else
+            {
+                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish" ).ConfigureAwait( false )).ShouldBeTrue();
+                display.ToString().ShouldBe( """
+                      ╓      CKt-Core            v1.0.0     
+                    1 ╙  ⊙   Test-Repo-Create    v0.0.0+fake → ⏚/v0.0.0 (FakeVersion, CodeChange)
+                      -      CKt-ActivityMonitor v0.1.0     
+                      ╓      CKt-PerfectEvent    v0.3.2     
+                      ╙      CKt-Monitoring      v0.2.3     
+                    Required build for 1 from the single pivot out of 5 repositories and 1 can be published.
+                    (No dependency updates other than the ones from the upstreams are needed.)
+                    ❰✓❱
+
+                    """ );
+            }
+        }
+        finally
+        {
+            await gitHubProvider.DeleteRepositoryAsync( TestHelper.Monitor, "CK-Build/Test-Repo-Create" ).ConfigureAwait( false );
+        }
+
+    }
+
+
+
+
     /// <summary>
     /// <see cref="CKli.HotZone.Plugin.HotZonePlugin.FixStartAsync"/>
     /// <see cref="CKli.HotZone.Plugin.HotZonePlugin.FixInfo"/>
@@ -376,7 +465,6 @@ public class S1ᅳInitializedᅳTests
         {
             var inSampleApp = inSampleFolder.ChangeDirectory( "CKt-App-Sample" );
             Directory.Exists( inSampleApp.CurrentDirectory ).ShouldBeTrue();
-
             (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleApp, "branch", "switch", "dev/stable" )).ShouldBeTrue();
 
             var path = inSampleApp.CurrentDirectory.AppendPart( "CKt.SomeApp" );
