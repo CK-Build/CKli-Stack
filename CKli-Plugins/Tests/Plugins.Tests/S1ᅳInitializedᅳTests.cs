@@ -116,11 +116,11 @@ public class S1ᅳInitializedᅳTests
                 if( firstModeCI )
                 {
                     display.ToString().ShouldBe( """
-                          ╓      CKt-Core            v1.0.0     
-                        1 ╙  ⊙   Test-Repo-Create    v0.0.0+fake → ⏚/v0.0.0--ci.3 (FakeVersion, CodeChange)
-                          -      CKt-ActivityMonitor v0.1.0     
-                          ╓      CKt-PerfectEvent    v0.3.2     
-                          ╙      CKt-Monitoring      v0.2.3     
+                          ╓      CKt-Core            v1.0.0      
+                        1 ╙  ⊙   Test-Repo-Create    v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (CodeChange)
+                          -      CKt-ActivityMonitor v0.1.0      
+                          ╓      CKt-PerfectEvent    v0.3.2      
+                          ╙      CKt-Monitoring      v0.2.3      
                         Required build for 1 from the single pivot out of 5 repositories and 1 can be published.
                         (No dependency updates other than the ones from the upstreams are needed.)
                         ❰✓❱
