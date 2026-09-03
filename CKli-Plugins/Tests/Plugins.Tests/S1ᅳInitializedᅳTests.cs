@@ -15,15 +15,20 @@ namespace Plugins.Tests.Integration;
 public class S1ᅳInitializedᅳTests
 {
     [Explicit]
-    [TestCase( "PublishCI" )]
-    [TestCase( "" )]
-    public async Task adding_a_GitHub_remote_repo_Async( string mode )
+    [TestCase( "", "" )]
+    [TestCase( "PublishCI", "" )]
+    [TestCase( "", "PublishCI" )]
+    [TestCase( "PublishCI", "PublishCI" )]
+    public async Task adding_a_GitHub_remote_repo_Async( string ciFirstMode, string ciSecondMode )
     {
         TestHelper.SetFileSystemWritePAT();
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(initialized)" );
         var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
+
+        bool firstModeCI = ciFirstMode == "PublishCI";
+        bool secondModeCI = ciSecondMode == "PublishCI";
 
         var gitHubProvider = Helper.GetGitHubHostingProvider();
         await gitHubProvider.DeleteRepositoryAsync( TestHelper.Monitor, "CK-Build/Test-Repo-Create" ).ConfigureAwait( false );
@@ -62,8 +67,9 @@ public class S1ᅳInitializedᅳTests
             (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "exec", "dotnet", "sln", "add", "SomeApp/SomeApp.csproj" ).ConfigureAwait( false )).ShouldBeTrue();
             (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "commit", "Added project." ).ConfigureAwait( false )).ShouldBeTrue();
             display.Clear();
-            if( mode == "PublishCI" )
+            if( firstModeCI )
             {
+                display.Clear();
                 (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--ci" ).ConfigureAwait( false )).ShouldBeTrue();
                 display.ToString().ShouldBe( """
                       ╓      CKt-Core            v1.0.0     
@@ -79,6 +85,7 @@ public class S1ᅳInitializedᅳTests
             }
             else
             {
+                display.Clear();
                 (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish" ).ConfigureAwait( false )).ShouldBeTrue();
                 display.ToString().ShouldBe( """
                       ╓      CKt-Core            v1.0.0     
@@ -91,6 +98,107 @@ public class S1ᅳInitializedᅳTests
                     ❰✓❱
 
                     """ );
+            }
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "branch", "switch", "dev/stable" ).ConfigureAwait( false )).ShouldBeTrue();
+            TestHelper.TouchAndCommit( testRepo.CurrentDirectory, "dev/stable" );
+
+            // Don't handle bool result: git branch fails when the branch already exists.
+            await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "exec", "git", "branch", "test-branch" ).ConfigureAwait( false );
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "branch", "push", "test-branch" ).ConfigureAwait( false )).ShouldBeTrue();
+            (await gitHubProvider.SetDefaultBranchAsync( TestHelper.Monitor, "CK-Build/Test-Repo-Create", "test-branch" ).ConfigureAwait( false )).ShouldBeTrue();
+
+            await Task.Delay( 200 );
+
+            if( secondModeCI )
+            {
+                display.Clear();
+                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--ci" ).ConfigureAwait( false )).ShouldBeTrue();
+                if( firstModeCI )
+                {
+                    display.ToString().ShouldBe( """
+                          ╓      CKt-Core            v1.0.0     
+                        1 ╙  ⊙   Test-Repo-Create    v0.0.0+fake → ⏚/v0.0.0--ci.3 (FakeVersion, CodeChange)
+                          -      CKt-ActivityMonitor v0.1.0     
+                          ╓      CKt-PerfectEvent    v0.3.2     
+                          ╙      CKt-Monitoring      v0.2.3     
+                        Required build for 1 from the single pivot out of 5 repositories and 1 can be published.
+                        (No dependency updates other than the ones from the upstreams are needed.)
+                        ❰✓❱
+
+                        """ );
+                }
+                else
+                {
+                    display.ToString().ShouldBe( """
+                          ╓      CKt-Core            v1.0.0
+                        1 ╙  ⊙   Test-Repo-Create    v0.0.0 → ⏚/v0.0.1--ci.1 (CodeChange)
+                          -      CKt-ActivityMonitor v0.1.0
+                          ╓      CKt-PerfectEvent    v0.3.2
+                          ╙      CKt-Monitoring      v0.2.3
+                        Required build for 1 from the single pivot out of 5 repositories and 1 can be published.
+                        (No dependency updates other than the ones from the upstreams are needed.)
+                        ❰✓❱
+
+                        """ );
+                }
+            }
+            else
+            {
+                display.Clear();
+                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish" ).ConfigureAwait( false )).ShouldBeTrue();
+                if( firstModeCI )
+                {
+                    display.ToString().ShouldBe( """
+                          ╓      CKt-Core            v1.0.0     
+                        1 ╙  ⊙   Test-Repo-Create    v0.0.0+fake → ⏚/v0.0.0 (FakeVersion, CodeChange)
+                          -      CKt-ActivityMonitor v0.1.0     
+                          ╓      CKt-PerfectEvent    v0.3.2     
+                          ╙      CKt-Monitoring      v0.2.3     
+                        Required build for 1 from the single pivot out of 5 repositories and 1 can be published.
+                        (No dependency updates other than the ones from the upstreams are needed.)
+                        ❰✓❱
+
+                        """ );
+                }
+                else
+                {
+                    display.ToString().ShouldBe( """
+                          ╓      CKt-Core            v1.0.0
+                        1 ╙  ⊙   Test-Repo-Create    v0.0.0 → ⏚/v0.0.1 (CodeChange)
+                          -      CKt-ActivityMonitor v0.1.0
+                          ╓      CKt-PerfectEvent    v0.3.2
+                          ╙      CKt-Monitoring      v0.2.3
+                        Required build for 1 from the single pivot out of 5 repositories and 1 can be published.
+                        (No dependency updates other than the ones from the upstreams are needed.)
+                        ❰✓❱
+
+                        """ );
+                }
+            }
+
+
+            // Test that dev/stable being the default branch is handled.
+            // Don't handle bool result: git branch fails when the branch already exists.
+            await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "exec", "git", "branch", "dev/stable" ).ConfigureAwait( false );
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "branch", "push", "dev/stable" ).ConfigureAwait( false )).ShouldBeTrue();
+
+            (await gitHubProvider.SetDefaultBranchAsync( TestHelper.Monitor, "CK-Build/Test-Repo-Create", "dev/stable" ).ConfigureAwait( false )).ShouldBeTrue();
+            var info = await gitHubProvider.GetRepositoryInfoAsync( TestHelper.Monitor, "CK-Build/Test-Repo-Create", true ).ConfigureAwait( false );
+            while( info.ShouldNotBeNull().DefaultBranch != "dev/stable" )
+            {
+                await Task.Delay( 200 );
+                info = await gitHubProvider.GetRepositoryInfoAsync( TestHelper.Monitor, "CK-Build/Test-Repo-Create", true ).ConfigureAwait( false );
+            }
+            // Touch and publish: Non-CI publication here (a CI publication would let the dev/stable).
+            // => We publish "stable" here: it MUST be restored as the default branch (because it is the BranchModel's root "stable").
+            TestHelper.TouchAndCommit( testRepo.CurrentDirectory, "dev/stable" );
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish" ).ConfigureAwait( false )).ShouldBeTrue();
+
+            info = await gitHubProvider.GetRepositoryInfoAsync( TestHelper.Monitor, "CK-Build/Test-Repo-Create", true ).ConfigureAwait( false );
+            while( info.ShouldNotBeNull().DefaultBranch != "stable" )
+            {
+                await Task.Delay( 200 );
+                info = await gitHubProvider.GetRepositoryInfoAsync( TestHelper.Monitor, "CK-Build/Test-Repo-Create", true ).ConfigureAwait( false );
             }
         }
         finally
