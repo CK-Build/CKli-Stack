@@ -30,8 +30,8 @@ public class S2ᅳWithSampleᅳTests
         -  CKt-ActivityMonitor           v0.1.1--ci.5
         ╓  CKt-PerfectEvent              v0.3.3--ci.5
         ║  CKt-Monitoring                v0.2.4--ci.5
-        ╙  Samples/CKt-App-Sample        v0.0.0--ci.2
-        -  Samples/CKt-Sample-Monitoring v0.0.0--ci.2
+        ╙  Samples/CKt-App-Sample        v0.0.0--ci.3
+        -  Samples/CKt-Sample-Monitoring v0.0.0--ci.3
         There is nothing to build across the 6 repositories and nothing to publish.
         ❰✓❱
         
@@ -93,8 +93,8 @@ public class S2ᅳWithSampleᅳTests
             2 -  CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
             3 ╓  CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
             4 ║  CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
-            5 ╙  Samples/CKt-App-Sample        v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
-            6 -  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
+            5 ╙  Samples/CKt-App-Sample        v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)            
+            6 -  Samples/CKt-Sample-Monitoring v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)            
             Required build for 6 repositories across the 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -112,8 +112,8 @@ public class S2ᅳWithSampleᅳTests
             - →·   CKt-ActivityMonitor           v0.1.1--ci.5
             ╓ →·   CKt-PerfectEvent              v0.3.3--ci.5
             ║ →·   CKt-Monitoring                v0.2.4--ci.5
-            ╙  ⊙   Samples/CKt-App-Sample        v0.0.0--ci.2
-            -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.2
+            ╙  ⊙   Samples/CKt-App-Sample        v0.0.0--ci.3
+            -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.3
             There is nothing to build from the 2 pivots out of 6 repositories and nothing to publish.
             (Using '*build' may detect required builds in upstreams repositories.)
             ❰✓❱
@@ -130,8 +130,8 @@ public class S2ᅳWithSampleᅳTests
             - →·   CKt-ActivityMonitor           v0.1.1--ci.5
             ╓ →·   CKt-PerfectEvent              v0.3.3--ci.5
             ║ →·   CKt-Monitoring                v0.2.4--ci.5
-            ╙      Samples/CKt-App-Sample        v0.0.0--ci.2
-            -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.2
+            ╙      Samples/CKt-App-Sample        v0.0.0--ci.3
+            -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.3
             There is nothing to build from the single pivot out of 6 repositories and nothing to publish.
             (Using '*build' may detect required builds in upstreams repositories.)
             ❰✓❱
@@ -147,8 +147,8 @@ public class S2ᅳWithSampleᅳTests
             - →·   CKt-ActivityMonitor           v0.1.1--ci.5
             ╓      CKt-PerfectEvent              v0.3.3--ci.5
             ║      CKt-Monitoring                v0.2.4--ci.5
-            ╙  ⊙   Samples/CKt-App-Sample        v0.0.0--ci.2
-            -      Samples/CKt-Sample-Monitoring v0.0.0--ci.2
+            ╙  ⊙   Samples/CKt-App-Sample        v0.0.0--ci.3
+            -      Samples/CKt-Sample-Monitoring v0.0.0--ci.3
             There is nothing to build from the single pivot out of 6 repositories and nothing to publish.
             (Using '*build' may detect required builds in upstreams repositories.)
             ❰✓❱
@@ -164,8 +164,8 @@ public class S2ᅳWithSampleᅳTests
               - →·   CKt-ActivityMonitor           v0.1.1--ci.5
             1 ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.6 (CodeChange)   
               ║      CKt-Monitoring                v0.2.4--ci.5
-              ╙      Samples/CKt-App-Sample        v0.0.0--ci.2
-            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)
+              ╙      Samples/CKt-App-Sample        v0.0.0--ci.3
+            2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)
             Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -184,8 +184,8 @@ public class S2ᅳWithSampleᅳTests
             2 -  CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
             3 ╓  CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
             4 ║  CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
-            5 ╙  Samples/CKt-App-Sample        v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
-            6 -  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
+            5 ╙  Samples/CKt-App-Sample        v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)            
+            6 -  Samples/CKt-Sample-Monitoring v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)            
             Required build for 6 repositories across the 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -201,8 +201,8 @@ public class S2ᅳWithSampleᅳTests
             2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
             3 ╓ →·   CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
             4 ║ →·   CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
-            5 ╙  ⊙   Samples/CKt-App-Sample        v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
-            6 -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
+            5 ╙  ⊙   Samples/CKt-App-Sample        v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)            
+            6 -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)            
             Required build for 6 from the 2 pivots out of 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -219,8 +219,8 @@ public class S2ᅳWithSampleᅳTests
             2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
             3 ╓ →·   CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
             4 ║ →·   CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
-            5 ╙      Samples/CKt-App-Sample        v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
-            6 -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
+            5 ╙      Samples/CKt-App-Sample        v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)            
+            6 -  ⊙   Samples/CKt-Sample-Monitoring v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)            
             Required build for 6 from the single pivot out of 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -237,8 +237,8 @@ public class S2ᅳWithSampleᅳTests
             2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
             3 ╓      CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
             4 ║      CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
-            5 ╙  ⊙   Samples/CKt-App-Sample        v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
-            6 -      Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
+            5 ╙  ⊙   Samples/CKt-App-Sample        v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)            
+            6 -      Samples/CKt-Sample-Monitoring v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)            
             Required build for 6 from the single pivot out of 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -254,8 +254,8 @@ public class S2ᅳWithSampleᅳTests
             2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
             3 ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.7 (UpstreamBuild, CodeChange)
             4 ║      CKt-Monitoring                v0.2.4--ci.5 → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
-            5 ╙      Samples/CKt-App-Sample        v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
-            6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.3 (UpstreamBuild)            
+            5 ╙      Samples/CKt-App-Sample        v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)            
+            6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.3 → ⏚/v0.0.0--ci.4 (UpstreamBuild)            
             Required build for 6 from the single pivot out of 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -560,8 +560,8 @@ public class S2ᅳWithSampleᅳTests
                 - →·   CKt-ActivityMonitor           v0.1.1--ci.5
               1 ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.6 (CodeChange)               
                 ║      CKt-Monitoring                v0.2.4--ci.5
-                ╙      Samples/CKt-App-Sample        v0.0.0--ci.2
-              2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2 → ⏚/v0.0.0--ci.4 (UpstreamBuild, CodeChange)
+                ╙      Samples/CKt-App-Sample        v0.0.0--ci.3
+              2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.3 → ⏚/v0.0.0--ci.5 (UpstreamBuild, CodeChange)
               Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
               (No dependency updates other than the ones from the upstreams are needed.)
               ❌ Failed
@@ -581,8 +581,8 @@ public class S2ᅳWithSampleᅳTests
                 - →·   CKt-ActivityMonitor           v0.1.1--ci.5  
                 ╓  ⊙   CKt-PerfectEvent              ⏚/v0.3.3--ci.6
                 ║      CKt-Monitoring                v0.2.4--ci.5  
-                ╙      Samples/CKt-App-Sample        v0.0.0--ci.2  
-              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2   → ⏚/v0.0.0--ci.5 (UpstreamVersion, CodeChange)
+                ╙      Samples/CKt-App-Sample        v0.0.0--ci.3  
+              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.3   → ⏚/v0.0.0--ci.6 (UpstreamVersion, CodeChange)
               Required build for 1 from the single pivot out of 6 repositories and 2 can be published.
               (No dependency updates other than the ones from the upstreams are needed.)
               ❰✓❱
@@ -602,8 +602,8 @@ public class S2ᅳWithSampleᅳTests
                 - →·   CKt-ActivityMonitor           v0.1.1--ci.5  
                 ╓  ⊙   CKt-PerfectEvent              ⏚/v0.3.3--ci.6
                 ║      CKt-Monitoring                v0.2.4--ci.5  
-                ╙      Samples/CKt-App-Sample        v0.0.0--ci.2  
-              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2   → ⏚/v0.0.0--ci.5 (UpstreamVersion, CodeChange)
+                ╙      Samples/CKt-App-Sample        v0.0.0--ci.3  
+              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.3   → ⏚/v0.0.0--ci.6 (UpstreamVersion, CodeChange)
               Required build for 1 from the single pivot out of 6 repositories and 2 can be published.
               (No dependency updates other than the ones from the upstreams are needed.)
               ❰✓❱
@@ -624,8 +624,8 @@ public class S2ᅳWithSampleᅳTests
                 - →·   CKt-ActivityMonitor           v0.1.1--ci.5  
                 ╓  ⊙   CKt-PerfectEvent              ⏚/v0.3.3--ci.6
                 ║      CKt-Monitoring                v0.2.4--ci.5  
-                ╙      Samples/CKt-App-Sample        v0.0.0--ci.2  
-              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2   → ⏚/v0.0.0--ci.5 (UpstreamVersion, CodeChange)
+                ╙      Samples/CKt-App-Sample        v0.0.0--ci.3  
+              1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.3   → ⏚/v0.0.0--ci.6 (UpstreamVersion, CodeChange)
               Required build for 1 from the single pivot out of 6 repositories and 2 can be published.
               (No dependency updates other than the ones from the upstreams are needed.)
               ❰✓❱
@@ -640,8 +640,8 @@ public class S2ᅳWithSampleᅳTests
               1 - →·   CKt-ActivityMonitor           v0.1.1--ci.5   → ⏚/v0.1.1--ci.6 (CodeChange)               
               2 ╓  ⊙   CKt-PerfectEvent              (v0.3.3--ci.6) → ⏚/v0.3.3--ci.7 (UpstreamBuild)            
               3 ║      CKt-Monitoring                v0.2.4--ci.5   → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
-              4 ╙      Samples/CKt-App-Sample        v0.0.0--ci.2   → ⏚/v0.0.0--ci.4 (UpstreamBuild, CodeChange)
-              5 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.2   → ⏚/v0.0.0--ci.6 (UpstreamBuild, CodeChange)
+              4 ╙      Samples/CKt-App-Sample        v0.0.0--ci.3   → ⏚/v0.0.0--ci.5 (UpstreamBuild, CodeChange)
+              5 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.3   → ⏚/v0.0.0--ci.7 (UpstreamBuild, CodeChange)
               Required build for 5 from the single pivot out of 6 repositories and 5 can be published.
               (No dependency updates other than the ones from the upstreams are needed.)
               ❰✓❱

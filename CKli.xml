@@ -1,12 +1,16 @@
-<CKli MinCKliVersion="0.10.0--ci.28">
+<CKli MinCKliVersion="0.14.0">
   <Plugins CompileMode="Debug">
     <ArtifactHandler>
       <NuGet>
-        <Feed Name="NuGet" Url="https://api.nuget.org/v3/index.json" PushQualityFilter="[papa,]">
-          <PushCredentials SecretKey="NUGET_ORG_PUSH_API_KEY" />
+        <Feed Name="NuGet" 
+              Url="https://api.nuget.org/v3/index.json"
+              PushQualityFilter="[papa,]">
+          <Credentials SecretKey="NUGET_ORG_PUSH_API_KEY" />
         </Feed>
-        <Feed Name="Signature-OpenSource" Url="https://pkgs.dev.azure.com/Signature-OpenSource/Feeds/_packaging/NetCore3/nuget/v3/index.json">
-          <PushCredentials SecretKey="AZURE_FEED_SIGNATURE_OPENSOURCE_PAT" />
+        <Feed Name="Signature-OpenSource" 
+              Url="https://pkgs.dev.azure.com/Signature-OpenSource/Feeds/_packaging/NetCore3/nuget/v3/index.json"
+              PushQualityFilter="[,],AllowCI">
+          <Credentials SecretKey="AZURE_FEED_SIGNATURE_OPENSOURCE_PAT" />
         </Feed>
       </NuGet>
     </ArtifactHandler>

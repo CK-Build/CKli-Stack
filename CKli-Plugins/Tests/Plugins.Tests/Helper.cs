@@ -59,7 +59,7 @@ internal static class Helper
                 "https://pkgs.dev.azure.com/Signature-OpenSource/Feeds/_packaging/NetCore3/nuget/v3/index.json" => $"file://{sosFeed}",
                 _ => Throw.NotSupportedException<string>( url.Value )
             } );
-            var key = f.Element( "PushCredentials" )?.Attribute( "SecretKey" );
+            var key = f.Element( "Credentials" )?.Attribute( "SecretKey" );
             key.ShouldNotBeNull().SetValue( "FILESYSTEM_GIT" );
         }
     }

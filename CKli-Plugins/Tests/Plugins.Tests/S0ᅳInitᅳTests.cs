@@ -11,7 +11,7 @@ namespace Plugins.Tests.Integration;
 public class S0ᅳInitᅳTests
 {
     /// <summary>
-    /// <see cref="CKli.Net8Migration.Plugin.Net8MigrationPlugin.MigrateNet8"/>
+    /// <see cref="CKli.Migration.Plugin.MigrationPlugin.MigrateNet8(CK.Core.IActivityMonitor, bool, bool)"/>
     /// </summary>
     /// <returns></returns>
     [Test]

@@ -2,12 +2,14 @@ using CK.Core;
 using CKli;
 using CKli.ArtifactHandler.Plugin;
 using CKli.BranchModel.Plugin;
+using CKli.Build.Plugin;
 using CKli.Core;
 using NUnit.Framework;
 using Shouldly;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using static CK.Testing.MonitorTestHelper;
 
 namespace Plugins.Tests.Integration;
@@ -207,8 +209,6 @@ public class S1ᅳInitializedᅳTests
         }
 
     }
-
-
 
 
     /// <summary>
@@ -752,6 +752,53 @@ public class S1ᅳInitializedᅳTests
 
             """ );
     }
+
+    [Explicit]
+    [Test]
+    public async Task restoring_from_private_feed_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        // Must alter the definition file before creating the repo (configured NuGetFeeds are cached).
+        //
+        // This feed is private read-only feed (because it has no PushQualityFilter).
+        // 
+        NormalizedPath definitionPath = world.WorldRoot.CurrentStackPath.AppendPart( "Test.xml" );
+        var definitionFile = XElement.Load( definitionPath );
+        definitionFile.Descendants( "NuGet" ).Single().AddFirst(
+            new XElement( "Feed", new XAttribute( "Name", "SC" ), new XAttribute( "Url", "https://pkgs.dev.azure.com/Signature-Code/_packaging/Default/nuget/v3/index.json" ),
+                        new XElement( "Credentials", new XAttribute( "SecretKey", "SC_READ_PAT" ) ) ) );
+        definitionFile.Descendants( "Feed" )
+                        .Single( e => e.Attribute( "Name" )!.Value == "NuGet" ).SetAttributeValue( "Url", "https://api.nuget.org/v3/index.json" );
+
+        definitionFile.SafeSave( definitionPath );
+
+        // This test uses the real "dotnet build".
+        BuildPlugin.SetBuilderFunction( null );
+
+        // Creates a repository with a default project that has a PackageReference to a package that exists ONLY in the private feed.
+        await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
+        NormalizedPath projectPath = world.WorldRoot.CurrentDirectory.Combine( "X-Core/X.Core/X.Core.csproj" );
+        var project = XElement.Load( projectPath );
+        project.Descendants( "ItemGroup" ).First().Add(
+            new XElement( "PackageReference", new XAttribute( "Include", "SLog.Device.Signature" ), new XAttribute( "Version", "13.2.0" ) ) );
+        project.SafeSave( projectPath );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "commit", "Added ref to SC feed package only." )).ShouldBeTrue();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue", "--fix" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            ❰✓❱
+
+            """ );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--ci" )).ShouldBeTrue();
+    }
+
 
     [Explicit]
     [Test]
