@@ -256,6 +256,47 @@ public class PublishedFolderTests
     }
 
     [Test]
+    public void OnExpiredPackage_removes_every_profile_that_offers_the_package()
+    {
+        var root = GetCleanFolder( nameof( OnExpiredPackage_removes_every_profile_that_offers_the_package ) );
+        var f = new PublishedFolder( root );
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Add( TestModel.SampleProfile( "1.2.4" ) );
+        f.Add( TestModel.SampleProfile( "1.3.0-alpha" ) );
+        f.Save().ShouldBe( 3 );
+
+        // A brand new folder: OnExpiredPackage reads every file.
+        var f2 = new PublishedFolder( root );
+        f2.OnExpiredPackage( "CK.Unknown", TestModel.V( "1.2.3" ) ).ShouldBeFalse();
+        f2.OnExpiredPackage( "CK.One", TestModel.V( "1.2.3" ) ).ShouldBeTrue();
+        f2.OnExpiredPackage( "CK.One", TestModel.V( "1.2.3" ) ).ShouldBeFalse( "Already removed." );
+
+        f2.Profiles.Select( p => p.Version.ToString() )
+                   .ShouldBe( new[] { "1.3.0-alpha", "1.2.4" }, "The profile that offers CK.One@1.2.3 is gone." );
+
+        f2.Save().ShouldBe( 1 );
+        File.Exists( Path.Combine( root, "v1.2.3.json" ) ).ShouldBeFalse();
+        // An expired profile is deleted, not deprecated: nothing is left to read.
+        var f3 = new PublishedFolder( root );
+        f3.Find( TestModel.V( "1.2.3" ) ).ShouldBeNull();
+        f3.GetLoadError( TestModel.V( "1.2.3" ) ).ShouldBeNull();
+    }
+
+    [Test]
+    public void OnExpiredPackage_ignores_a_profile_that_offers_another_version()
+    {
+        var root = GetCleanFolder( nameof( OnExpiredPackage_ignores_a_profile_that_offers_another_version ) );
+        var f = new PublishedFolder( root );
+        // SampleProfile puts its packages in the profile's own version: only "1.2.3" offers CK.One@1.2.3.
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Add( TestModel.SampleProfile( "1.2.4" ) );
+        f.Save().ShouldBe( 2 );
+
+        new PublishedFolder( root ).OnExpiredPackage( "CK.One", TestModel.V( "9.9.9" ) ).ShouldBeFalse();
+        new PublishedFolder( root ).Profiles.Count().ShouldBe( 2 );
+    }
+
+    [Test]
     public void an_unreadable_file_is_a_load_error_and_can_be_replaced()
     {
         var root = GetCleanFolder( nameof( an_unreadable_file_is_a_load_error_and_can_be_replaced ) );

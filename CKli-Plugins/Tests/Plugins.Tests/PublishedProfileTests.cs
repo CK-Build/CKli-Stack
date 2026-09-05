@@ -153,11 +153,28 @@ public class PublishedProfileTests
         folder.Reload();
         folder.LoadErrors.ShouldBeEmpty();
         folder.Profiles.Select( p => p.IsDeprecated ).ShouldBe( [false, true] );
-
-        // It is idempotent: deprecating it again changes nothing.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "deprecate", "v1.0.2", "--immediate", "--allow-update" )).ShouldBeTrue();
+        // Re-running the same deprecation changes nothing: the deprecation of a profile is monotonic.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "deprecate", "v1.0.2", "--days", "30", "--allow-update", "--reason", "Again." )).ShouldBeTrue();
         folder.Reload();
         folder.Profiles.Select( p => p.IsDeprecated ).ShouldBe( [false, true] );
+
+        // Expiring it ("--immediate") removes the version tag and unlists the packages: the profile that
+        // offers them no longer describes anything, so it is deleted rather than kept as deprecated.
+        var removed = folder.Profiles.Single( p => p.IsDeprecated ).Version;
+        var removedFile = folder.GetProfileFilePath( removed );
+        File.Exists( removedFile ).ShouldBeTrue();
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "deprecate", "v1.0.2", "--immediate", "--allow-update" )).ShouldBeTrue();
+
+        folder.Reload();
+        folder.LoadErrors.ShouldBeEmpty();
+        folder.Profiles.Select( p => p.Packages["X.Core"].Version.ToString() ).ShouldBe( ["1.0.3"] );
+        File.Exists( removedFile ).ShouldBeFalse();
+
+        // And that is idempotent too: there is nothing left to remove.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "deprecate", "v1.0.2", "--immediate", "--allow-update" )).ShouldBeTrue();
+        folder.Reload();
+        folder.Profiles.Select( p => p.Packages["X.Core"].Version.ToString() ).ShouldBe( ["1.0.3"] );
     }
 
     // The harness commits on "dev/stable": a successful non-CI publication integrates it into "stable"
