@@ -1,0 +1,322 @@
+using CK.Core;
+using CK.Packaging.Abstractions;
+using CKli.Publish.Plugin;
+using NUnit.Framework;
+using Shouldly;
+using System;
+using System.Collections.Immutable;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using static CK.Testing.MonitorTestHelper;
+
+namespace Plugins.Tests;
+
+/// <summary>
+/// <see cref="PublishedFolder"/> unit tests: no World is involved, the folder is a plain
+/// directory of Json <see cref="PublishedProfile"/> files.
+/// </summary>
+[TestFixture]
+public class PublishedFolderTests
+{
+    // Each test works in its own folder: TestHelper.CleanupFolder creates an empty one.
+    static string GetCleanFolder( string testName )
+    {
+        var p = Path.GetFullPath( Path.Combine( Path.GetTempPath(), "Plugins.Tests.PublishedFolder", testName ) );
+        TestHelper.CleanupFolder( p, ensureFolderAvailable: true );
+        return p;
+    }
+
+    // Builds the profiles of the "CKt" test stack.
+    static class TestModel
+    {
+        public static readonly Uri StackUrl = new Uri( "https://github.com/Signature-Code/CKt-Stack" );
+
+        public static readonly WorldName World = WorldName.Parse( "CKt" );
+
+        /// <summary>
+        /// Parses a Conformant SVersion.
+        /// </summary>
+        public static SVersion V( string version ) => SVersion.Parse( version, mustBeCSVersion: true );
+
+        /// <summary>
+        /// Creates a profile of 2 repositories and 3 packages, all in the provided version.
+        /// </summary>
+        public static PublishedProfile SampleProfile( string version = "1.2.3" )
+        {
+            return new PublishedProfile( StackUrl,
+                                         World,
+                                         V( version ),
+                                         [Repo( "Two", 2, $"CK.Two@{version}" ),
+                                          Repo( "One", 1, $"CK.One.Sub@{version}", $"CK.One@{version}" )] );
+        }
+
+        static Repository Repo( string name, ulong id, params string[] packages )
+        {
+            var key = new RepositoryKey( new Uri( $"https://github.com/Signature-Code/CKt-{name}" ),
+                                         new RandomId( id ) );
+            return new Repository( key, packages.Select( Package ).ToImmutableArray() );
+        }
+
+        static PackageInstance Package( string packageInstance )
+        {
+            return PackageInstance.TryParse( packageInstance, out var p )
+                    ? p
+                    : throw new ArgumentException( $"Invalid package instance '{packageInstance}'." );
+        }
+    }
+
+    [Test]
+    public void the_root_directory_must_exist_unless_createIfMissing()
+    {
+        var root = GetCleanFolder( nameof( the_root_directory_must_exist_unless_createIfMissing ) );
+        var missing = Path.Combine( root, "Published" );
+
+        Should.Throw<ArgumentException>( () => new PublishedFolder( missing ) )
+              .Message.ShouldStartWith( $"Published folder directory must exist: '{missing}'." );
+
+        var f = new PublishedFolder( missing, createIfMissing: true );
+        Directory.Exists( missing ).ShouldBeTrue();
+        f.RootPath.ShouldBe( missing + Path.DirectorySeparatorChar );
+    }
+
+    [Test]
+    public void an_empty_folder_has_no_profile()
+    {
+        var f = new PublishedFolder( GetCleanFolder( nameof( an_empty_folder_has_no_profile ) ) );
+
+        f.Profiles.ShouldBeEmpty();
+        f.LoadErrors.ShouldBeEmpty();
+        f.IsDirty.ShouldBeFalse();
+        f.Save().ShouldBe( 0 );
+        f.Find( TestModel.V( "1.2.3" ) ).ShouldBeNull();
+        f.GetLoadError( TestModel.V( "1.2.3" ) ).ShouldBeNull();
+    }
+
+    [TestCase( "1.2.3", @"v1.2.3.json" )]
+    [TestCase( "1.2.3--ci.5", @"v1.2.3--ci.5.json" )]
+    [TestCase( "1.3.0-alpha", @"alpha\v1.3.0-alpha.json" )]
+    [TestCase( "1.3.0-zulu.4.ci.12", @"zulu\v1.3.0-zulu.4.ci.12.json" )]
+    [TestCase( "0.0.0-0.some-explo", @"explo\some-explo\v0.0.0-0.some-explo.json" )]
+    public void the_file_path_of_a_profile_follows_its_branch_name( string version, string relativePath )
+    {
+        var root = GetCleanFolder( nameof( the_file_path_of_a_profile_follows_its_branch_name ) );
+        var f = new PublishedFolder( root );
+
+        var expected = Path.Combine( root, relativePath.Replace( '\\', Path.DirectorySeparatorChar ) );
+        f.GetProfileFilePath( TestModel.V( version ) ).ShouldBe( expected );
+    }
+
+    [Test]
+    public void GetProfileFilePath_requires_a_conformant_version()
+    {
+        var f = new PublishedFolder( GetCleanFolder( nameof( GetProfileFilePath_requires_a_conformant_version ) ) );
+        var notCS = SVersion.Parse( "1.0.0-not-conformant" );
+
+        Should.Throw<ArgumentException>( () => f.GetProfileFilePath( notCS ) )
+              .Message.ShouldStartWith( "Version '1.0.0-not-conformant' must be a Conformant SVersion." );
+    }
+
+    [Test]
+    public void added_profiles_are_written_by_Save_and_read_back()
+    {
+        var root = GetCleanFolder( nameof( added_profiles_are_written_by_Save_and_read_back ) );
+        var f = new PublishedFolder( root );
+
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Add( TestModel.SampleProfile( "1.3.0-alpha" ) );
+        f.Add( TestModel.SampleProfile( "0.0.0-0.some-explo" ) );
+        f.IsDirty.ShouldBeTrue();
+        // Nothing is written before Save.
+        Directory.EnumerateFiles( root, "*.json", SearchOption.AllDirectories ).ShouldBeEmpty();
+
+        f.Save().ShouldBe( 3 );
+        f.IsDirty.ShouldBeFalse();
+        f.Save().ShouldBe( 0, "Nothing more to do." );
+
+        File.Exists( Path.Combine( root, "v1.2.3.json" ) ).ShouldBeTrue();
+        File.Exists( Path.Combine( root, "alpha", "v1.3.0-alpha.json" ) ).ShouldBeTrue();
+        File.Exists( Path.Combine( root, "explo", "some-explo", "v0.0.0-0.some-explo.json" ) ).ShouldBeTrue();
+
+        // A brand new folder reads the files.
+        var f2 = new PublishedFolder( root );
+        f2.Profiles.Select( p => p.Version.ToString() )
+                   .ShouldBe( new[] { "1.3.0-alpha", "1.2.3", "0.0.0-0.some-explo" },
+                              "Ordered by descending version." );
+        f2.LoadErrors.ShouldBeEmpty();
+
+        var found = f2.Find( TestModel.V( "1.2.3" ) );
+        found.ShouldNotBeNull();
+        found.ToJsonString().ShouldBe( TestModel.SampleProfile( "1.2.3" ).ToJsonString() );
+        // The file is the indented Json.
+        File.ReadAllText( Path.Combine( root, "v1.2.3.json" ) ).ShouldBe( found.ToJsonString() );
+    }
+
+    [Test]
+    public void Add_throws_when_the_version_already_exists()
+    {
+        var root = GetCleanFolder( nameof( Add_throws_when_the_version_already_exists ) );
+        var f = new PublishedFolder( root );
+
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        Should.Throw<InvalidOperationException>( () => f.Add( TestModel.SampleProfile( "1.2.3" ) ) )
+              .Message.ShouldBe( "Profile '1.2.3' already exists." );
+
+        f.Save().ShouldBe( 1 );
+
+        // The saved profile is found by a new folder: Add still throws.
+        var f2 = new PublishedFolder( root );
+        Should.Throw<InvalidOperationException>( () => f2.Add( TestModel.SampleProfile( "1.2.3" ) ) );
+    }
+
+    [Test]
+    public void Remove_deletes_the_file()
+    {
+        var root = GetCleanFolder( nameof( Remove_deletes_the_file ) );
+        var f = new PublishedFolder( root );
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Add( TestModel.SampleProfile( "1.3.0-alpha" ) );
+        f.Save().ShouldBe( 2 );
+
+        f.Remove( TestModel.V( "1.2.4" ) ).ShouldBeFalse( "Unknown version." );
+        f.Remove( TestModel.V( "1.2.3" ) ).ShouldBeTrue();
+        f.Remove( TestModel.V( "1.2.3" ) ).ShouldBeFalse( "Already removed." );
+        f.Find( TestModel.V( "1.2.3" ) ).ShouldBeNull();
+        File.Exists( Path.Combine( root, "v1.2.3.json" ) ).ShouldBeTrue( "Not saved yet." );
+
+        f.Save().ShouldBe( 1 );
+        File.Exists( Path.Combine( root, "v1.2.3.json" ) ).ShouldBeFalse();
+
+        new PublishedFolder( root ).Profiles.Select( p => p.Version.ToString() )
+                                            .ShouldBe( new[] { "1.3.0-alpha" } );
+
+        // A removed profile can be added again.
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Save().ShouldBe( 1 );
+        File.Exists( Path.Combine( root, "v1.2.3.json" ) ).ShouldBeTrue();
+    }
+
+    [Test]
+    public void Reload_forgets_the_pending_modifications()
+    {
+        var root = GetCleanFolder( nameof( Reload_forgets_the_pending_modifications ) );
+        var f = new PublishedFolder( root );
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Save().ShouldBe( 1 );
+
+        f.Remove( TestModel.V( "1.2.3" ) ).ShouldBeTrue();
+        f.Add( TestModel.SampleProfile( "2.0.0" ) );
+        f.IsDirty.ShouldBeTrue();
+
+        f.Reload();
+        f.IsDirty.ShouldBeFalse();
+        f.Find( TestModel.V( "1.2.3" ) ).ShouldNotBeNull();
+        f.Find( TestModel.V( "2.0.0" ) ).ShouldBeNull();
+    }
+
+    [Test]
+    public void Deprecate_updates_the_file()
+    {
+        var root = GetCleanFolder( nameof( Deprecate_updates_the_file ) );
+        var f = new PublishedFolder( root );
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Save().ShouldBe( 1 );
+
+        f.Deprecate( TestModel.V( "9.9.9" ) ).ShouldBeFalse( "Unknown version." );
+        f.Deprecate( TestModel.V( "1.2.3" ) ).ShouldBeTrue();
+        f.Deprecate( TestModel.V( "1.2.3" ) ).ShouldBeFalse( "Idempotent." );
+        f.Find( TestModel.V( "1.2.3" ) )!.IsDeprecated.ShouldBeTrue();
+
+        f.Save().ShouldBe( 1 );
+        new PublishedFolder( root ).Find( TestModel.V( "1.2.3" ) )!.IsDeprecated.ShouldBeTrue();
+    }
+
+    [Test]
+    public void OnDeprecatedPackage_deprecates_every_profile_that_offers_the_package()
+    {
+        var root = GetCleanFolder( nameof( OnDeprecatedPackage_deprecates_every_profile_that_offers_the_package ) );
+        var f = new PublishedFolder( root );
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Add( TestModel.SampleProfile( "1.2.4" ) );
+        f.Add( TestModel.SampleProfile( "1.3.0-alpha" ) );
+        f.Save().ShouldBe( 3 );
+
+        // A brand new folder: OnDeprecatedPackage reads every file.
+        var f2 = new PublishedFolder( root );
+        f2.OnDeprecatedPackage( "CK.Unknown", TestModel.V( "1.2.3" ) ).ShouldBeFalse();
+        f2.OnDeprecatedPackage( "CK.One", TestModel.V( "1.2.3" ) ).ShouldBeTrue();
+        f2.OnDeprecatedPackage( "CK.One", TestModel.V( "1.2.3" ) ).ShouldBeFalse( "Already deprecated." );
+
+        f2.Profiles.Where( p => p.IsDeprecated )
+                   .Select( p => p.Version.ToString() )
+                   .ShouldBe( new[] { "1.2.3" }, "Only the profile that offers CK.One@1.2.3." );
+
+        f2.Save().ShouldBe( 1 );
+        new PublishedFolder( root ).Find( TestModel.V( "1.2.3" ) )!.IsDeprecated.ShouldBeTrue();
+    }
+
+    [Test]
+    public void an_unreadable_file_is_a_load_error_and_can_be_replaced()
+    {
+        var root = GetCleanFolder( nameof( an_unreadable_file_is_a_load_error_and_can_be_replaced ) );
+        File.WriteAllText( Path.Combine( root, "v1.2.3.json" ), "{ this is not json" );
+        File.WriteAllText( Path.Combine( root, "v1.2.4.json" ),
+                           TestModel.SampleProfile( "1.2.3" ).ToJsonString() );
+
+        var f = new PublishedFolder( root );
+
+        f.Find( TestModel.V( "1.2.3" ) ).ShouldBeNull();
+        // A syntax error is a JsonReaderException (a specialized JsonException).
+        f.GetLoadError( TestModel.V( "1.2.3" ) ).ShouldBeAssignableTo<JsonException>();
+        // The file name and the profile's version must agree.
+        f.GetLoadError( TestModel.V( "1.2.4" ) )
+         .ShouldBeAssignableTo<JsonException>()!
+         .Message.ShouldEndWith( "contains the version '1.2.3'." );
+
+        f.LoadErrors.Select( e => e.Version.ToString() ).ShouldBe( new[] { "1.2.4", "1.2.3" } );
+        f.Profiles.ShouldBeEmpty();
+
+        // An invalid file doesn't prevent the add: Save replaces it.
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Save().ShouldBe( 1 );
+
+        var f2 = new PublishedFolder( root );
+        f2.Find( TestModel.V( "1.2.3" ) ).ShouldNotBeNull();
+        f2.GetLoadError( TestModel.V( "1.2.3" ) ).ShouldBeNull();
+    }
+
+    [Test]
+    public void a_missing_file_is_not_a_load_error()
+    {
+        var f = new PublishedFolder( GetCleanFolder( nameof( a_missing_file_is_not_a_load_error ) ) );
+
+        f.Find( TestModel.V( "1.2.3" ) ).ShouldBeNull();
+        f.GetLoadError( TestModel.V( "1.2.3" ) ).ShouldBeNull();
+    }
+
+    [Test]
+    public void files_that_are_not_at_their_canonical_path_are_ignored()
+    {
+        var root = GetCleanFolder( nameof( files_that_are_not_at_their_canonical_path_are_ignored ) );
+        var good = TestModel.SampleProfile( "1.2.3" ).ToJsonString();
+
+        // Not a version.
+        File.WriteAllText( Path.Combine( root, "index.json" ), good );
+        // A version with a prefix.
+        File.WriteAllText( Path.Combine( root, "profile-v1.2.3.json" ), good );
+        // A stable version in a branch folder.
+        Directory.CreateDirectory( Path.Combine( root, "alpha" ) );
+        File.WriteAllText( Path.Combine( root, "alpha", "v1.2.3.json" ), good );
+        // A prerelease at the root.
+        File.WriteAllText( Path.Combine( root, "v1.3.0-alpha.json" ),
+                           TestModel.SampleProfile( "1.3.0-alpha" ).ToJsonString() );
+        // The only canonical file.
+        File.WriteAllText( Path.Combine( root, "v2.0.0.json" ),
+                           TestModel.SampleProfile( "2.0.0" ).ToJsonString() );
+
+        var f = new PublishedFolder( root );
+
+        f.Profiles.Select( p => p.Version.ToString() ).ShouldBe( new[] { "2.0.0" } );
+        f.LoadErrors.ShouldBeEmpty();
+    }
+}
