@@ -319,4 +319,80 @@ public class PublishedFolderTests
         f.Profiles.Select( p => p.Version.ToString() ).ShouldBe( new[] { "2.0.0" } );
         f.LoadErrors.ShouldBeEmpty();
     }
+
+    // 2026 is not a leap year: the 254th day is the 11th of September.
+    static readonly DateTime _day254 = new DateTime( 2026, 9, 11, 13, 45, 0, DateTimeKind.Utc );
+
+    [TestCase( CSVersionKind.Stable, false, "2026.254.0" )]
+    [TestCase( CSVersionKind.Stable, true, "2026.254.0--ci.0" )]
+    [TestCase( CSVersionKind.Alpha, false, "2026.254.0-alpha" )]
+    [TestCase( CSVersionKind.Alpha, true, "2026.254.0-alpha.0.ci.0" )]
+    [TestCase( CSVersionKind.Zulu, false, "2026.254.0-zulu" )]
+    [TestCase( CSVersionKind.Zulu, true, "2026.254.0-zulu.0.ci.0" )]
+    public void a_new_profile_version_is_time_based( CSVersionKind branchKind, bool isCIBuild, string expected )
+    {
+        var f = new PublishedFolder( GetCleanFolder( nameof( a_new_profile_version_is_time_based ) ) );
+
+        var v = f.CreateNewProfileVersion( branchKind, isCIBuild: isCIBuild, utcNow: _day254 );
+        v.ToString().ShouldBe( expected );
+        // The version is always a Conformant SVersion: the PublishedProfile constructor requires it.
+        v.VersionKind.ShouldBe( branchKind );
+        v.IsCI.ShouldBe( isCIBuild );
+    }
+
+    [Test]
+    public void a_new_profile_version_of_an_exploratory_branch_carries_its_name()
+    {
+        var f = new PublishedFolder( GetCleanFolder( nameof( a_new_profile_version_of_an_exploratory_branch_carries_its_name ) ) );
+
+        f.CreateNewProfileVersion( CSVersionKind.Exploratory, "some-explo", utcNow: _day254 )
+         .ToString().ShouldBe( "2026.254.0-0.some-explo" );
+        f.CreateNewProfileVersion( CSVersionKind.Exploratory, "some-explo", isCIBuild: true, utcNow: _day254 )
+         .ToString().ShouldBe( "2026.254.0-0.some-explo.0.ci.0" );
+    }
+
+    [Test]
+    public void a_new_profile_version_requires_a_branch_kind_that_exists()
+    {
+        var f = new PublishedFolder( GetCleanFolder( nameof( a_new_profile_version_requires_a_branch_kind_that_exists ) ) );
+
+        Should.Throw<ArgumentException>( () => f.CreateNewProfileVersion( CSVersionKind.None ) )
+              .Message.ShouldStartWith( "Invalid branch kind 'None'." );
+        Should.Throw<ArgumentException>( () => f.CreateNewProfileVersion( CSVersionKind.Exploratory ) )
+              .Message.ShouldStartWith( "An exploratory branch requires its name." );
+    }
+
+    [Test]
+    public void the_patch_of_a_new_profile_version_is_incremented_until_it_is_free()
+    {
+        var root = GetCleanFolder( nameof( the_patch_of_a_new_profile_version_is_incremented_until_it_is_free ) );
+        var f = new PublishedFolder( root );
+
+        f.CreateNewProfileVersion( CSVersionKind.Alpha, utcNow: _day254 ).ToString().ShouldBe( "2026.254.0-alpha" );
+        // A pending Add is enough: the folder doesn't need to be saved.
+        f.Add( TestModel.SampleProfile( "2026.254.0-alpha" ) );
+        f.CreateNewProfileVersion( CSVersionKind.Alpha, utcNow: _day254 ).ToString().ShouldBe( "2026.254.1-alpha" );
+
+        f.Add( TestModel.SampleProfile( "2026.254.1-alpha" ) );
+        f.Save().ShouldBe( 2 );
+        f.Reload();
+        f.CreateNewProfileVersion( CSVersionKind.Alpha, utcNow: _day254 ).ToString().ShouldBe( "2026.254.2-alpha" );
+
+        // Another branch (and the CI builds of a branch) has its own patch sequence.
+        f.CreateNewProfileVersion( CSVersionKind.Stable, utcNow: _day254 ).ToString().ShouldBe( "2026.254.0" );
+        f.CreateNewProfileVersion( CSVersionKind.Alpha, isCIBuild: true, utcNow: _day254 )
+         .ToString().ShouldBe( "2026.254.0-alpha.0.ci.0" );
+    }
+
+    [Test]
+    public void a_new_profile_version_skips_an_unreadable_file_that_Save_would_replace()
+    {
+        var root = GetCleanFolder( nameof( a_new_profile_version_skips_an_unreadable_file_that_Save_would_replace ) );
+        File.WriteAllText( Path.Combine( root, "v2026.254.0.json" ), "not a profile" );
+
+        var f = new PublishedFolder( root );
+
+        f.GetLoadError( TestModel.V( "2026.254.0" ) ).ShouldNotBeNull();
+        f.CreateNewProfileVersion( CSVersionKind.Stable, utcNow: _day254 ).ToString().ShouldBe( "2026.254.1" );
+    }
 }
