@@ -117,6 +117,49 @@ public class PublishedProfileTests
               .ShouldBe( [$"{expected}.1", $"{expected}.0", $"{expected}.0--ci.0"] );
     }
 
+    /// <summary>
+    /// Deprecating a version deprecates every published profile that offers it. The propagation across the
+    /// consumers applies: only the profiles that offer one of the deprecated versions are impacted, so a
+    /// later profile that offers the same packages in newer versions is left alone.
+    /// </summary>
+    [Test]
+    public async Task deprecating_a_version_deprecates_the_profiles_that_offer_it_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        await world.CreateRepoAsync( "X-Consumer", "v0.3.3", references: [rCore] ).ConfigureAwait( false );
+
+        // The first publication offers X.Core@1.0.2 and X.Consumer@0.3.4.
+        await TouchDevStableAsync( rCore, "First.txt" ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        // The second one offers X.Core@1.0.3 and X.Consumer@0.3.5.
+        await TouchDevStableAsync( rCore, "Second.txt" ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+
+        var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
+                                                         .AppendPart( "Published" ) );
+        // Profiles are ordered by descending version: the newer publication comes first.
+        folder.Profiles.Select( p => p.Packages["X.Core"].Version.ToString() ).ShouldBe( ["1.0.3", "1.0.2"] );
+        folder.Profiles.Any( p => p.IsDeprecated ).ShouldBeFalse();
+
+        // Deprecating X.Core v1.0.2 hits the first profile, which offers it. The second one offers only
+        // newer versions and must be left alone. (The deprecation also propagates to X-Consumer v0.3.4,
+        // but that package lives in the same profile, so it is not what this assertion discriminates.)
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "deprecate", "v1.0.2", "--days", "30" )).ShouldBeTrue();
+
+        folder.Reload();
+        folder.LoadErrors.ShouldBeEmpty();
+        folder.Profiles.Select( p => p.IsDeprecated ).ShouldBe( [false, true] );
+
+        // It is idempotent: deprecating it again changes nothing.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "deprecate", "v1.0.2", "--immediate", "--allow-update" )).ShouldBeTrue();
+        folder.Reload();
+        folder.Profiles.Select( p => p.IsDeprecated ).ShouldBe( [false, true] );
+    }
+
     // The harness commits on "dev/stable": a successful non-CI publication integrates it into "stable"
     // and deletes it, so it may have to be created again.
     static async Task TouchDevStableAsync( FakeBuildRepo repo, string fileName = "CKliTouchAndCommit.txt" )
