@@ -177,12 +177,72 @@ public class PublishedProfileTests
         folder.Profiles.Select( p => p.Packages["X.Core"].Version.ToString() ).ShouldBe( ["1.0.3"] );
     }
 
+    /// <summary>
+    /// A fix publishes versions that supersede the ones it fixes. The profiles that offer those are not
+    /// rewritten - they record what was published - so the fix adds a superseding profile beside each one,
+    /// with the same Major.Minor and the next free Patch. A profile that offers only newer versions is left
+    /// alone.
+    /// </summary>
+    [Test]
+    public async Task a_fix_publication_supersedes_the_profiles_that_offer_the_fixed_versions_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
+        await world.CreateRepoAsync( "X-Consumer", "v0.1.0", references: [rCore] ).ConfigureAwait( false );
+
+        // Two publications, each triggered by a "feat:" commit. The first profile offers X.Core@1.1.0 and
+        // X.Consumer@0.2.0, the second one X.Core@1.2.0 and X.Consumer@0.3.0. The second publication is also
+        // what pushes v1.1 out of the hot zone so that it can be fixed.
+        await TouchDevStableAsync( rCore, "First.txt", "feat: a first feature." ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        await TouchDevStableAsync( rCore, "Second.txt", "feat: a second feature." ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+
+        var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
+                                                         .AppendPart( "Published" ) );
+        var today = DateTime.UtcNow;
+        var day = $"{today.Year}.{today.DayOfYear}";
+        folder.Profiles.Select( p => p.Packages["X.Core"].Version.ToString() ).ShouldBe( ["1.2.0", "1.1.0"] );
+
+        // Fixing v1.1 publishes X.Core@1.1.1 and, since X-Consumer v0.2.0 consumed X.Core@1.1.0, X.Consumer@0.2.1.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "fix", "start", "v1.1" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: "fix/v1.1", fileName: "The-fix.txt" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "fix", "publish" )).ShouldBeTrue();
+
+        folder.Reload();
+        folder.LoadErrors.ShouldBeEmpty();
+        // A third profile: the one that offered the fixed versions has been superseded. Both were published
+        // today, so the successor takes the next free Patch.
+        folder.Profiles.Select( p => p.Version.ToString() )
+              .ShouldBe( [$"{day}.2", $"{day}.1", $"{day}.0"] );
+
+        var superseding = folder.Find( SVersion.Parse( $"{day}.2" ) )!;
+        superseding.Packages["X.Core"].Version.ToString().ShouldBe( "1.1.1" );
+        superseding.Packages["X.Consumer"].Version.ToString().ShouldBe( "0.2.1" );
+        superseding.IsDeprecated.ShouldBeFalse();
+
+        // The profile it supersedes is untouched, and the one that offers only newer versions is not concerned.
+        var superseded = folder.Find( SVersion.Parse( $"{day}.0" ) )!;
+        superseded.Packages["X.Core"].Version.ToString().ShouldBe( "1.1.0" );
+        superseded.Packages["X.Consumer"].Version.ToString().ShouldBe( "0.2.0" );
+        var untouched = folder.Find( SVersion.Parse( $"{day}.1" ) )!;
+        untouched.Packages["X.Core"].Version.ToString().ShouldBe( "1.2.0" );
+    }
+
     // The harness commits on "dev/stable": a successful non-CI publication integrates it into "stable"
     // and deletes it, so it may have to be created again.
-    static async Task TouchDevStableAsync( FakeBuildRepo repo, string fileName = "CKliTouchAndCommit.txt" )
+    static async Task TouchDevStableAsync( FakeBuildRepo repo,
+                                           string fileName = "CKliTouchAndCommit.txt",
+                                           string? commitMessage = null )
     {
         // "git branch dev/stable" fails when it already exists: the error is ignored on purpose.
         await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "exec", "git", "branch", "dev/stable" );
-        TestHelper.TouchAndCommit( repo.WorkingFolderPath, branchName: "dev/stable", fileName: fileName );
+        TestHelper.TouchAndCommit( repo.WorkingFolderPath,
+                                   branchName: "dev/stable",
+                                   commitMessage: commitMessage,
+                                   fileName: fileName );
     }
 }

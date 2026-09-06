@@ -4,6 +4,7 @@ using CKli.Publish.Plugin;
 using NUnit.Framework;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -253,6 +254,110 @@ public class PublishedFolderTests
 
         f2.Save().ShouldBe( 1 );
         new PublishedFolder( root ).Find( TestModel.V( "1.2.3" ) )!.IsDeprecated.ShouldBeTrue();
+    }
+
+    // "CK.One" of the SampleProfile has been fixed: its version becomes the provided one.
+    static Dictionary<PackageInstance, SVersion> Fixed( string fixedVersion, string supersedingVersion )
+    {
+        return new Dictionary<PackageInstance, SVersion>
+        {
+            { new PackageInstance( "CK.One", TestModel.V( fixedVersion ) ), TestModel.V( supersedingVersion ) }
+        };
+    }
+
+    [Test]
+    public void OnFixedPackages_supersedes_the_profiles_that_offer_a_fixed_package()
+    {
+        var root = GetCleanFolder( nameof( OnFixedPackages_supersedes_the_profiles_that_offer_a_fixed_package ) );
+        var f = new PublishedFolder( root );
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Add( TestModel.SampleProfile( "1.2.4" ) );
+        f.Add( TestModel.SampleProfile( "1.3.0-alpha" ) );
+        f.Save().ShouldBe( 3 );
+
+        // A brand new folder: OnFixedPackages reads every file.
+        var f2 = new PublishedFolder( root );
+        var created = f2.OnFixedPackages( Fixed( "1.2.3", "1.2.9" ) );
+
+        // Only the profile that offers CK.One@1.2.3 is superseded. Its successor keeps its Major.Minor and
+        // takes the next free Patch: "1.2.4" is taken, so "1.2.5".
+        created.Length.ShouldBe( 1 );
+        var p = created[0];
+        p.Version.ToString().ShouldBe( "1.2.5" );
+        p.IsDeprecated.ShouldBeFalse();
+        p.StackUrl.ShouldBe( TestModel.StackUrl );
+        p.World.FullName.ShouldBe( TestModel.World.FullName );
+
+        // Only the fixed package moves: the offer is otherwise the one it supersedes.
+        p.Packages["CK.One"].Version.ToString().ShouldBe( "1.2.9" );
+        p.Packages["CK.One.Sub"].Version.ToString().ShouldBe( "1.2.3" );
+        p.Packages["CK.Two"].Version.ToString().ShouldBe( "1.2.3" );
+
+        // The superseded profile records what was published and is left untouched.
+        f2.Find( TestModel.V( "1.2.3" ) )!.Packages["CK.One"].Version.ToString().ShouldBe( "1.2.3" );
+
+        f2.Save().ShouldBe( 1 );
+        new PublishedFolder( root ).Profiles
+                                   .Select( x => x.Version.ToString() )
+                                   .ShouldBe( new[] { "1.3.0-alpha", "1.2.5", "1.2.4", "1.2.3" } );
+    }
+
+    [Test]
+    public void a_superseding_profile_stays_on_its_branch()
+    {
+        var root = GetCleanFolder( nameof( a_superseding_profile_stays_on_its_branch ) );
+        var f = new PublishedFolder( root );
+        f.Add( TestModel.SampleProfile( "1.3.0-alpha" ) );
+        f.Save().ShouldBe( 1 );
+
+        var created = new PublishedFolder( root ).OnFixedPackages( Fixed( "1.3.0-alpha", "1.3.1" ) );
+        created.Length.ShouldBe( 1 );
+        created[0].Version.ToString().ShouldBe( "1.3.1-alpha" );
+    }
+
+    [Test]
+    public void OnFixedPackages_leaves_a_deprecated_profile_locked()
+    {
+        var root = GetCleanFolder( nameof( OnFixedPackages_leaves_a_deprecated_profile_locked ) );
+        var f = new PublishedFolder( root );
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Deprecate( TestModel.V( "1.2.3" ) ).ShouldBeTrue();
+        f.Save().ShouldBe( 1 );
+
+        new PublishedFolder( root ).OnFixedPackages( Fixed( "1.2.3", "1.2.9" ) )
+                                   .ShouldBeEmpty( "A deprecated profile is locked." );
+    }
+
+    [Test]
+    public void OnFixedPackages_is_idempotent()
+    {
+        var root = GetCleanFolder( nameof( OnFixedPackages_is_idempotent ) );
+        var f = new PublishedFolder( root );
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Save().ShouldBe( 1 );
+
+        var f2 = new PublishedFolder( root );
+        f2.OnFixedPackages( Fixed( "1.2.3", "1.2.9" ) ).Length.ShouldBe( 1 );
+        f2.OnFixedPackages( Fixed( "1.2.3", "1.2.9" ) )
+          .ShouldBeEmpty( "The superseding profile already carries that offer." );
+        f2.Save().ShouldBe( 1 );
+
+        // And across a reload: retrying an interrupted fix publication adds nothing.
+        new PublishedFolder( root ).OnFixedPackages( Fixed( "1.2.3", "1.2.9" ) ).ShouldBeEmpty();
+    }
+
+    [Test]
+    public void OnFixedPackages_ignores_a_package_no_profile_offers()
+    {
+        var root = GetCleanFolder( nameof( OnFixedPackages_ignores_a_package_no_profile_offers ) );
+        var f = new PublishedFolder( root );
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Save().ShouldBe( 1 );
+
+        var f2 = new PublishedFolder( root );
+        f2.OnFixedPackages( Fixed( "9.9.9", "9.9.10" ) ).ShouldBeEmpty( "No profile offers CK.One@9.9.9." );
+        f2.OnFixedPackages( new Dictionary<PackageInstance, SVersion>() ).ShouldBeEmpty();
+        f2.IsDirty.ShouldBeFalse();
     }
 
     [Test]
