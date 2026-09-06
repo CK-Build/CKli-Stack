@@ -58,6 +58,21 @@ public class PublishedProfileTests
         p.Version.IsCI.ShouldBeFalse();
         File.Exists( folder.GetProfileFilePath( p.Version ) ).ShouldBeTrue();
 
+        // The publication also refreshed the index at the folder's root: it reflects the profile files,
+        // and a stable publication lands in the always-present "(stable)" group.
+        File.ReadAllText( folder.IndexFilePath ).ShouldBe( $$"""
+            {
+              "Alive": {
+                "(stable)": [
+                  "{{p.Version}}"
+                ]
+              },
+              "Deprecated": {
+                "(stable)": []
+              }
+            }
+            """ );
+
         p.World.FullName.ShouldBe( "Test" );
         p.StackUrl.AbsoluteUri.ShouldEndWith( "Test-Stack" );
         p.IsDeprecated.ShouldBeFalse();

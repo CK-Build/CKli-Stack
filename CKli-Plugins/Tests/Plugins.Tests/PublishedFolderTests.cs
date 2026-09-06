@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using static CK.Testing.MonitorTestHelper;
 
@@ -529,6 +530,121 @@ public class PublishedFolderTests
         f.CreateNewProfileVersion( CSVersionKind.Alpha, isCIBuild: true, utcNow: _day254 )
          .ToString().ShouldBe( "2026.254.0-alpha.0.ci.0" );
     }
+
+    [Test]
+    public void the_index_always_carries_the_stable_group_even_when_it_is_empty()
+    {
+        var root = GetCleanFolder( nameof( the_index_always_carries_the_stable_group_even_when_it_is_empty ) );
+        var f = new PublishedFolder( root );
+
+        f.IndexFilePath.ShouldBe( Path.Combine( root, PublishedFolder.IndexFileName ) );
+        ReadIndex( f ).ShouldBe( """
+            {
+              "Alive": {
+                "(stable)": []
+              },
+              "Deprecated": {
+                "(stable)": []
+              }
+            }
+            """ );
+
+        // Nothing changed: Save writes no file at all, index included.
+        f.Save().ShouldBe( 0 );
+        File.Exists( f.IndexFilePath ).ShouldBeFalse();
+    }
+
+    [Test]
+    public void the_index_groups_by_branch_orders_descending_and_splits_alive_from_deprecated()
+    {
+        var root = GetCleanFolder( nameof( the_index_groups_by_branch_orders_descending_and_splits_alive_from_deprecated ) );
+        var f = new PublishedFolder( root );
+
+        foreach( var v in new[] { "1.2.3", "1.2.4", "1.2.5", "1.3.0-alpha", "1.3.0-zulu.4.ci.12", "0.0.0-0.some-explo" } )
+        {
+            f.Add( TestModel.SampleProfile( v ) );
+        }
+        // "1.2.4" leaves the middle of the stable group and "1.3.0-alpha" is the only alpha: the branch
+        // must disappear from "Alive" and appear in "Deprecated".
+        f.Deprecate( TestModel.V( "1.2.4" ) ).ShouldBeTrue();
+        f.Deprecate( TestModel.V( "1.3.0-alpha" ) ).ShouldBeTrue();
+
+        f.Save().ShouldBe( 6, "The index is not one of them." );
+
+        File.ReadAllText( f.IndexFilePath ).ShouldBe( """
+            {
+              "Alive": {
+                "(stable)": [
+                  "1.2.5",
+                  "1.2.3"
+                ],
+                "explo/some-explo": [
+                  "0.0.0-0.some-explo"
+                ],
+                "zulu": [
+                  "1.3.0-zulu.4.ci.12"
+                ]
+              },
+              "Deprecated": {
+                "(stable)": [
+                  "1.2.4"
+                ],
+                "alpha": [
+                  "1.3.0-alpha"
+                ]
+              }
+            }
+            """ );
+    }
+
+    [Test]
+    public void the_index_is_refreshed_only_when_a_profile_file_changed()
+    {
+        var root = GetCleanFolder( nameof( the_index_is_refreshed_only_when_a_profile_file_changed ) );
+        var f = new PublishedFolder( root );
+
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Save().ShouldBe( 1 );
+        File.ReadAllText( f.IndexFilePath ).ShouldContain( "1.2.3" );
+
+        // A Save that changes nothing doesn't touch the index: deleting it is how we can tell.
+        File.Delete( f.IndexFilePath );
+        f.Save().ShouldBe( 0 );
+        File.Exists( f.IndexFilePath ).ShouldBeFalse();
+
+        // Removing the last profile brings it back, empty.
+        f.Remove( TestModel.V( "1.2.3" ) ).ShouldBeTrue();
+        f.Save().ShouldBe( 1 );
+        File.ReadAllText( f.IndexFilePath ).ShouldBe( """
+            {
+              "Alive": {
+                "(stable)": []
+              },
+              "Deprecated": {
+                "(stable)": []
+              }
+            }
+            """ );
+    }
+
+    [Test]
+    public void the_index_is_never_read_back_as_a_profile()
+    {
+        var root = GetCleanFolder( nameof( the_index_is_never_read_back_as_a_profile ) );
+        var f = new PublishedFolder( root );
+
+        f.Add( TestModel.SampleProfile( "1.2.3" ) );
+        f.Save().ShouldBe( 1 );
+        File.Exists( f.IndexFilePath ).ShouldBeTrue();
+
+        // "index" is not a version: the file this folder writes is invisible to its own discovery.
+        f.Reload();
+        f.Profiles.Select( p => p.Version.ToString() ).ShouldBe( ["1.2.3"] );
+        f.LoadErrors.ShouldBeEmpty();
+    }
+
+    // The index file is utf-8 without a BOM and uses "\r\n", like every profile file.
+    static string ReadIndex( PublishedFolder f ) => Encoding.UTF8.GetString( f.CreateIndexUtf8Bytes() );
 
     [Test]
     public void a_new_profile_version_skips_an_unreadable_file_that_Save_would_replace()
