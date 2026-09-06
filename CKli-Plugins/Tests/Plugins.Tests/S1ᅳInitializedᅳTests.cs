@@ -286,45 +286,45 @@ public class S1ᅳInitializedᅳTests
 
             """ );
 
-        // ckli fix build --ci
+        // ckli fix build
         using( TestHelper.Monitor.OpenInfo( """
-            First 'ckli fix build --ci' => triggers the Net8 migration.
+            First 'ckli fix build' => triggers the Net8 migration.
             This handles NuGet.config => nuget.config, removing RepositoryInfo.xml, transforming .sln to .slnx, removing CodeCakeBuilder...
             """ ) )
         {
-            // The first (CKt-Core) is ci.2 (Empty commit + "Net8 migration applied") and the following ci.3 because of
-            // Empty Commit + "Net8 migration applied" + Update dependencies.
+            // The Net8 migration adds an empty commit and a "Net8 migration applied" one; the
+            // repositories that follow it also get an "Update dependencies" commit.
             display.Clear();
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build", "--ci" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
-                  CKt-Core            ⎇ fix/v1.0  → v1.0.1--ci.2
-                  CKt-ActivityMonitor ⎇ fix/v0.1  → v0.1.1--ci.3
-                  CKt-PerfectEvent    ⎇ fix/v0.2  → v0.2.2--ci.3
-                  CKt-PerfectEvent    ⎇ fix/v0.3  → v0.3.3--ci.3
-                  CKt-Monitoring      ⎇ fix/v0.2  → v0.2.4--ci.3
+                  CKt-Core            ⎇ fix/v1.0  → v1.0.1
+                  CKt-ActivityMonitor ⎇ fix/v0.1  → v0.1.1
+                  CKt-PerfectEvent    ⎇ fix/v0.2  → v0.2.2
+                  CKt-PerfectEvent    ⎇ fix/v0.3  → v0.3.3
+                  CKt-Monitoring      ⎇ fix/v0.2  → v0.2.4
                 ❰✓❱
 
                 """ );
 
         }
 
-        // ckli fix build --ci
-        using( TestHelper.Monitor.OpenInfo( "Second 'ckli fix build --ci' (no change), all are skipped." ) )
+        // ckli fix build
+        using( TestHelper.Monitor.OpenInfo( "Second 'ckli fix build' (no change), all are skipped." ) )
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
             display.Clear();
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build", "--ci" )).ShouldBeTrue();
-            logs.ShouldContain( "Useless build for 'CKt-Core/1.0.1--ci.2' skipped." );
-            logs.ShouldContain( "Useless build for 'CKt-ActivityMonitor/0.1.1--ci.3' skipped." );
-            logs.ShouldContain( "Useless build for 'CKt-PerfectEvent/0.2.2--ci.3' skipped." );
-            logs.ShouldContain( "Useless build for 'CKt-PerfectEvent/0.3.3--ci.3' skipped." );
-            logs.ShouldContain( "Useless build for 'CKt-Monitoring/0.2.4--ci.3' skipped." );
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build" )).ShouldBeTrue();
+            logs.ShouldContain( "Useless build for 'CKt-Core/1.0.1' skipped." );
+            logs.ShouldContain( "Useless build for 'CKt-ActivityMonitor/0.1.1' skipped." );
+            logs.ShouldContain( "Useless build for 'CKt-PerfectEvent/0.2.2' skipped." );
+            logs.ShouldContain( "Useless build for 'CKt-PerfectEvent/0.3.3' skipped." );
+            logs.ShouldContain( "Useless build for 'CKt-Monitoring/0.2.4' skipped." );
             display.ToString().ShouldBe( """
-                  CKt-Core            ⎇ fix/v1.0    v1.0.1--ci.2
-                  CKt-ActivityMonitor ⎇ fix/v0.1    v0.1.1--ci.3
-                  CKt-PerfectEvent    ⎇ fix/v0.2    v0.2.2--ci.3
-                  CKt-PerfectEvent    ⎇ fix/v0.3    v0.3.3--ci.3
-                  CKt-Monitoring      ⎇ fix/v0.2    v0.2.4--ci.3
+                  CKt-Core            ⎇ fix/v1.0    v1.0.1
+                  CKt-ActivityMonitor ⎇ fix/v0.1    v0.1.1
+                  CKt-PerfectEvent    ⎇ fix/v0.2    v0.2.2
+                  CKt-PerfectEvent    ⎇ fix/v0.3    v0.3.3
+                  CKt-Monitoring      ⎇ fix/v0.2    v0.2.4
                 ❰✓❱
 
                 """ );
@@ -334,17 +334,17 @@ public class S1ᅳInitializedᅳTests
         var cktActivityMonitor = context.ChangeDirectory( "CKt-ActivityMonitor" );
         TestHelper.TouchAndCommit( cktActivityMonitor.CurrentDirectory, branchName: "fix/v0.1" );
 
-        using( TestHelper.Monitor.OpenInfo( "'ckli fix build' NOT in ci (CKt.ActivityMonitor has changed)." ) )
+        using( TestHelper.Monitor.OpenInfo( "'ckli fix build' after a change in CKt-ActivityMonitor: it MOVES its version onto the new commit." ) )
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
             display.Clear();
             (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
-                          CKt-Core            ⎇ fix/v1.0  → v1.0.1
+                          CKt-Core            ⎇ fix/v1.0    v1.0.1
                           CKt-ActivityMonitor ⎇ fix/v0.1  → v0.1.1
-                          CKt-PerfectEvent    ⎇ fix/v0.2  → v0.2.2
-                          CKt-PerfectEvent    ⎇ fix/v0.3  → v0.3.3
-                          CKt-Monitoring      ⎇ fix/v0.2  → v0.2.4
+                          CKt-PerfectEvent    ⎇ fix/v0.2    v0.2.2
+                          CKt-PerfectEvent    ⎇ fix/v0.3    v0.3.3
+                          CKt-Monitoring      ⎇ fix/v0.2    v0.2.4
                         ❰✓❱
 
                         """ );
@@ -410,26 +410,13 @@ public class S1ᅳInitializedᅳTests
         TestHelper.TouchAndCommit( cktMonitoring.CurrentDirectory, branchName: "fix/v0.2" );
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build", "--ci" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "build" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              CKt-Core            ⎇ fix/v1.0  → v1.0.2--ci.1
-              CKt-ActivityMonitor ⎇ fix/v0.1  → v0.1.2--ci.2
-              CKt-PerfectEvent    ⎇ fix/v0.2  → v0.2.3--ci.2
-              CKt-PerfectEvent    ⎇ fix/v0.3  → v0.3.4--ci.2
-              CKt-Monitoring      ⎇ fix/v0.2  → v0.2.5--ci.3
-            ❰✓❱
-
-            """ );
-
-        // No build required...
-        display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "publish", "--ci" )).ShouldBeTrue();
-        display.ToString().ShouldBe( """
-              CKt-Core            ⎇ fix/v1.0    v1.0.2--ci.1
-              CKt-ActivityMonitor ⎇ fix/v0.1    v0.1.2--ci.2
-              CKt-PerfectEvent    ⎇ fix/v0.2    v0.2.3--ci.2
-              CKt-PerfectEvent    ⎇ fix/v0.3    v0.3.4--ci.2
-              CKt-Monitoring      ⎇ fix/v0.2    v0.2.5--ci.3
+              CKt-Core            ⎇ fix/v1.0  → v1.0.2
+              CKt-ActivityMonitor ⎇ fix/v0.1  → v0.1.2
+              CKt-PerfectEvent    ⎇ fix/v0.2  → v0.2.3
+              CKt-PerfectEvent    ⎇ fix/v0.3  → v0.3.4
+              CKt-Monitoring      ⎇ fix/v0.2  → v0.2.5
             ❰✓❱
 
             """ );
@@ -437,11 +424,11 @@ public class S1ᅳInitializedᅳTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "fix", "publish" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              CKt-Core            ⎇ fix/v1.0  → v1.0.2
-              CKt-ActivityMonitor ⎇ fix/v0.1  → v0.1.2
-              CKt-PerfectEvent    ⎇ fix/v0.2  → v0.2.3
-              CKt-PerfectEvent    ⎇ fix/v0.3  → v0.3.4
-              CKt-Monitoring      ⎇ fix/v0.2  → v0.2.5
+              CKt-Core            ⎇ fix/v1.0    v1.0.2
+              CKt-ActivityMonitor ⎇ fix/v0.1    v0.1.2
+              CKt-PerfectEvent    ⎇ fix/v0.2    v0.2.3
+              CKt-PerfectEvent    ⎇ fix/v0.3    v0.3.4
+              CKt-Monitoring      ⎇ fix/v0.2    v0.2.5
             ❰✓❱
 
             """ );

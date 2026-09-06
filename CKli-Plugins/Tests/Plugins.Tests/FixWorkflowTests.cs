@@ -94,39 +94,44 @@ public class FixWorkflowTests
             """ );
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "fix", "build", "--ci" )).ShouldBeTrue();
-        display.ToString().ShouldBe( """
-              X-Core            ⎇ fix/v1.0  → v1.0.1--ci.2
-              X-ActivityMonitor ⎇ fix/v0.1  → v0.1.1--ci.3
-              X-Monitoring      ⎇ fix/v0.2  → v0.2.1--ci.3
-            ❰✓❱
-
-            """ );
-
-        // Second "fix build --ci" with no change: everything is skipped.
-        using( TestHelper.Monitor.CollectTexts( out var logs ) )
-        {
-            display.Clear();
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "fix", "build", "--ci" )).ShouldBeTrue();
-            logs.ShouldContain( l => l.Contains( "Useless build for 'X-Core/" ) && l.Contains( "skipped." ) );
-            display.ToString().ShouldBe( """
-                  X-Core            ⎇ fix/v1.0    v1.0.1--ci.2
-                  X-ActivityMonitor ⎇ fix/v0.1    v0.1.1--ci.3
-                  X-Monitoring      ⎇ fix/v0.2    v0.2.1--ci.3
-                ❰✓❱
-
-                """ );
-        }
-
-        // A change in the middle of the chain, on its fix branch.
-        TestHelper.TouchAndCommit( rMonitor.WorkingFolderPath, branchName: "fix/v0.1" );
-
-        display.Clear();
+        // "fix build" produces the target versions as "local/" ones. There is no CI fix build: a fix is
+        // shared with "ckli fix push", not by publishing intermediate CI versions.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "fix", "build" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
               X-Core            ⎇ fix/v1.0  → v1.0.1
               X-ActivityMonitor ⎇ fix/v0.1  → v0.1.1
               X-Monitoring      ⎇ fix/v0.2  → v0.2.1
+            ❰✓❱
+
+            """ );
+
+        // Second "fix build" with no change: everything is skipped.
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            display.Clear();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "fix", "build" )).ShouldBeTrue();
+            logs.ShouldContain( l => l.Contains( "Useless build for 'X-Core/" ) && l.Contains( "skipped." ) );
+            display.ToString().ShouldBe( """
+                  X-Core            ⎇ fix/v1.0    v1.0.1
+                  X-ActivityMonitor ⎇ fix/v0.1    v0.1.1
+                  X-Monitoring      ⎇ fix/v0.2    v0.2.1
+                ❰✓❱
+
+                """ );
+        }
+
+        // A change in the middle of the chain, on its fix branch. Only X-ActivityMonitor builds, and it
+        // MOVES its v0.1.1 onto the new commit instead of producing a new version - that is the whole point
+        // of a fix, and what makes the build a "rolling local" one. X-Core has nothing new, and
+        // X-Monitoring's reference to X.ActivityMonitor still reads 0.1.1, so both are skipped.
+        TestHelper.TouchAndCommit( rMonitor.WorkingFolderPath, branchName: "fix/v0.1" );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "fix", "build" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+              X-Core            ⎇ fix/v1.0    v1.0.1
+              X-ActivityMonitor ⎇ fix/v0.1  → v0.1.1
+              X-Monitoring      ⎇ fix/v0.2    v0.2.1
             ❰✓❱
 
             """ );
