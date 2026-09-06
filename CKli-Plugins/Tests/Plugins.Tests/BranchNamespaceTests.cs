@@ -2,7 +2,9 @@ using CK.Core;
 using CKli.BranchModel.Plugin;
 using NUnit.Framework;
 using Shouldly;
+using System;
 using System.Linq;
+using static CK.Testing.MonitorTestHelper;
 
 namespace Plugins.Tests;
 
@@ -135,5 +137,42 @@ public class BranchNamespaceTests
             stable -> zulu |> delta |✋ alpha
             <Explo Name="explo/again" Link="Manual" Parent="zulu" />
             """ );
+    }
+
+    /// <summary>
+    /// A "-ci" suffix qualifies a branch name to tell its CI builds from its regular versions - the Publish
+    /// plugin's "Published/index.json" does exactly that - so an exploratory name, the only branch name that
+    /// is free, must not be able to spell one. The standard prerelease names ("alpha" to "zulu") are fixed
+    /// and by design none of them collides, which is why only the exploratory ones are checked.
+    /// </summary>
+    [TestCase( "explo/spike-ci" )]
+    [TestCase( "explo/ci-spike" )]
+    [TestCase( "explo/x-ci" )]
+    public void an_exploratory_branch_name_cannot_be_confused_with_a_ci_line( string branchName )
+    {
+        var def = new BranchNamespace( null, "stable -> zulu => romeo |> delta |✋ alpha", [] );
+
+        Should.Throw<ArgumentException>( () => def.AddOrUpdateExplo( branchName ) )
+              .Message.ShouldContain( """must not start with "ci-" nor end with "-ci".""" );
+
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            BranchName.TryParseBranchName( TestHelper.Monitor, branchName, out _ ).ShouldBeFalse();
+            logs.ShouldContain( $"""Invalid '{branchName}'. An exploratory branch name must not start with "ci-" nor end with "-ci".""" );
+        }
+    }
+
+    /// <summary>
+    /// The rule is about the whole name: "ci" alone, or a name that merely contains "-ci-", is fine.
+    /// </summary>
+    [TestCase( "explo/ci" )]
+    [TestCase( "explo/spike-ci-2" )]
+    [TestCase( "explo/cix" )]
+    public void an_exploratory_branch_name_that_only_looks_like_a_ci_line_is_valid( string branchName )
+    {
+        var def = new BranchNamespace( null, "stable -> zulu => romeo |> delta |✋ alpha", [] );
+
+        def.AddOrUpdateExplo( branchName ).Item2.Name.ShouldBe( branchName );
+        BranchName.TryParseBranchName( TestHelper.Monitor, branchName, out _ ).ShouldBeTrue();
     }
 }

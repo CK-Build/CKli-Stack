@@ -560,17 +560,23 @@ public class PublishedFolderTests
         var root = GetCleanFolder( nameof( the_index_groups_by_branch_orders_descending_and_splits_alive_from_deprecated ) );
         var f = new PublishedFolder( root );
 
-        foreach( var v in new[] { "1.2.3", "1.2.4", "1.2.5", "1.3.0-alpha", "1.3.0-zulu.4.ci.12", "0.0.0-0.some-explo" } )
+        foreach( var v in new[] { "1.2.3", "1.2.4", "1.2.5",
+                                  "1.2.5--ci.3", "1.2.6--ci.0",
+                                  "1.3.0-alpha", "1.3.0-alpha.0.ci.7",
+                                  "1.3.0-zulu.4.ci.12",
+                                  "0.0.0-0.some-explo" } )
         {
             f.Add( TestModel.SampleProfile( v ) );
         }
-        // "1.2.4" leaves the middle of the stable group and "1.3.0-alpha" is the only alpha: the branch
-        // must disappear from "Alive" and appear in "Deprecated".
+        // "1.2.4" leaves the middle of the stable group. "1.3.0-alpha" is the only regular alpha, so that
+        // branch must disappear from "Alive" - while its CI line, "alpha-ci", stays there: a branch's CI
+        // builds and its regular versions never share a list, and here they do not even share a set.
         f.Deprecate( TestModel.V( "1.2.4" ) ).ShouldBeTrue();
         f.Deprecate( TestModel.V( "1.3.0-alpha" ) ).ShouldBeTrue();
 
-        f.Save().ShouldBe( 6, "The index is not one of them." );
+        f.Save().ShouldBe( 9, "The index is not one of them." );
 
+        // "1.2.5" and "1.2.5--ci.3" are the same branch at the same numbers and still land in two lists.
         File.ReadAllText( f.IndexFilePath ).ShouldBe( """
             {
               "Alive": {
@@ -578,10 +584,17 @@ public class PublishedFolderTests
                   "1.2.5",
                   "1.2.3"
                 ],
+                "(stable-ci)": [
+                  "1.2.6--ci.0",
+                  "1.2.5--ci.3"
+                ],
+                "alpha-ci": [
+                  "1.3.0-alpha.0.ci.7"
+                ],
                 "explo/some-explo": [
                   "0.0.0-0.some-explo"
                 ],
-                "zulu": [
+                "zulu-ci": [
                   "1.3.0-zulu.4.ci.12"
                 ]
               },
