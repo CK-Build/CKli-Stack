@@ -14,19 +14,19 @@ using static CK.Testing.MonitorTestHelper;
 namespace Plugins.Tests;
 
 /// <summary>
-/// A successful publication leaves the <see cref="PublishedProfile"/> it offers in the Stack's
+/// A successful publication leaves the <see cref="PublishedProfile"/> it carries in the Stack's
 /// "Published" folder. These tests use the fake build harness only
 /// (<see cref="CKliBuildPluginTestHelperExtensions.CKliCreateFakeBuildTestEnvAsync"/>).
 /// </summary>
 public class PublishedProfileTests
 {
     /// <summary>
-    /// The profile describes what the World offers: one <see cref="Repository"/> per Repo, each with the
+    /// The profile describes what the World produces: one <see cref="Repository"/> per Repo, each with the
     /// packages it produced. Its own version is minted from the day of the publication, it is NOT one of
     /// the package versions.
     /// </summary>
     [Test]
-    public async Task a_publication_writes_the_profile_it_offers_Async()
+    public async Task a_publication_writes_its_profile_Async()
     {
         using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
         var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
@@ -87,12 +87,12 @@ public class PublishedProfileTests
         p.Repositories[0].Key.Id.ShouldNotBe( p.Repositories[1].Key.Id );
 
         // A package belongs to the repository that produces it: X-Consumer consumes X.Core@1.0.2 but
-        // the offer of that package is X-Core's.
+        // that package is produced by X-Core.
         p.Repositories[0].Packages.Select( x => x.ToString() ).ShouldBe( ["X.Consumer@0.3.4"] );
         p.Repositories[1].Packages.Select( x => x.ToString() ).ShouldBe( ["X.Core@1.0.2"] );
-        p.Packages.Count.ShouldBe( 2 );
-        p.Packages["X.Core"].Version.ToString().ShouldBe( "1.0.2" );
-        p.Packages["x.consumer"].Version.ToString().ShouldBe( "0.3.4" );
+        p.ProducedPackages.Count.ShouldBe( 2 );
+        p.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.0.2" );
+        p.ProducedPackages["x.consumer"].Version.ToString().ShouldBe( "0.3.4" );
     }
 
     /// <summary>
@@ -133,12 +133,12 @@ public class PublishedProfileTests
     }
 
     /// <summary>
-    /// Deprecating a version deprecates every published profile that offers it. The propagation across the
-    /// consumers applies: only the profiles that offer one of the deprecated versions are impacted, so a
-    /// later profile that offers the same packages in newer versions is left alone.
+    /// Deprecating a version deprecates every published profile that carries it. The propagation across the
+    /// consumers applies: only the profiles that carry one of the deprecated versions are impacted, so a
+    /// later profile that carries the same packages in newer versions is left alone.
     /// </summary>
     [Test]
-    public async Task deprecating_a_version_deprecates_the_profiles_that_offer_it_Async()
+    public async Task deprecating_a_version_deprecates_the_profiles_that_carry_it_Async()
     {
         using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
         var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
@@ -147,20 +147,20 @@ public class PublishedProfileTests
         var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
         await world.CreateRepoAsync( "X-Consumer", "v0.3.3", references: [rCore] ).ConfigureAwait( false );
 
-        // The first publication offers X.Core@1.0.2 and X.Consumer@0.3.4.
+        // The first publication carries X.Core@1.0.2 and X.Consumer@0.3.4.
         await TouchDevStableAsync( rCore, "First.txt" ).ConfigureAwait( false );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
-        // The second one offers X.Core@1.0.3 and X.Consumer@0.3.5.
+        // The second one carries X.Core@1.0.3 and X.Consumer@0.3.5.
         await TouchDevStableAsync( rCore, "Second.txt" ).ConfigureAwait( false );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
 
         var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
                                                          .AppendPart( "Published" ) );
         // Profiles are ordered by descending version: the newer publication comes first.
-        folder.Profiles.Select( p => p.Packages["X.Core"].Version.ToString() ).ShouldBe( ["1.0.3", "1.0.2"] );
+        folder.Profiles.Select( p => p.ProducedPackages["X.Core"].Version.ToString() ).ShouldBe( ["1.0.3", "1.0.2"] );
         folder.Profiles.Any( p => p.IsDeprecated ).ShouldBeFalse();
 
-        // Deprecating X.Core v1.0.2 hits the first profile, which offers it. The second one offers only
+        // Deprecating X.Core v1.0.2 hits the first profile, which carries it. The second one carries only
         // newer versions and must be left alone. (The deprecation also propagates to X-Consumer v0.3.4,
         // but that package lives in the same profile, so it is not what this assertion discriminates.)
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "deprecate", "v1.0.2", "--days", "30" )).ShouldBeTrue();
@@ -174,7 +174,7 @@ public class PublishedProfileTests
         folder.Profiles.Select( p => p.IsDeprecated ).ShouldBe( [false, true] );
 
         // Expiring it ("--immediate") removes the version tag and unlists the packages: the profile that
-        // offers them no longer describes anything, so it is deleted rather than kept as deprecated.
+        // carries them no longer describes anything, so it is deleted rather than kept as deprecated.
         var removed = folder.Profiles.Single( p => p.IsDeprecated ).Version;
         var removedFile = folder.GetProfileFilePath( removed );
         File.Exists( removedFile ).ShouldBeTrue();
@@ -183,23 +183,23 @@ public class PublishedProfileTests
 
         folder.Reload();
         folder.LoadErrors.ShouldBeEmpty();
-        folder.Profiles.Select( p => p.Packages["X.Core"].Version.ToString() ).ShouldBe( ["1.0.3"] );
+        folder.Profiles.Select( p => p.ProducedPackages["X.Core"].Version.ToString() ).ShouldBe( ["1.0.3"] );
         File.Exists( removedFile ).ShouldBeFalse();
 
         // And that is idempotent too: there is nothing left to remove.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "deprecate", "v1.0.2", "--immediate", "--allow-update" )).ShouldBeTrue();
         folder.Reload();
-        folder.Profiles.Select( p => p.Packages["X.Core"].Version.ToString() ).ShouldBe( ["1.0.3"] );
+        folder.Profiles.Select( p => p.ProducedPackages["X.Core"].Version.ToString() ).ShouldBe( ["1.0.3"] );
     }
 
     /// <summary>
-    /// A fix publishes versions that supersede the ones it fixes. The profiles that offer those are not
+    /// A fix publishes versions that supersede the ones it fixes. The profiles that carry those are not
     /// rewritten - they record what was published - so the fix adds a superseding profile beside each one,
-    /// with the same Major.Minor and the next free Patch. A profile that offers only newer versions is left
+    /// with the same Major.Minor and the next free Patch. A profile that carries only newer versions is left
     /// alone.
     /// </summary>
     [Test]
-    public async Task a_fix_publication_supersedes_the_profiles_that_offer_the_fixed_versions_Async()
+    public async Task a_fix_publication_supersedes_the_profiles_that_carry_the_fixed_versions_Async()
     {
         using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
         var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
@@ -208,7 +208,7 @@ public class PublishedProfileTests
         var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
         await world.CreateRepoAsync( "X-Consumer", "v0.1.0", references: [rCore] ).ConfigureAwait( false );
 
-        // Two publications, each triggered by a "feat:" commit. The first profile offers X.Core@1.1.0 and
+        // Two publications, each triggered by a "feat:" commit. The first profile carries X.Core@1.1.0 and
         // X.Consumer@0.2.0, the second one X.Core@1.2.0 and X.Consumer@0.3.0. The second publication is also
         // what pushes v1.1 out of the hot zone so that it can be fixed.
         await TouchDevStableAsync( rCore, "First.txt", "feat: a first feature." ).ConfigureAwait( false );
@@ -220,7 +220,7 @@ public class PublishedProfileTests
                                                          .AppendPart( "Published" ) );
         var today = DateTime.UtcNow;
         var day = $"{today.Year}.{today.DayOfYear}";
-        folder.Profiles.Select( p => p.Packages["X.Core"].Version.ToString() ).ShouldBe( ["1.2.0", "1.1.0"] );
+        folder.Profiles.Select( p => p.ProducedPackages["X.Core"].Version.ToString() ).ShouldBe( ["1.2.0", "1.1.0"] );
 
         // Fixing v1.1 publishes X.Core@1.1.1 and, since X-Consumer v0.2.0 consumed X.Core@1.1.0, X.Consumer@0.2.1.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "fix", "start", "v1.1" )).ShouldBeTrue();
@@ -229,22 +229,22 @@ public class PublishedProfileTests
 
         folder.Reload();
         folder.LoadErrors.ShouldBeEmpty();
-        // A third profile: the one that offered the fixed versions has been superseded. Both were published
+        // A third profile: the one that carried the fixed versions has been superseded. Both were published
         // today, so the successor takes the next free Patch.
         folder.Profiles.Select( p => p.Version.ToString() )
               .ShouldBe( [$"{day}.2", $"{day}.1", $"{day}.0"] );
 
         var superseding = folder.Find( SVersion.Parse( $"{day}.2" ) )!;
-        superseding.Packages["X.Core"].Version.ToString().ShouldBe( "1.1.1" );
-        superseding.Packages["X.Consumer"].Version.ToString().ShouldBe( "0.2.1" );
+        superseding.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.1.1" );
+        superseding.ProducedPackages["X.Consumer"].Version.ToString().ShouldBe( "0.2.1" );
         superseding.IsDeprecated.ShouldBeFalse();
 
-        // The profile it supersedes is untouched, and the one that offers only newer versions is not concerned.
+        // The profile it supersedes is untouched, and the one that carries only newer versions is not concerned.
         var superseded = folder.Find( SVersion.Parse( $"{day}.0" ) )!;
-        superseded.Packages["X.Core"].Version.ToString().ShouldBe( "1.1.0" );
-        superseded.Packages["X.Consumer"].Version.ToString().ShouldBe( "0.2.0" );
+        superseded.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.1.0" );
+        superseded.ProducedPackages["X.Consumer"].Version.ToString().ShouldBe( "0.2.0" );
         var untouched = folder.Find( SVersion.Parse( $"{day}.1" ) )!;
-        untouched.Packages["X.Core"].Version.ToString().ShouldBe( "1.2.0" );
+        untouched.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.2.0" );
     }
 
     // The harness commits on "dev/stable": a successful non-CI publication integrates it into "stable"

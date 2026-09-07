@@ -45,7 +45,7 @@ public class SkippedRepositoryTests
         var rSibling = await world.CreateRepoAsync( "X-Monitoring", "v0.2.4", references: [rUp] ).ConfigureAwait( false );
         var rDown = await world.CreateRepoAsync( "X-Sample", "v0.0.0", references: [rPivot] ).ConfigureAwait( false );
 
-        // The upstream must actually produce a NEW version, otherwise v0.1.0 stays what this World offers and
+        // The upstream must actually produce a NEW version, otherwise v0.1.0 stays what this World produces and
         // there is nothing for the sibling to be misaligned with. Publishing from the root realigns everybody.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rUp.Root, "branch", "switch", "dev/stable", "-c" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( rUp.WorkingFolderPath, branchName: "dev/stable" );
@@ -64,7 +64,7 @@ public class SkippedRepositoryTests
             """ );
 
         // Now misalign the skipped sibling: its sources reference a version of X.ActivityMonitor that this
-        // World no longer offers, while its own last CI build tag stays aligned (so this is NOT detected as a
+        // World no longer produces, while its own last CI build tag stays aligned (so this is NOT detected as a
         // MustBuildReason.UpstreamVersion).
         rSibling.AddOrUpdateReference( rUp, "v0.1.0", branchName: "dev/stable" );
 
