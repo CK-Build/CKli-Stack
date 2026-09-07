@@ -96,6 +96,50 @@ public class PublishedProfileTests
     }
 
     /// <summary>
+    /// Beyond what its repositories produce, a profile records what they consume from OUTSIDE the World: the
+    /// DirectDependencies. A package the World produces is never one of them - it belongs to the repository
+    /// that produces it - and an identifier consumed by two repositories appears once.
+    /// </summary>
+    [Test]
+    public async Task a_publication_records_the_external_packages_it_is_built_against_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        var rConsumer = await world.CreateRepoAsync( "X-Consumer", "v0.3.3", references: [rCore] ).ConfigureAwait( false );
+
+        // "Ext.Shared" is referenced by both repositories in the same version, "Ext.OnlyCore" by X-Core alone.
+        // Adding these references is also what makes both repositories build.
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( "X.Core", "Ext.Shared", SVersion.Parse( "3.1.0" ), "dev/stable" );
+            e.AddOrUpdateReference( "X.Core", "Ext.OnlyCore", SVersion.Parse( "1.2.3" ), "dev/stable" );
+        }
+        using( var e = rConsumer.CreateEditor() )
+        {
+            e.AddOrUpdateReference( "X.Consumer", "Ext.Shared", SVersion.Parse( "3.1.0" ), "dev/stable" );
+        }
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+
+        var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
+                                                         .AppendPart( "Published" ) );
+        folder.LoadErrors.ShouldBeEmpty();
+        var p = folder.Profiles.Single();
+
+        // X.Core is consumed by X-Consumer but produced by this World: it is a produced package, not a
+        // direct dependency. The direct dependencies are sorted by identifier.
+        p.ProducedPackages.Keys.Order().ShouldBe( ["X.Consumer", "X.Core"] );
+        p.DirectDependencies.Select( x => x.ToString() ).ShouldBe( ["Ext.OnlyCore@1.2.3", "Ext.Shared@3.1.0"] );
+
+        // The direct dependencies survive the Json round trip.
+        folder.Reload();
+        folder.Profiles.Single().DirectDependencies.Select( x => x.ToString() )
+              .ShouldBe( ["Ext.OnlyCore@1.2.3", "Ext.Shared@3.1.0"] );
+    }
+
+    /// <summary>
     /// Two publications of the same day on the same branch: the second one increments the Patch. A CI
     /// publication is a CI version, so it never collides with the non CI one.
     /// </summary>
