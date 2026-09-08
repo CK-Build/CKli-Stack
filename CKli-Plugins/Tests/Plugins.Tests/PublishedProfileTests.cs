@@ -1,11 +1,13 @@
 using CK.Core;
 using CK.Packaging.Abstractions;
 using CKli;
+using CKli.ArtifactHandler.Plugin;
 using CKli.Core;
 using CKli.Publish.Plugin;
 using NUnit.Framework;
 using Shouldly;
 using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -289,6 +291,247 @@ public class PublishedProfileTests
         superseded.ProducedPackages["X.Consumer"].Version.ToString().ShouldBe( "0.2.0" );
         var untouched = folder.Find( SVersion.Parse( $"{day}.1" ) )!;
         untouched.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.2.0" );
+    }
+
+    /// <summary>
+    /// The fake build restores nothing, so a transitive set exists in this harness only when a test declares
+    /// one on <see cref="FakeBuildRepo.TransitivePackages"/>. That declaration reaches the version tag of every
+    /// build of the repository - the initial one included, which is what a publication that does NOT rebuild it
+    /// reads - and a repository that declares nothing keeps an unrecorded set.
+    /// </summary>
+    [Test]
+    public async Task the_fake_harness_records_the_transitive_packages_a_test_declares_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        var rConsumer = await world.CreateRepoAsync( "X-Consumer", "v0.3.3", references: [rCore] ).ConfigureAwait( false );
+
+        // Nothing has been declared yet: the initial version tags carry no transitive section at all.
+        ReadContent( rCore, "v1.0.1" ).HasTransitive.ShouldBeFalse();
+
+        // Declaring rewrites the initial version tag in place - same commit, so no "--ci.N" moves.
+        // The declaration is a set: it is sorted here, not by the test.
+        rCore.TransitivePackages = [Instance( "Ext.Deeper@1.5.0" ), Instance( "Ext.Deep@2.0.0" )];
+        var initial = ReadContent( rCore, "v1.0.1" );
+        initial.HasTransitive.ShouldBeTrue();
+        initial.Transitive.Select( p => p.ToString() ).ShouldBe( ["Ext.Deep@2.0.0", "Ext.Deeper@1.5.0"] );
+
+        // An empty declaration is NOT the absence of one: it states that a restore brings nothing.
+        rConsumer.TransitivePackages = [];
+        var consumerInitial = ReadContent( rConsumer, "v0.3.3" );
+        consumerInitial.HasTransitive.ShouldBeTrue();
+        consumerInitial.Transitive.ShouldBeEmpty();
+
+        // The declaration feeds every subsequent fake build: publishing X-Core rebuilds it and its consumer.
+        await TouchDevStableAsync( rCore ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+
+        ReadContent( rCore, "v1.0.2" ).Transitive.Select( p => p.ToString() )
+                                      .ShouldBe( ["Ext.Deep@2.0.0", "Ext.Deeper@1.5.0"] );
+        var rebuiltConsumer = ReadContent( rConsumer, "v0.3.4" );
+        rebuiltConsumer.HasTransitive.ShouldBeTrue();
+        rebuiltConsumer.Transitive.ShouldBeEmpty();
+
+        static BuildContentInfo ReadContent( FakeBuildRepo repo, string tagName )
+        {
+            using var e = repo.CreateEditor();
+            var tag = e.GitRepository.Repository.Tags[tagName];
+            tag.ShouldNotBeNull( $"Tag '{tagName}' not found in '{repo.DisplayPath}'." );
+            BuildContentInfo.TryParse( tag.Annotation.Message, out var content ).ShouldBeTrue();
+            return content!;
+        }
+    }
+
+    /// <summary>
+    /// Beyond the packages its repositories reference, a profile records what a restore brings: the union of
+    /// what NuGet resolved transitively for each of them. An identifier the profile already states - a direct
+    /// dependency here - is not repeated by it.
+    /// </summary>
+    [Test]
+    public async Task a_publication_records_what_a_restore_brings_beyond_its_direct_dependencies_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        var rConsumer = await world.CreateRepoAsync( "X-Consumer", "v0.3.3", references: [rCore] ).ConfigureAwait( false );
+
+        // Both repositories reference "Ext.Shared" - that is what makes them build, and what puts the
+        // identifier in the direct dependencies.
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( "X.Core", "Ext.Shared", SVersion.Parse( "3.1.0" ), "dev/stable" );
+        }
+        using( var e = rConsumer.CreateEditor() )
+        {
+            e.AddOrUpdateReference( "X.Consumer", "Ext.Shared", SVersion.Parse( "3.1.0" ), "dev/stable" );
+        }
+        // A restore of either brings "Ext.Deep", which nobody references. X-Consumer's restore also brings
+        // the very "Ext.Shared" it references: that one is already stated by the direct dependencies.
+        rCore.TransitivePackages = [Instance( "Ext.Deep@2.0.0" )];
+        rConsumer.TransitivePackages = [Instance( "Ext.Deep@2.0.0" ), Instance( "Ext.Shared@3.1.0" )];
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+
+        var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
+                                                         .AppendPart( "Published" ) );
+        folder.LoadErrors.ShouldBeEmpty();
+        var p = folder.Profiles.Single();
+
+        p.DirectDependencies.Select( x => x.ToString() ).ShouldBe( ["Ext.Shared@3.1.0"] );
+        p.TransitiveDependencies.Regular.Select( x => x.ToString() ).ShouldBe( ["Ext.Deep@2.0.0"] );
+        p.TransitiveDependencies.Ambiguous.ShouldBeEmpty( "Ext.Shared is a direct dependency at the very "
+                                                          + "version the restore brings: nothing to report." );
+
+        // The transitive dependencies survive the Json round trip.
+        folder.Reload();
+        folder.Profiles.Single().TransitiveDependencies.Regular.Select( x => x.ToString() )
+              .ShouldBe( ["Ext.Deep@2.0.0"] );
+    }
+
+    /// <summary>
+    /// Two repositories can resolve one identifier to two versions - their graphs differ, and the 'D' mapping
+    /// aligns the DIRECT references only. Such a disagreement is recorded with the repositories that made it,
+    /// resolved from the transitive packages themselves when nothing anchors the identifier and anchored on
+    /// the profile's own entry when something does.
+    /// </summary>
+    [Test]
+    public async Task transitive_packages_that_disagree_are_recorded_with_the_repositories_that_resolved_them_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        var rConsumer = await world.CreateRepoAsync( "X-Consumer", "v0.3.3", references: [rCore] ).ConfigureAwait( false );
+
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( "X.Core", "Ext.Shared", SVersion.Parse( "3.1.0" ), "dev/stable" );
+        }
+        using( var e = rConsumer.CreateEditor() )
+        {
+            e.AddOrUpdateReference( "X.Consumer", "Ext.Shared", SVersion.Parse( "3.1.0" ), "dev/stable" );
+        }
+        // "Ext.Deep" is nobody's reference and the two restores disagree on it. "Ext.Shared" IS referenced,
+        // in 3.1.0, but X-Consumer's restore resolved 4.0.0: that is the harmful direction.
+        rCore.TransitivePackages = [Instance( "Ext.Deep@1.0.0" )];
+        rConsumer.TransitivePackages = [Instance( "Ext.Deep@2.0.0" ), Instance( "Ext.Shared@4.0.0" )];
+
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+            // These are external packages nobody here references: reported, never gated.
+            logs.ShouldContain( "2 transitive package(s) resolved to more than one version across this "
+                                + "publication, or to a version this publication does not carry: "
+                                + "Ext.Deep, Ext.Shared." );
+        }
+
+        var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
+                                                         .AppendPart( "Published" ) );
+        folder.LoadErrors.ShouldBeEmpty();
+        var p = folder.Profiles.Single();
+        var coreId = p.Repositories.Single( r => r.Key.Url.AbsoluteUri.EndsWith( "X-Core" ) ).Key.Id;
+        var consumerId = p.Repositories.Single( r => r.Key.Url.AbsoluteUri.EndsWith( "X-Consumer" ) ).Key.Id;
+
+        var t = p.TransitiveDependencies;
+        t.Regular.ShouldBeEmpty();
+        t.Ambiguous.Select( a => $"{a} ({a.ResolvedFrom})" )
+                   .ShouldBe( ["Ext.Deep@2.0.0 (TransitiveDependencies)",
+                               "Ext.Shared@3.1.0 (DirectDependencies)"] );
+
+        // Nothing anchors Ext.Deep: the version is the greatest resolution (NuGet's highest-wins) and the
+        // resolutions are sorted by descending version.
+        var deep = t.Ambiguous[0];
+        deep.Resolutions.Select( r => r.Version.ToString() ).ShouldBe( ["2.0.0", "1.0.0"] );
+        deep.Resolutions[0].Repositories.ShouldBe( [consumerId] );
+        deep.Resolutions[1].Repositories.ShouldBe( [coreId] );
+
+        // Ext.Shared is anchored on the direct dependency: only the greater resolution is reported.
+        var shared = t.Ambiguous[1];
+        shared.Resolutions.Select( r => r.Version.ToString() ).ShouldBe( ["4.0.0"] );
+        shared.Resolutions[0].Repositories.ShouldBe( [consumerId] );
+
+        // And all of it survives the Json round trip, repository identifiers included.
+        folder.Reload();
+        var back = folder.Profiles.Single().TransitiveDependencies;
+        back.Ambiguous.Select( a => $"{a} ({a.ResolvedFrom})" ).ShouldBe( t.Ambiguous.Select( a => $"{a} ({a.ResolvedFrom})" ) );
+        back.Ambiguous[0].Resolutions.ShouldBe( deep.Resolutions );
+    }
+
+    /// <summary>
+    /// A fix successor is a projection of its origin: it carries the dependencies verbatim, except that an
+    /// ambiguity anchored on a produced package the fix moves is re-anchored on the superseding version -
+    /// and disappears when that version has caught up with everything it reported.
+    /// </summary>
+    [Test]
+    public async Task a_fix_successor_carries_the_dependencies_and_re_anchors_its_ambiguities_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
+        var rConsumer = await world.CreateRepoAsync( "X-Consumer", "v0.1.0", references: [rCore] ).ConfigureAwait( false );
+
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( "X.Core", "Ext.Shared", SVersion.Parse( "3.1.0" ), "dev/stable" );
+        }
+        // X-Consumer's restore claims two X.Core the first publication does not carry: the one the fix will
+        // produce (1.1.1) and one no publication ever will (9.9.9). Both are ambiguities anchored on the
+        // produced X.Core@1.1.0; after the fix only 9.9.9 still is.
+        rConsumer.TransitivePackages = [Instance( "X.Core@1.1.1" ), Instance( "X.Core@9.9.9" )];
+
+        // Two publications: X.Core@1.1.0 then X.Core@1.2.0. The second one is also what pushes v1.1 out of
+        // the hot zone so that it can be fixed.
+        await TouchDevStableAsync( rCore, "First.txt", "feat: a first feature." ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        await TouchDevStableAsync( rCore, "Second.txt", "feat: a second feature." ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+
+        var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
+                                                         .AppendPart( "Published" ) );
+        var today = DateTime.UtcNow;
+        var day = $"{today.Year}.{today.DayOfYear}";
+
+        var origin = folder.Find( SVersion.Parse( $"{day}.0" ) )!;
+        origin.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.1.0" );
+        origin.TransitiveDependencies.Ambiguous.Single()
+              .Resolutions.Select( r => r.Version.ToString() ).ShouldBe( ["9.9.9", "1.1.1"] );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "fix", "start", "v1.1" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: "fix/v1.1", fileName: "The-fix.txt" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "fix", "publish" )).ShouldBeTrue();
+
+        folder.Reload();
+        folder.LoadErrors.ShouldBeEmpty();
+        var superseding = folder.Find( SVersion.Parse( $"{day}.2" ) )!;
+        superseding.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.1.1" );
+
+        // The direct dependencies are carried verbatim.
+        superseding.DirectDependencies.Select( x => x.ToString() ).ShouldBe( ["Ext.Shared@3.1.0"] );
+
+        // The ambiguity moved with its anchor, and 1.1.1 is no longer a disagreement.
+        var a = superseding.TransitiveDependencies.Ambiguous.Single();
+        a.PackageId.ShouldBe( "X.Core" );
+        a.Version.ToString().ShouldBe( "1.1.1" );
+        a.ResolvedFrom.ShouldBe( VersionSource.ProducedPackages );
+        a.Resolutions.Select( r => r.Version.ToString() ).ShouldBe( ["9.9.9"] );
+
+        // A profile records what was published: the origin is untouched.
+        folder.Find( SVersion.Parse( $"{day}.0" ) )!.TransitiveDependencies.Ambiguous.Single()
+              .Resolutions.Select( r => r.Version.ToString() ).ShouldBe( ["9.9.9", "1.1.1"] );
+    }
+
+    static PackageInstance Instance( string s )
+    {
+        var i = s.IndexOf( '@' );
+        return new PackageInstance( s[..i], SVersion.Parse( s[(i + 1)..] ) );
     }
 
     // The harness commits on "dev/stable": a successful non-CI publication integrates it into "stable"
