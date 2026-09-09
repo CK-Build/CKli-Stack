@@ -1,6 +1,7 @@
 using CK.Core;
 using CKli;
 using CKli.Core;
+using CKli.Publish.Plugin;
 using NUnit.Framework;
 using Shouldly;
 using System.IO;
@@ -253,6 +254,55 @@ public class LTSCreateTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "create", "@net8" )).ShouldBeTrue();
         VersionBounds( LoadWorldDefinition( stack, "Test@net8.xml" ) )
             .ShouldBe( [("X-Core", null, "2.0.0-0"), ("X-App", null, "1.0.0-0")] );
+    }
+
+    /// <summary>
+    /// The Published folder is World scoped: ".PublicStack/Published" for the default World and
+    /// ".PublicStack/{LTSName}/Published" for a LTS one - the LocalWorldName.SharedDataFolder convention that
+    /// the plugin solution and the CommonFiles folder already follow.
+    /// <para>
+    /// PublishPlugin used to compose it from the StackRepository.StackWorkingFolder instead, so every World
+    /// of a Stack shared one folder: an LTS World's profiles landed in the default World's, in its index, and
+    /// competed for the next free Patch of the day.
+    /// </para>
+    /// </summary>
+    [Test]
+    public async Task the_Published_folder_is_World_scoped_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.2.3" ).ConfigureAwait( false );
+        await world.CreateRepoAsync( "X-App", "v0.4.0", references: [rCore] ).ConfigureAwait( false );
+
+        // An LTS World can only be created from a World whose "dev/" branches are integrated: only a
+        // publication does that. It also writes the default World's first profile.
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+
+        var defaultPublished = StackFolder( stack ).AppendPart( "Published" );
+        new PublishedFolder( defaultPublished ).Profiles.Count().ShouldBe( 1 );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "create", "@net8" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "clone", "@net8" )).ShouldBeTrue();
+
+        // Opening the LTS World and asking its PublishPlugin where it publishes is enough: the folder is
+        // created on demand, so its existence is the assertion. Publishing there would need its brand new
+        // "@net8/stable" branch to be opened in the repositories first.
+        var ltsEnv = world.WorldRoot.ChangeDirectory( stack.StackRoot.AppendPart( "@net8" ) );
+        var (ltsStack, ltsWorld) = StackRepository.TryOpenWorldFromPath( TestHelper.Monitor, ltsEnv, out var error, skipPullStack: true );
+        error.ShouldBeFalse();
+        using( ltsStack )
+        {
+            var publish = ltsWorld.ShouldNotBeNull().GetRequiredPlugin<PublishPlugin>( TestHelper.Monitor ).ShouldNotBeNull();
+            var ltsPublished = StackFolder( stack ).AppendPart( "@net8" ).AppendPart( "Published" );
+            publish.PublishedFolder.RootPath.ShouldBe( Path.GetFullPath( ltsPublished ) + Path.DirectorySeparatorChar );
+            Directory.Exists( ltsPublished ).ShouldBeTrue( "Created on demand." );
+            new PublishedFolder( ltsPublished ).Profiles.ShouldBeEmpty( "The LTS World has published nothing." );
+        }
+        // And the default World's folder is untouched: the two are independent.
+        new PublishedFolder( defaultPublished ).Profiles.Count().ShouldBe( 1 );
     }
 
     static NormalizedPath StackFolder( FakeBuildStack stack ) => stack.StackRoot.AppendPart( ".PublicStack" );
