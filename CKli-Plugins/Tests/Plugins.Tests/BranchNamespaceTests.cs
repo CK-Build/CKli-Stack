@@ -32,7 +32,12 @@ public class BranchNamespaceTests
         defaultBranchNamespace.Root.DevName.ShouldBe( "Net8/dev/stable" );
         defaultBranchNamespace.ByName.ShouldHaveSingleItem();
         defaultBranchNamespace.ByName["Net8/stable"].ShouldBeSameAs( defaultBranchNamespace.Branches[0] );
-        defaultBranchNamespace.GetMainLine().ShouldBe( "Net8/stable" );
+        // GetMainLine() is the CONFIGURATION: it is what the constructor above parses, so the LTS name is
+        // not part of it (the constructor prepends it). BranchName.ConfigurationName is that form.
+        defaultBranchNamespace.Root.ConfigurationName.ShouldBe( "stable" );
+        defaultBranchNamespace.GetMainLine().ShouldBe( "stable" );
+        new BranchNamespace( "Net8", defaultBranchNamespace.GetMainLine(), defaultBranchNamespace.GetExplo() )
+            .ShouldBe( defaultBranchNamespace, "The configuration round trips." );
     }
 
     [Test]
@@ -88,6 +93,41 @@ public class BranchNamespaceTests
 
         ns = ns.Remove( ns.FindRequired( "delta" ) );
         ns.GetMainLine().ShouldBe( "stable" );
+    }
+
+    /// <summary>
+    /// In a LTS world every branch name carries the "{LTSName}/" prefix, but the configuration that
+    /// GetMainLine()/GetExplo() write back never does: the constructor is what prepends it, and its MainLine
+    /// parser rejects a name starting with the '@' of an LTSName. Writing the prefixed names made the world
+    /// unloadable - which is what "ckli lts create" and any branch mutation in a LTS world used to produce.
+    /// </summary>
+    [Test]
+    public void lts_namespace_configuration_round_trips()
+    {
+        var def = new BranchNamespace( null, "stable -> zulu => romeo", [] );
+        // 2 exploratory branches with 2 different parents: GetExplo() emits them as 2 top level elements,
+        // each with its own Parent attribute.
+        var (withExplo, _) = def.AddOrUpdateExplo( "explo/v-next", BranchLinkType.Release, def.FindRequired( "romeo" ) );
+        (withExplo, _) = withExplo.AddOrUpdateExplo( "explo/spike", BranchLinkType.CI, withExplo.FindRequired( "zulu" ) );
+
+        var lts = new BranchNamespace( "@net8", withExplo.GetMainLine(), withExplo.GetExplo() );
+        lts.Branches.Select( b => b.Name )
+           .ShouldBe( ["@net8/stable", "@net8/zulu", "@net8/romeo", "@net8/explo/v-next", "@net8/explo/spike"] );
+        lts.Branches.Select( b => b.ConfigurationName )
+           .ShouldBe( ["stable", "zulu", "romeo", "explo/v-next", "explo/spike"] );
+        lts.FindRequired( "@net8/explo/spike" ).Parent.ShouldNotBeNull().Name.ShouldBe( "@net8/zulu" );
+
+        lts.GetMainLine().ShouldBe( "stable -> zulu => romeo" );
+        lts.GetExplo().Select( e => e.ToString() ).Concatenate( "" )
+           .ShouldBe( """<Explo Name="explo/v-next" Link="Release" Parent="romeo" /><Explo Name="explo/spike" Parent="zulu" />""" );
+        new BranchNamespace( "@net8", lts.GetMainLine(), lts.GetExplo() ).ShouldBe( lts );
+
+        // CreateForLTS keeps only the root branch: this is the configuration "ckli lts create" writes.
+        var ltsRoot = def.CreateForLTS( "@net8" );
+        ltsRoot.Branches.Select( b => b.Name ).ShouldBe( ["@net8/stable"] );
+        ltsRoot.GetMainLine().ShouldBe( "stable" );
+        ltsRoot.GetExplo().ShouldBeEmpty();
+        new BranchNamespace( "@net8", ltsRoot.GetMainLine(), ltsRoot.GetExplo() ).ShouldBe( ltsRoot );
     }
 
     [Test]
