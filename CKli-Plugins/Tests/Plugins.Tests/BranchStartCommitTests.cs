@@ -1,4 +1,4 @@
-﻿using CK.Core;
+using CK.Core;
 using CKli;
 using LibGit2Sharp;
 using NUnit.Framework;
