@@ -1,8 +1,9 @@
-﻿using CK.Core;
+using CK.Core;
 using CKli;
 using NUnit.Framework;
 using Shouldly;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using static CK.Testing.MonitorTestHelper;
 
@@ -226,17 +227,125 @@ public class DepsUpdateTests
     }
 
     /// <summary>
-    /// Applying is not implemented yet: without --dry-run the command reports and fails rather than pretending.
+    /// Applying rewrites the project on the "dev/" branch and commits it: a second run has nothing left to do.
     /// </summary>
     [Test]
-    public async Task applying_is_not_implemented_yet_Async()
+    public async Task applying_rewrites_the_project_and_commits_it_Async()
     {
         using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
         var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var world = stack.DefaultWorld;
+        var display = stack.Screen;
 
         var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) );
+        }
+        var before = DevStableTip( rCore );
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update" )).ShouldBeFalse();
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "Updated 1 package(s) in 1 repositories" );
+
+        // The reference has been rewritten in the project of the "dev/" branch, and committed.
+        Reference( rCore, "dev/stable", "CK.CanaryPackage" ).ShouldBe( "1.0.0" );
+        DevStableTip( rCore ).ShouldNotBe( before, "The update has been committed." );
+
+        // Idempotent: the World is aligned now.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "Nothing to update" );
+    }
+
+    /// <summary>
+    /// A repository that doesn't have the branch gets it created - at the commit its BranchLinkType says,
+    /// which is the content that has been analyzed - and the update is committed on its "dev/" branch.
+    /// </summary>
+    [Test]
+    public async Task applying_creates_the_branch_of_a_repository_that_lacks_it_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        // X-Core <- X-App (the pivot). Both are behind on the same external package.
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        var rApp = await world.CreateRepoAsync( "X-App", "v0.1.0", references: [rCore] ).ConfigureAwait( false );
+        foreach( var r in new[] { rCore, rApp } )
+        {
+            using var e = r.CreateEditor();
+            e.AddOrUpdateReference( r.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) );
+        }
+        // "romeo" is opened on the pivot only: X-Core doesn't have it, but it is in the World branch model.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "branch", "open", "romeo", "--link", "Full" )).ShouldBeTrue();
+        BranchExists( rCore, "romeo" ).ShouldBeFalse();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update", "--branch", "romeo" )).ShouldBeTrue();
+
+        // The upstream joined the update and its "romeo" branch has been created.
+        BranchExists( rCore, "romeo" ).ShouldBeTrue();
+        Reference( rCore, "dev/romeo", "CK.CanaryPackage" ).ShouldBe( "1.0.0" );
+        Reference( rApp, "dev/romeo", "CK.CanaryPackage" ).ShouldBe( "1.0.0" );
+        // Only the analyzed branch is updated: "dev/stable" still references the old version.
+        Reference( rCore, "dev/stable", "CK.CanaryPackage" ).ShouldBe( "0.9.0" );
+    }
+
+    /// <summary>
+    /// A downgrade is applied only with --allow-downgrade: a World Reference may pin lower than what this
+    /// World references and alignment is the point, but it is never a silent move.
+    /// </summary>
+    [Test]
+    public async Task a_downgrade_requires_allow_downgrade_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+
+        var refStack = await testEnv.CreateStackAsync( "Ref", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var rLib = await refStack.DefaultWorld.CreateRepoAsync( "R-Lib", "v1.0.1" ).ConfigureAwait( false );
+        TestHelper.TouchAndCommit( rLib.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish" )).ShouldBeTrue();
+
+        var stack = await testEnv.CreateStackAsync( "Test", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+        var rApp = await world.CreateRepoAsync( "X-App", "v0.1.0" ).ConfigureAwait( false );
+        // Ahead of what the reference publishes (1.0.2): aligning on it moves the version DOWN.
+        using( var e = rApp.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rApp.DefaultProjectName, "R.Lib", SVersion.Parse( "2.0.0" ) );
+        }
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "reference", "set", refStack.Remotes.StackUri.ToString() )).ShouldBeTrue();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update" )).ShouldBeFalse();
+        display.ToString().ShouldContain( "R.Lib 2.0.0 \u2192 1.0.2" );
+        Reference( rApp, "dev/stable", "R.Lib" ).ShouldBe( "2.0.0", "Nothing has been written." );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update", "--allow-downgrade" )).ShouldBeTrue();
+        Reference( rApp, "dev/stable", "R.Lib" ).ShouldBe( "1.0.2" );
+    }
+
+    static bool BranchExists( FakeBuildRepo repo, string branchName )
+    {
+        using var e = repo.CreateEditor();
+        return e.GitRepository.Repository.Branches[branchName] != null;
+    }
+
+    static string DevStableTip( FakeBuildRepo repo )
+    {
+        using var e = repo.CreateEditor();
+        return e.GitRepository.Repository.Branches["dev/stable"].Tip.Sha;
+    }
+
+    // The version a project of a branch references, or null when that identifier is not referenced.
+    static string? Reference( FakeBuildRepo repo, string branchName, string packageId )
+    {
+        using var e = repo.CreateEditor();
+        var p = e.ReadProjects( branchName ).Single( x => x.ProjectName == repo.DefaultProjectName );
+        var found = p.References.Where( x => x.PackageId == packageId ).ToList();
+        found.Count.ShouldBeLessThanOrEqualTo( 1, $"'{packageId}' is referenced more than once." );
+        return found.Count == 0 ? null : found[0].Version.ToString();
     }
 }
