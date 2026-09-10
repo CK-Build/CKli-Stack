@@ -1,7 +1,8 @@
-using CK.Core;
+﻿using CK.Core;
 using CKli;
 using NUnit.Framework;
 using Shouldly;
+using System.IO;
 using System.Threading.Tasks;
 using static CK.Testing.MonitorTestHelper;
 
@@ -139,6 +140,89 @@ public class DepsUpdateTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldContain( "Nothing to update" );
+    }
+
+    /// <summary>
+    /// A World Reference is the source that matters: the version its published profile carries for a package
+    /// it produces is the target, and it wins over what the feeds offer. The referenced Stack here publishes
+    /// "R.Lib" at 1.0.2 while the feed offers 9.9.9: the target is the reference's version.
+    /// </summary>
+    [Test]
+    public async Task a_World_Reference_anchors_the_target_and_wins_over_the_feeds_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+
+        // The referenced Stack: a repository, a change and a publication - so it has a Published/index.json
+        // and a profile that carries its produced package.
+        var refStack = await testEnv.CreateStackAsync( "Ref", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var rLib = await refStack.DefaultWorld.CreateRepoAsync( "R-Lib", "v1.0.1" ).ConfigureAwait( false );
+        TestHelper.TouchAndCommit( rLib.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish" )).ShouldBeTrue();
+
+        // The consuming Stack: it is behind on the referenced package.
+        var stack = await testEnv.CreateStackAsync( "Test", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+        var rApp = await world.CreateRepoAsync( "X-App", "v0.1.0" ).ConfigureAwait( false );
+        using( var e = rApp.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rApp.DefaultProjectName, "R.Lib", SVersion.Parse( "1.0.1" ) );
+        }
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "reference", "set", refStack.Remotes.StackUri.ToString() )).ShouldBeTrue();
+
+        // The feed offers a greater version of the very same package: an empty version folder is all the V3
+        // expanded layout needs to list it.
+        var (nugetOrgFeed, _) = Helper.GetFakeFeedPaths( testEnv.Path );
+        Directory.CreateDirectory( Path.Combine( nugetOrgFeed, "r.lib", "9.9.9" ) );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update", "--dry-run" )).ShouldBeTrue();
+        var text = display.ToString();
+        text.ShouldContain( "R.Lib 1.0.1 → 1.0.2", customMessage: text );
+        text.ShouldContain( "produced by", customMessage: "The origin is the reference's profile, not a feed." );
+        text.ShouldNotContain( "9.9.9", customMessage: "The feed does not win over a reference." );
+    }
+
+    /// <summary>
+    /// "--ci" considers the CI published profiles of the References. A folder holds at most one alive CI
+    /// profile per branch and it is newer than every non CI publication of that branch, so the one that is
+    /// there simply applies: this asserts both halves - without the flag the release is the target, with it
+    /// the CI publication is.
+    /// </summary>
+    [Test]
+    public async Task the_CI_published_profile_of_a_Reference_is_used_only_with_ci_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+
+        var refStack = await testEnv.CreateStackAsync( "Ref", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var rLib = await refStack.DefaultWorld.CreateRepoAsync( "R-Lib", "v1.0.1" ).ConfigureAwait( false );
+        // A release, then a CI publication on top of it.
+        TestHelper.TouchAndCommit( rLib.WorkingFolderPath, branchName: null, fileName: "First.txt" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( rLib.WorkingFolderPath, branchName: null, fileName: "Second.txt" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish", "--ci" )).ShouldBeTrue();
+
+        var stack = await testEnv.CreateStackAsync( "Test", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+        var rApp = await world.CreateRepoAsync( "X-App", "v0.1.0" ).ConfigureAwait( false );
+        using( var e = rApp.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rApp.DefaultProjectName, "R.Lib", SVersion.Parse( "1.0.1" ) );
+        }
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "reference", "set", refStack.Remotes.StackUri.ToString() )).ShouldBeTrue();
+
+        // Without --ci: the release is the target, the CI publication is not a candidate.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update", "--dry-run" )).ShouldBeTrue();
+        var release = display.ToString();
+        release.ShouldContain( "R.Lib 1.0.1 → 1.0.2", customMessage: release );
+
+        // With --ci: the CI publication of the very same branch applies.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update", "--dry-run", "--ci" )).ShouldBeTrue();
+        var ci = display.ToString();
+        ci.ShouldContain( "R.Lib 1.0.1 → 1.0.3--ci", customMessage: ci );
     }
 
     /// <summary>
