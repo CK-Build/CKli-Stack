@@ -1,7 +1,9 @@
 using CK.Core;
 using CKli;
+using LibGit2Sharp;
 using NUnit.Framework;
 using Shouldly;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -325,6 +327,131 @@ public class DepsUpdateTests
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update", "--allow-downgrade" )).ShouldBeTrue();
         Reference( rApp, "dev/stable", "R.Lib" ).ShouldBe( "1.0.2" );
+    }
+
+    /// <summary>
+    /// The version filter is stable/not and nothing finer: a root branch takes only the stable versions a
+    /// feed offers, --prerelease takes the greatest whatever it is. The prerelease here is a plain SemVer
+    /// one ("2.0.0-rc.1"), which is what most third party packages look like - and what CSVersionKindFilter
+    /// would have rejected.
+    /// </summary>
+    [Test]
+    public async Task the_root_branch_ignores_the_prereleases_of_a_feed_unless_prerelease_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) );
+        }
+        // The feed offers 1.0.0 (seeded) and a greater prerelease.
+        SeedFeedVersion( testEnv, "ck.canarypackage", "2.0.0-rc.1" );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 \u2192 1.0.0", customMessage: display.ToString() );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--prerelease" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 \u2192 2.0.0-rc.1", customMessage: display.ToString() );
+    }
+
+    /// <summary>
+    /// The other way around on a prerelease branch: the prereleases are candidates there, and --stable
+    /// restricts it back to the stable ones.
+    /// </summary>
+    [Test]
+    public async Task a_prerelease_branch_takes_the_prereleases_unless_stable_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) );
+        }
+        SeedFeedVersion( testEnv, "ck.canarypackage", "2.0.0-rc.1" );
+        // A "Full" link: the default "CI" one would need a build on the parent to start from.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "branch", "open", "romeo", "--link", "Full" )).ShouldBeTrue();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--branch", "romeo" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 \u2192 2.0.0-rc.1", customMessage: display.ToString() );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--branch", "romeo", "--stable" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 \u2192 1.0.0", customMessage: display.ToString() );
+
+        // The two are exclusive.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--stable", "--prerelease" )).ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// The command fetches first and then refuses a World that is behind its remotes: it requires a coherent
+    /// World instead of merging one, so its report always describes what an update would write. --no-fetch
+    /// skips the fetch, and the divergence is then simply not visible - which is exactly what the fetch buys.
+    /// </summary>
+    [Test]
+    public async Task a_branch_behind_its_remote_is_refused_and_only_the_fetch_reveals_it_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) );
+        }
+        // Someone else pushed to the remote: the local tracking branch is now behind it.
+        CommitInRemote( rCore, "main" );
+
+        // --no-fetch: the remote tracking reference is stale, so nothing looks wrong and the analysis runs.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--no-fetch" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 \u2192 1.0.0" );
+
+        // With the fetch, the divergence is real and the command refuses rather than merging it.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run" )).ShouldBeFalse();
+        // Nothing has been written, and the local branch has NOT been merged.
+        Reference( rCore, "dev/stable", "CK.CanaryPackage" ).ShouldBe( "0.9.0" );
+        BehindBy( rCore, "main" ).ShouldBe( 1, "The command refuses, it never merges." );
+    }
+
+    // Adds a version of a package to the fake "nuget.org" feed: an empty folder is all the V3 expanded
+    // layout needs to list it.
+    static void SeedFeedVersion( FakeBuildTestEnv testEnv, string lowercasePackageId, string version )
+    {
+        var (nugetOrgFeed, _) = Helper.GetFakeFeedPaths( testEnv.Path );
+        Directory.CreateDirectory( Path.Combine( nugetOrgFeed, lowercasePackageId, version ) );
+    }
+
+    // Commits directly in the remote (bare) repository: the local clone becomes behind it.
+    static void CommitInRemote( FakeBuildRepo repo, string branchName )
+    {
+        var path = Repository.Discover( repo.World.Stack.Remotes.GetUriFor( repo.RepositoryName ).LocalPath );
+        using var git = new Repository( path );
+        var b = git.Branches[branchName].ShouldNotBeNull();
+        var committer = new Signature( "SomeoneElse", "none", DateTimeOffset.Now );
+        var c = git.ObjectDatabase.CreateCommit( committer, committer, "A commit pushed by someone else.",
+                                                 b.Tip.Tree, [b.Tip], prettifyMessage: true );
+        git.Refs.UpdateTarget( b.Reference, c.Id, null );
+    }
+
+    static int BehindBy( FakeBuildRepo repo, string branchName )
+    {
+        using var e = repo.CreateEditor();
+        var b = e.GitRepository.Repository.Branches[branchName].ShouldNotBeNull();
+        return b.TrackingDetails.BehindBy ?? 0;
     }
 
     static bool BranchExists( FakeBuildRepo repo, string branchName )
