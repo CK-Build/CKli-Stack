@@ -510,9 +510,9 @@ public class PublishedFolderTests
     }
 
     [Test]
-    public void the_patch_of_a_new_profile_version_is_incremented_until_it_is_free()
+    public void the_patch_of_a_new_profile_version_is_minted_above_the_ones_of_its_day()
     {
-        var root = GetCleanFolder( nameof( the_patch_of_a_new_profile_version_is_incremented_until_it_is_free ) );
+        var root = GetCleanFolder( nameof( the_patch_of_a_new_profile_version_is_minted_above_the_ones_of_its_day ) );
         var f = new PublishedFolder( root );
 
         f.CreateNewProfileVersion( CSVersionKind.Alpha, utcNow: _day254 ).ToString().ShouldBe( "2026.254.0-alpha" );
@@ -525,10 +525,86 @@ public class PublishedFolderTests
         f.Reload();
         f.CreateNewProfileVersion( CSVersionKind.Alpha, utcNow: _day254 ).ToString().ShouldBe( "2026.254.2-alpha" );
 
-        // Another branch (and the CI builds of a branch) has its own patch sequence.
+        // Another branch has its own patch sequence.
         f.CreateNewProfileVersion( CSVersionKind.Stable, utcNow: _day254 ).ToString().ShouldBe( "2026.254.0" );
+        // But the CI builds of a branch SHARE its sequence (they have the same SVersion.BranchName): a number
+        // is never reused, so a CI publication can never sort below the release it follows - and
+        // RemoveSupersededCIProfiles is free to delete the ones it supersedes.
         f.CreateNewProfileVersion( CSVersionKind.Alpha, isCIBuild: true, utcNow: _day254 )
-         .ToString().ShouldBe( "2026.254.0-alpha.0.ci.0" );
+         .ToString().ShouldBe( "2026.254.2-alpha.0.ci.0" );
+    }
+
+    [Test]
+    public void a_publication_removes_the_CI_profiles_it_supersedes()
+    {
+        var root = GetCleanFolder( nameof( a_publication_removes_the_CI_profiles_it_supersedes ) );
+        var f = new PublishedFolder( root );
+
+        f.Add( TestModel.SampleProfile( "2026.254.0" ) );
+        f.Add( TestModel.SampleProfile( "2026.254.1--ci.0" ) );
+        f.Add( TestModel.SampleProfile( "2026.254.2--ci.0" ) );
+        // Another branch: its CI profiles are none of this branch's business.
+        f.Add( TestModel.SampleProfile( "2026.254.3-alpha.0.ci.0" ) );
+        f.Save().ShouldBe( 4 );
+
+        // A CI publication supersedes the CI publications that precede it on its branch, and only those.
+        f.Add( TestModel.SampleProfile( "2026.254.4--ci.0" ) );
+        f.RemoveSupersededCIProfiles( TestModel.V( "2026.254.4--ci.0" ) )
+         .Select( v => v.ToString() )
+         .ShouldBe( ["2026.254.1--ci.0", "2026.254.2--ci.0"] );
+        f.Profiles.Select( p => p.Version.ToString() )
+         .ShouldBe( ["2026.254.4--ci.0", "2026.254.3-alpha.0.ci.0", "2026.254.0"] );
+
+        // A non CI publication supersedes them all: only the releases (and the other branch) remain.
+        f.Add( TestModel.SampleProfile( "2026.254.5" ) );
+        f.RemoveSupersededCIProfiles( TestModel.V( "2026.254.5" ) )
+         .Select( v => v.ToString() )
+         .ShouldBe( ["2026.254.4--ci.0"] );
+        f.Profiles.Select( p => p.Version.ToString() )
+         .ShouldBe( ["2026.254.5", "2026.254.3-alpha.0.ci.0", "2026.254.0"] );
+
+        // 3 files move: the two deletions and the new release. "2026.254.4--ci.0" has been added and
+        // superseded without ever being saved, so it never reaches the disk at all.
+        f.Save().ShouldBe( 3 );
+        f.Reload();
+        f.LoadErrors.ShouldBeEmpty();
+        f.Profiles.Select( p => p.Version.ToString() )
+         .ShouldBe( ["2026.254.5", "2026.254.3-alpha.0.ci.0", "2026.254.0"] );
+    }
+
+    [Test]
+    public void a_deprecated_CI_profile_is_never_removed()
+    {
+        var root = GetCleanFolder( nameof( a_deprecated_CI_profile_is_never_removed ) );
+        var f = new PublishedFolder( root );
+
+        f.Add( TestModel.SampleProfile( "2026.254.0--ci.0" ) );
+        f.Deprecate( TestModel.V( "2026.254.0--ci.0" ) ).ShouldBeTrue();
+
+        // A deprecated profile is a record of a problem: superseding it doesn't erase it.
+        f.Add( TestModel.SampleProfile( "2026.254.1" ) );
+        f.RemoveSupersededCIProfiles( TestModel.V( "2026.254.1" ) ).ShouldBeEmpty();
+        f.Profiles.Select( p => p.Version.ToString() ).ShouldBe( ["2026.254.1", "2026.254.0--ci.0"] );
+    }
+
+    [Test]
+    public void a_removed_profile_does_not_free_its_patch()
+    {
+        var root = GetCleanFolder( nameof( a_removed_profile_does_not_free_its_patch ) );
+        var f = new PublishedFolder( root );
+
+        f.Add( TestModel.SampleProfile( "2026.254.0" ) );
+        f.Add( TestModel.SampleProfile( "2026.254.1" ) );
+        f.Save().ShouldBe( 2 );
+
+        f.Remove( TestModel.V( "2026.254.1" ) ).ShouldBeTrue();
+        f.CreateNewProfileVersion( CSVersionKind.Stable, utcNow: _day254 ).ToString().ShouldBe( "2026.254.2" );
+
+        // The mark lives in the folder, not in a stored counter: once the removal is saved, the surviving
+        // maximum is what carries it. This is why RemoveSupersededCIProfiles never removes the maximum.
+        f.Save().ShouldBe( 1 );
+        f.Reload();
+        f.CreateNewProfileVersion( CSVersionKind.Stable, utcNow: _day254 ).ToString().ShouldBe( "2026.254.1" );
     }
 
     [Test]

@@ -142,8 +142,9 @@ public class PublishedProfileTests
     }
 
     /// <summary>
-    /// Two publications of the same day on the same branch: the second one increments the Patch. A CI
-    /// publication is a CI version, so it never collides with the non CI one.
+    /// Two publications of the same day on the same branch: the second one takes the next Patch. The CI
+    /// publications share that counter - a number is never reused - and a non CI publication supersedes
+    /// them: only the releases remain in the folder.
     /// </summary>
     [Test]
     public async Task the_profiles_of_a_day_are_distinguished_by_their_patch_Async()
@@ -163,19 +164,25 @@ public class PublishedProfileTests
         await TouchDevStableAsync( rCore, "First.txt" ).ConfigureAwait( false );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
 
-        // A CI publication: the profile is a CI version at the same Patch. Its file is in the folder's root
-        // like any stable one (SVersion.BranchName is the empty string for a stable version AND its CI builds).
+        // A CI publication: the profile is a CI version at the NEXT Patch (the CI and the non CI forms of a
+        // branch share one counter). Its file is in the folder's root like any stable one (SVersion.BranchName
+        // is the empty string for a stable version AND its CI builds).
         await TouchDevStableAsync( rCore, "Second.txt" ).ConfigureAwait( false );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--ci" )).ShouldBeTrue();
+
+        folder.Reload();
+        folder.Profiles.Select( x => x.Version.ToString() )
+              .ShouldBe( [$"{expected}.1--ci.0", $"{expected}.0"] );
 
         await TouchDevStableAsync( rCore, "Third.txt" ).ConfigureAwait( false );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
 
         folder.Reload();
         folder.LoadErrors.ShouldBeEmpty();
-        // Profiles are ordered by descending version: "X.Y.1" then "X.Y.0" then its CI build.
+        // The release supersedes the CI publication it follows: that profile is gone, and its number is not
+        // reused - the release took the next one.
         folder.Profiles.Select( x => x.Version.ToString() )
-              .ShouldBe( [$"{expected}.1", $"{expected}.0", $"{expected}.0--ci.0"] );
+              .ShouldBe( [$"{expected}.2", $"{expected}.0"] );
     }
 
     /// <summary>
