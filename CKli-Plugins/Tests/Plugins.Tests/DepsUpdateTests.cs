@@ -43,7 +43,9 @@ public class DepsUpdateTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run" )).ShouldBeTrue();
         var text = display.ToString();
         text.ShouldContain( "X-Core" );
-        text.ShouldContain( "CK.CanaryPackage 0.9.0 → 1.0.0" );
+        // The upgrade rows are indented below their repository: a multi line TextBlock trims its lines,
+        // so this only holds because each line is its own renderable with a left margin.
+        text.ShouldContain( "    ▲ CK.CanaryPackage 0.9.0 → 1.0.0", customMessage: text );
         text.ShouldContain( "1 upgrade(s) in 1 repositories" );
     }
 
