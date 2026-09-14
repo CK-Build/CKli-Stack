@@ -41,7 +41,7 @@ public class DepsUpdateTests
         }
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget", "--by-repo" )).ShouldBeTrue();
         var text = display.ToString();
         text.ShouldContain( "X-Core" );
         // The upgrade rows are indented below their repository: a multi line TextBlock trims its lines,
@@ -85,7 +85,7 @@ public class DepsUpdateTests
         // --with-nuget: the feed answers and the very same World has an upgrade.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget" )).ShouldBeTrue();
-        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 → 1.0.0" );
+        display.ToString().ShouldContain( "CK.CanaryPackage → 1.0.0" );
 
         // The feed only filters are refused rather than silently ignored.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--stable" )).ShouldBeFalse();
@@ -142,7 +142,7 @@ public class DepsUpdateTests
 
         // From the middle repository: its upstream (X-Core) and its downstream (X-Sample) are both reported.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rMiddle.Root, "deps", "update", "--dry-run", "--with-nuget" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rMiddle.Root, "deps", "update", "--dry-run", "--with-nuget", "--by-repo" )).ShouldBeTrue();
         var wide = display.ToString();
         wide.ShouldContain( "X-Core" );
         wide.ShouldContain( "X-Middle" );
@@ -151,7 +151,7 @@ public class DepsUpdateTests
 
         // --narrow: the downstream is left out.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rMiddle.Root, "deps", "update", "--dry-run", "--with-nuget", "--narrow" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rMiddle.Root, "deps", "update", "--dry-run", "--with-nuget", "--narrow", "--by-repo" )).ShouldBeTrue();
         var narrow = display.ToString();
         narrow.ShouldContain( "X-Core" );
         narrow.ShouldContain( "X-Middle" );
@@ -165,6 +165,57 @@ public class DepsUpdateTests
         wide.ShouldContain( "\u2192\u00b7   X-Core", customMessage: wide );
         wide.ShouldContain( " \u2299   X-Middle", customMessage: wide );
         wide.ShouldContain( " \u00b7\u2192  X-Sample", customMessage: wide );
+    }
+
+    /// <summary>
+    /// The report is by package: one row per package with the version it moves to and where that comes from,
+    /// then one row per version it moves from with the repositories that are on it, greatest version first.
+    /// The pivot marker is not displayed - the grouping is about packages, not about where a repository sits
+    /// in the graph - and "--by-repo" is what asks for the other orientation.
+    /// </summary>
+    [Test]
+    public async Task the_report_is_by_package_and_by_repo_gives_the_other_orientation_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        // A chain: X-Core <- X-Middle (the pivot) <- X-Sample. Two of them are on the same version of the
+        // package and the third is on another one: that is what the version groups are about.
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        var rMiddle = await world.CreateRepoAsync( "X-Middle", "v0.5.0", references: [rCore] ).ConfigureAwait( false );
+        var rSample = await world.CreateRepoAsync( "X-Sample", "v0.1.0", references: [rMiddle] ).ConfigureAwait( false );
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.8.0" ) );
+        }
+        foreach( var r in new[] { rMiddle, rSample } )
+        {
+            using var e = r.CreateEditor();
+            e.AddOrUpdateReference( r.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) );
+        }
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rMiddle.Root, "deps", "update", "--dry-run", "--with-nuget" )).ShouldBeTrue();
+        var text = display.ToString();
+        // One row for the package, then the versions it moves from - greatest first, so the most behind last.
+        text.ShouldContain( "CK.CanaryPackage \u2192 1.0.0", customMessage: text );
+        text.ShouldContain( "\u25b2 0.9.0  X-Middle, X-Sample", customMessage: text );
+        text.ShouldContain( "\u25b2 0.8.0  X-Core", customMessage: text );
+        text.ShouldContain( "3 upgrade(s) of 1 package(s) in 3 repositories", customMessage: text );
+        text.IndexOf( "0.9.0  X-Middle" ).ShouldBeLessThan( text.IndexOf( "0.8.0  X-Core" ),
+                                                            "Greatest version first: the most behind repositories come last." );
+        // No pivot marker in this mode, even though this graph has one.
+        text.ShouldNotContain( "\u2299", customMessage: "The pivot marker is not displayed by the package report." );
+
+        // The very same World with --by-repo: the marker is back and the origin repeats on every row.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rMiddle.Root, "deps", "update", "--dry-run", "--with-nuget", "--by-repo" )).ShouldBeTrue();
+        var byRepo = display.ToString();
+        byRepo.ShouldContain( "by repository", customMessage: byRepo );
+        byRepo.ShouldContain( "\u2299", customMessage: byRepo );
+        byRepo.ShouldContain( "    \u25b2 CK.CanaryPackage 0.9.0 \u2192 1.0.0", customMessage: byRepo );
     }
 
     /// <summary>
@@ -188,7 +239,7 @@ public class DepsUpdateTests
         }
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget", "--all" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget", "--all", "--by-repo" )).ShouldBeTrue();
         var text = display.ToString();
         text.ShouldContain( "X-Core", customMessage: text );
         text.ShouldContain( "X-App", customMessage: text );
@@ -255,7 +306,7 @@ public class DepsUpdateTests
                 version, so only the <VersionTag><Packages> bounds can drive an update.
                 """ );
         }
-        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 → 1.2.0", customMessage: display.ToString() );
+        display.ToString().ShouldContain( "CK.CanaryPackage → 1.2.0", customMessage: display.ToString() );
         Reference( rCore, "dev/stable", "CK.CanaryPackage" ).ShouldBe( "1.2.0" );
 
         // Idempotent: the reference is in its bound now.
@@ -294,7 +345,7 @@ public class DepsUpdateTests
         }
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run" )).ShouldBeTrue();
-        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 → 1.0.0", customMessage: display.ToString() );
+        display.ToString().ShouldContain( "CK.CanaryPackage → 1.0.0", customMessage: display.ToString() );
     }
 
     /// <summary>
@@ -322,7 +373,7 @@ public class DepsUpdateTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget" )).ShouldBeTrue();
         var text = display.ToString();
-        text.ShouldContain( "CK.CanaryPackage 0.9.0 → 1.5.0", customMessage: text );
+        text.ShouldContain( "CK.CanaryPackage → 1.5.0", customMessage: text );
         text.ShouldNotContain( "2.0.0", customMessage: "The greatest version is out of the bound: it is not a candidate." );
     }
 
@@ -431,7 +482,7 @@ public class DepsUpdateTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update", "--dry-run", "--with-nuget" )).ShouldBeTrue();
         var text = display.ToString();
-        text.ShouldContain( "R.Lib 1.0.1 → 1.0.2", customMessage: text );
+        text.ShouldContain( "R.Lib → 1.0.2", customMessage: text );
         text.ShouldContain( "produced by", customMessage: "The origin is the reference's profile, not a feed." );
         text.ShouldNotContain( "9.9.9", customMessage: "The feed does not win over a reference." );
     }
@@ -469,13 +520,13 @@ public class DepsUpdateTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update", "--dry-run" )).ShouldBeTrue();
         var release = display.ToString();
-        release.ShouldContain( "R.Lib 1.0.1 → 1.0.2", customMessage: release );
+        release.ShouldContain( "R.Lib → 1.0.2", customMessage: release );
 
         // With --ci: the CI publication of the very same branch applies.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update", "--dry-run", "--ci" )).ShouldBeTrue();
         var ci = display.ToString();
-        ci.ShouldContain( "R.Lib 1.0.1 → 1.0.3--ci", customMessage: ci );
+        ci.ShouldContain( "R.Lib → 1.0.3--ci", customMessage: ci );
     }
 
     /// <summary>
@@ -572,7 +623,9 @@ public class DepsUpdateTests
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update" )).ShouldBeFalse();
-        display.ToString().ShouldContain( "R.Lib 2.0.0 \u2192 1.0.2" );
+        var down = display.ToString();
+        down.ShouldContain( "R.Lib \u2192 1.0.2", customMessage: down );
+        down.ShouldContain( "\u25bc 2.0.0", customMessage: "The arrow sits on the version group: this one moves DOWN." );
         Reference( rApp, "dev/stable", "R.Lib" ).ShouldBe( "2.0.0", "Nothing has been written." );
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update", "--allow-downgrade" )).ShouldBeTrue();
@@ -603,11 +656,11 @@ public class DepsUpdateTests
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget" )).ShouldBeTrue();
-        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 \u2192 1.0.0", customMessage: display.ToString() );
+        display.ToString().ShouldContain( "CK.CanaryPackage \u2192 1.0.0", customMessage: display.ToString() );
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget", "--prerelease" )).ShouldBeTrue();
-        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 \u2192 2.0.0-rc.1", customMessage: display.ToString() );
+        display.ToString().ShouldContain( "CK.CanaryPackage \u2192 2.0.0-rc.1", customMessage: display.ToString() );
     }
 
     /// <summary>
@@ -633,11 +686,11 @@ public class DepsUpdateTests
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget", "--branch", "romeo" )).ShouldBeTrue();
-        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 \u2192 2.0.0-rc.1", customMessage: display.ToString() );
+        display.ToString().ShouldContain( "CK.CanaryPackage \u2192 2.0.0-rc.1", customMessage: display.ToString() );
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget", "--branch", "romeo", "--stable" )).ShouldBeTrue();
-        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 \u2192 1.0.0", customMessage: display.ToString() );
+        display.ToString().ShouldContain( "CK.CanaryPackage \u2192 1.0.0", customMessage: display.ToString() );
 
         // The two are exclusive.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget", "--stable", "--prerelease" )).ShouldBeFalse();
@@ -667,7 +720,7 @@ public class DepsUpdateTests
         // --no-fetch: the remote tracking reference is stale, so nothing looks wrong and the analysis runs.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget", "--no-fetch" )).ShouldBeTrue();
-        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 \u2192 1.0.0" );
+        display.ToString().ShouldContain( "CK.CanaryPackage \u2192 1.0.0" );
 
         // With the fetch, the divergence is real and the command refuses rather than merging it.
         display.Clear();
