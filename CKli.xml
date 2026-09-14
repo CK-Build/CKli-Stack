@@ -21,7 +21,11 @@
     <Migration />
     <Publish />
     <ShallowSolution />
-    <VersionTag />
+    <VersionTag>
+      <Packages>
+        <Package Name="DotNet.ReproducibleBuilds" Version="1.2.39[Lock]" />
+      </Packages>
+    </VersionTag>
   </Plugins>
   <Repository Url="https://github.com/CK-Build/CKli" />
   <Repository Url="https://github.com/CK-Build/CK-SVersion" />
