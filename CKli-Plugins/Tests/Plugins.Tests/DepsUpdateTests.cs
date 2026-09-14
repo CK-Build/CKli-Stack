@@ -7,6 +7,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using static CK.Testing.MonitorTestHelper;
 
 namespace Plugins.Tests;
@@ -68,14 +69,14 @@ public class DepsUpdateTests
             e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) );
         }
 
-        // By default: this World has no <Reference>, so nothing can anchor a target - and it is said.
+        // By default: this World has no <Reference> and no bound, so nothing can anchor a target - and it is said.
         display.Clear();
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
             (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update" )).ShouldBeTrue();
             logs.ShouldContain( """
-                This World has no <Reference> and --with-nuget is not specified: nothing can anchor a target
-                version, so there is nothing to update.
+                This World has no <Reference>, no <VersionTag><Packages> bound and --with-nuget is not
+                specified: nothing can anchor a target version, so there is nothing to update.
                 """ );
         }
         display.ToString().ShouldContain( "Nothing to update" );
@@ -159,22 +160,46 @@ public class DepsUpdateTests
     }
 
     /// <summary>
-    /// A pin in the World's &lt;VersionTag&gt;&lt;Packages&gt; configuration is an authoritative exception:
-    /// the identifier has no target at all, so it is never upgraded.
+    /// A &lt;VersionTag&gt;&lt;Packages&gt; bound caps what a source may propose: a "[Lock]"ed bound accepts its
+    /// base version and nothing else, so the greatest version the feeds offer is refused - and the report says
+    /// that the package is held back rather than silently skipping it.
     /// </summary>
     [Test]
-    public async Task a_pinned_package_is_never_upgraded_Async()
+    public async Task a_locked_bound_is_a_pin_that_no_feed_can_move_Async()
     {
         using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
-        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: ( monitor, stackPath, plugins ) =>
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: BoundConfiguration( "CK.CanaryPackage", "0.9.0[Lock]" ) )
+                                 .ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        using( var e = rCore.CreateEditor() )
         {
-            Helper.ConfigureFakeFeeds( monitor, stackPath, plugins );
-            var versionTag = plugins.Element( "VersionTag" ).ShouldNotBeNull();
-            versionTag.Add( new System.Xml.Linq.XElement( "Packages",
-                                new System.Xml.Linq.XElement( "Package",
-                                    new System.Xml.Linq.XAttribute( "Name", "CK.CanaryPackage" ),
-                                    new System.Xml.Linq.XAttribute( "Version", "0.9.0" ) ) ) );
-        } ).ConfigureAwait( false );
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) );
+        }
+
+        // The feed offers 1.0.0 (seeded) but the bound refuses it.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget" )).ShouldBeTrue();
+        var text = display.ToString();
+        text.ShouldContain( "Nothing to update", customMessage: text );
+        text.ShouldContain( "1 package(s) are held back by the World <Packages> configuration:", customMessage: text );
+        text.ShouldContain( "CK.CanaryPackage: 1.0.0", customMessage: text );
+        text.ShouldContain( "is not in the configured bound 0.9.0[Lock]", customMessage: text );
+    }
+
+    /// <summary>
+    /// The bound is an invariant of the World, not only a cap: a repository that references the package outside
+    /// of it is brought back to the bound's base version - even with no &lt;Reference&gt; and no --with-nuget,
+    /// where no source can anchor anything at all.
+    /// </summary>
+    [Test]
+    public async Task a_bound_alone_brings_an_out_of_bound_dependency_back_into_it_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: BoundConfiguration( "CK.CanaryPackage", "1.2.0[Lock]" ) )
+                                 .ConfigureAwait( false );
         var world = stack.DefaultWorld;
         var display = stack.Screen;
 
@@ -185,8 +210,152 @@ public class DepsUpdateTests
         }
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget" )).ShouldBeTrue();
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update" )).ShouldBeTrue();
+            logs.ShouldContain( """
+                This World has no <Reference> and --with-nuget is not specified: nothing can anchor a target
+                version, so only the <VersionTag><Packages> bounds can drive an update.
+                """ );
+        }
+        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 → 1.2.0", customMessage: display.ToString() );
+        Reference( rCore, "dev/stable", "CK.CanaryPackage" ).ShouldBe( "1.2.0" );
+
+        // Idempotent: the reference is in its bound now.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update" )).ShouldBeTrue();
         display.ToString().ShouldContain( "Nothing to update" );
+    }
+
+    /// <summary>
+    /// A bare version is a floor and not a pin: a reference above it is left alone, one below it is brought up
+    /// to it. This is what "Version" means now that it is a SVersionBound.
+    /// </summary>
+    [Test]
+    public async Task a_bare_bound_is_a_floor_not_a_pin_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: BoundConfiguration( "CK.CanaryPackage", "1.0.0" ) )
+                                 .ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        // Above the floor: nothing to do. A pin would have moved it back down to 1.0.0.
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "1.5.0" ) );
+        }
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "Nothing to update" );
+
+        // Below the floor: brought up to it.
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) );
+        }
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "CK.CanaryPackage 0.9.0 → 1.0.0", customMessage: display.ToString() );
+    }
+
+    /// <summary>
+    /// The bound filters the candidates a feed offers instead of blocking on the greatest one: a "[LockMajor]"
+    /// bound tracks the greatest version of that major and simply ignores the next one.
+    /// </summary>
+    [Test]
+    public async Task a_LockMajor_bound_tracks_the_greatest_version_of_its_major_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: BoundConfiguration( "CK.CanaryPackage", "1.0.0[LockMajor]" ) )
+                                 .ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) );
+        }
+        // The feed offers 1.0.0 (seeded), 1.5.0 and 2.0.0: only the 1.x are candidates.
+        SeedFeedVersion( testEnv, "ck.canarypackage", "1.5.0" );
+        SeedFeedVersion( testEnv, "ck.canarypackage", "2.0.0" );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget" )).ShouldBeTrue();
+        var text = display.ToString();
+        text.ShouldContain( "CK.CanaryPackage 0.9.0 → 1.5.0", customMessage: text );
+        text.ShouldNotContain( "2.0.0", customMessage: "The greatest version is out of the bound: it is not a candidate." );
+    }
+
+    /// <summary>
+    /// A World Reference is a source like any other as far as the bound is concerned: the version its published
+    /// profile carries is refused when it is outside of it, and the package is reported as held back.
+    /// </summary>
+    [Test]
+    public async Task a_bound_caps_what_a_World_Reference_may_propose_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+
+        // The referenced Stack publishes "R.Lib" at 1.0.2.
+        var refStack = await testEnv.CreateStackAsync( "Ref", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var rLib = await refStack.DefaultWorld.CreateRepoAsync( "R-Lib", "v1.0.1" ).ConfigureAwait( false );
+        TestHelper.TouchAndCommit( rLib.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish" )).ShouldBeTrue();
+
+        // The consuming Stack holds "R.Lib" at 1.0.1.
+        var stack = await testEnv.CreateStackAsync( "Test", BoundConfiguration( "R.Lib", "1.0.1[Lock]" ) ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+        var rApp = await world.CreateRepoAsync( "X-App", "v0.1.0" ).ConfigureAwait( false );
+        using( var e = rApp.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rApp.DefaultProjectName, "R.Lib", SVersion.Parse( "1.0.1" ) );
+        }
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "reference", "set", refStack.Remotes.StackUri.ToString() )).ShouldBeTrue();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update", "--dry-run" )).ShouldBeTrue();
+        var text = display.ToString();
+        text.ShouldContain( "Nothing to update", customMessage: text );
+        text.ShouldContain( "held back by the World <Packages> configuration", customMessage: text );
+        text.ShouldContain( "R.Lib: 1.0.2", customMessage: text );
+        text.ShouldContain( "is not in the configured bound 1.0.1[Lock]", customMessage: text );
+        Reference( rApp, "dev/stable", "R.Lib" ).ShouldBe( "1.0.1", "Nothing has been written." );
+    }
+
+    /// <summary>
+    /// A Version that is not a version bound is a configuration error, and the command says which element
+    /// carries it instead of failing later on something else.
+    /// </summary>
+    [Test]
+    public async Task an_invalid_bound_is_a_configuration_error_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: BoundConfiguration( "CK.CanaryPackage", "not a bound" ) )
+                                 .ConfigureAwait( false );
+        var rCore = await stack.DefaultWorld.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run" )).ShouldBeFalse();
+            logs.Any( l => l.Contains( "Unable to parse the Version attribute" ) ).ShouldBeTrue( logs.Concatenate( Environment.NewLine ) );
+        }
+    }
+
+    // Configures the fake feeds and one <VersionTag><Packages><Package Name=".." Version=".." /> bound.
+    static Action<IActivityMonitor, NormalizedPath, XElement> BoundConfiguration( string packageId, string bound )
+    {
+        return ( monitor, stackPath, plugins ) =>
+        {
+            Helper.ConfigureFakeFeeds( monitor, stackPath, plugins );
+            var versionTag = plugins.Element( "VersionTag" ).ShouldNotBeNull();
+            versionTag.Add( new XElement( "Packages",
+                                new XElement( "Package",
+                                    new XAttribute( "Name", packageId ),
+                                    new XAttribute( "Version", bound ) ) ) );
+        };
     }
 
     /// <summary>
