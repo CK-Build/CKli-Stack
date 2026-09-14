@@ -157,6 +157,43 @@ public class DepsUpdateTests
         narrow.ShouldContain( "X-Middle" );
         narrow.ShouldNotContain( "X-Sample" );
         narrow.ShouldContain( "2 upgrade(s) in 2 repositories" );
+
+        // The rows are the build roadmap's: the pivot marker, then the repository name. The marker says how
+        // each repository relates to the PIVOTS - X-Middle is the only one, and it has no pivot on either side
+        // of it, so it is a bare "\u2299"; X-Core produces for it ("\u2192\u00b7") and X-Sample consumes from it ("\u00b7\u2192").
+        // Every case is 3 columns wide, which is what makes the names line up with no table layout.
+        wide.ShouldContain( "\u2192\u00b7   X-Core", customMessage: wide );
+        wide.ShouldContain( " \u2299   X-Middle", customMessage: wide );
+        wide.ShouldContain( " \u00b7\u2192  X-Sample", customMessage: wide );
+    }
+
+    /// <summary>
+    /// Without pivots every repository is one, so the marker column says nothing and is dropped entirely -
+    /// exactly as a build roadmap drops it. This is what "--all" always gets.
+    /// </summary>
+    [Test]
+    public async Task the_pivot_marker_is_dropped_when_every_repository_is_a_pivot_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        var rApp = await world.CreateRepoAsync( "X-App", "v0.1.0", references: [rCore] ).ConfigureAwait( false );
+        foreach( var r in new[] { rCore, rApp } )
+        {
+            using var e = r.CreateEditor();
+            e.AddOrUpdateReference( r.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) );
+        }
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget", "--all" )).ShouldBeTrue();
+        var text = display.ToString();
+        text.ShouldContain( "X-Core", customMessage: text );
+        text.ShouldContain( "X-App", customMessage: text );
+        text.ShouldNotContain( "\u2299", customMessage: "Every repository is a pivot: the column says nothing and is not displayed." );
+        text.ShouldNotContain( "\u00b7", customMessage: text );
     }
 
     /// <summary>

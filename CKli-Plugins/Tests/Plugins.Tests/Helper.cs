@@ -45,8 +45,24 @@ internal static class Helper
         return (clonedFolder.Combine( "FakeFeed/nuget.org" ), clonedFolder.Combine( "FakeFeed/Signature-OpenSource" ));
     }
 
+    /// <summary>
+    /// Removes the &lt;VersionTag&gt;&lt;Packages&gt; bounds that a test clone inherits from the World this suite
+    /// runs in: <c>RemotesCollection.CloneAsync</c> writes that World's &lt;Plugins&gt; element into every clone,
+    /// so a bound declared for the CKli stack itself would otherwise apply to every fixture and decide what they
+    /// build - the CKt(...) fixtures pin packages that such a bound moves.
+    /// <para>
+    /// A fixture states the bounds it is about, and inherits none. <see cref="ConfigureFakeFeeds"/> calls this,
+    /// so it is only passed explicitly by the fixtures that configure no feed.
+    /// </para>
+    /// </summary>
+    public static void RemoveAmbientPackageBounds( IActivityMonitor monitor, NormalizedPath stackPath, XElement plugins )
+    {
+        plugins.Elements( "VersionTag" ).Elements( "Packages" ).Remove();
+    }
+
     public static void ConfigureFakeFeeds( IActivityMonitor monitor, NormalizedPath stackPath, XElement plugins )
     {
+        RemoveAmbientPackageBounds( monitor, stackPath, plugins );
         var (nugetOrgFeed, sosFeed) = GetFakeFeedPaths( stackPath.RemoveLastPart() );
         NuGetHelper.EnsureLocalFeed( monitor, nugetOrgFeed );
         NuGetHelper.EnsureLocalFeed( monitor, sosFeed );

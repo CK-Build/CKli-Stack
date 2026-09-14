@@ -21,7 +21,7 @@ public class S0ᅳInitᅳTests
 
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(init)" );
-        var context = await remotes.CloneAsync( clonedFolder ).ConfigureAwait( false );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.RemoveAmbientPackageBounds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         // ckli migrate net8

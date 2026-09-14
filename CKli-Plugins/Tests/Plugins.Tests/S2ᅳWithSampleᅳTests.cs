@@ -18,7 +18,7 @@ public class S2ᅳWithSampleᅳTests
     {
         var clonedFolder = TestHelper.InitializeClonedFolder();
         var remotes = TestHelper.OpenRemotes( "CKt(with_sample)" );
-        var context = await remotes.CloneAsync( clonedFolder ).ConfigureAwait( false );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.RemoveAmbientPackageBounds ).ConfigureAwait( false );
         var display = (StringScreen)context.Screen;
 
         // From stack root (or if --all is specified): all solutions are pivots <==> none of them is.
