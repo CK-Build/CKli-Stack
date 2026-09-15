@@ -432,17 +432,173 @@ public class DepsUpdateTests
         }
     }
 
+    /// <summary>
+    /// A "Prefix*" Name covers a whole package family: one &lt;Package&gt; line bounds every identifier that
+    /// starts with it, which is what a framework coupled family (Microsoft.AspNetCore.*) needs - its packages
+    /// only ship assets for their own generation, so they must move together. A matched bound then applies
+    /// exactly as if the identifier had been named: above it or below it, both come back to its base version.
+    /// </summary>
+    [Test]
+    public async Task a_pattern_bound_covers_a_whole_family_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: BoundsConfiguration( ("Microsoft.AspNetCore.*", "8.0.0[LockMajor]") ) )
+                                 .ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "Microsoft.AspNetCore.Http", SVersion.Parse( "7.0.1" ) );
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "Microsoft.AspNetCore.Authentication.OpenIdConnect", SVersion.Parse( "10.0.0" ) );
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "Microsoft.Extensions.Configuration.Binder", SVersion.Parse( "10.0.0" ) );
+        }
+
+        // No <Reference> and no --with-nuget: the bounds are the only thing that can drive an update.
+        // Bringing the 10.0.0 reference back into the family's bound is a downgrade, which is never applied
+        // without --allow-downgrade - and holding a framework coupled family down is exactly what this is for.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--allow-downgrade" )).ShouldBeTrue();
+        var text = display.ToString();
+        text.ShouldContain( "2 upgrade(s)", customMessage: text );
+        Reference( rCore, "dev/stable", "Microsoft.AspNetCore.Http" ).ShouldBe( "8.0.0" );
+        Reference( rCore, "dev/stable", "Microsoft.AspNetCore.Authentication.OpenIdConnect" ).ShouldBe( "8.0.0" );
+        Reference( rCore, "dev/stable", "Microsoft.Extensions.Configuration.Binder" )
+            .ShouldBe( "10.0.0", "The prefix is a prefix: no pattern covers this one and nothing anchors it." );
+    }
+
+    /// <summary>
+    /// The first &lt;Package&gt; that matches wins, so a name declared <em>before</em> a family is that family's
+    /// exception. Being exact buys no priority: the same name declared after the family would never match.
+    /// </summary>
+    [Test]
+    public async Task a_name_declared_before_its_family_is_the_exception_of_that_family_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: BoundsConfiguration( ("Microsoft.AspNetCore.Http", "7.0.1[Lock]"),
+                                                                                                    ("Microsoft.AspNetCore.*", "8.0.0[LockMajor]") ) )
+                                 .ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "Microsoft.AspNetCore.Http", SVersion.Parse( "7.0.1" ) );
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "Microsoft.AspNetCore.Routing", SVersion.Parse( "7.0.1" ) );
+        }
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update" )).ShouldBeTrue();
+        var text = display.ToString();
+        text.ShouldContain( "1 upgrade(s)", customMessage: text );
+        Reference( rCore, "dev/stable", "Microsoft.AspNetCore.Http" ).ShouldBe( "7.0.1", "The first matching rule accepts it: the family rule is never reached." );
+        Reference( rCore, "dev/stable", "Microsoft.AspNetCore.Routing" ).ShouldBe( "8.0.0" );
+    }
+
+    /// <summary>
+    /// A package a pattern holds back is reported with the pattern that carries the bound: its reach is
+    /// exactly what the package identifier alone doesn't show, and a deliberate hold is meant to be read.
+    /// </summary>
+    [Test]
+    public async Task a_pattern_names_itself_when_it_holds_a_package_back_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: BoundsConfiguration( ("CK.*", "0.9.0[Lock]") ) )
+                                 .ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) );
+        }
+
+        // The feed offers 1.0.0 (seeded) but the pattern's bound refuses it.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget" )).ShouldBeTrue();
+        var text = display.ToString();
+        text.ShouldContain( "Nothing to update", customMessage: text );
+        text.ShouldContain( "1 package(s) are held back by the World <Packages> configuration:", customMessage: text );
+        text.ShouldContain( "CK.CanaryPackage: 1.0.0", customMessage: text );
+        text.ShouldContain( "is not in the configured bound 0.9.0[Lock] of <Package Name=\"CK.*\" />", customMessage: text );
+    }
+
+    /// <summary>
+    /// A &lt;Package&gt; declared after one that already covers it can never match - a family declared before
+    /// its own exception is the usual way to get there. The configuration still says something coherent, so
+    /// this is a warning and the command runs: the family bound applies to the shadowed identifier.
+    /// </summary>
+    [Test]
+    public async Task an_unreachable_Package_rule_is_warned_about_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: BoundsConfiguration( ("Microsoft.AspNetCore.*", "8.0.0[LockMajor]"),
+                                                                                                    ("Microsoft.AspNetCore.Http", "7.0.1[Lock]") ) )
+                                 .ConfigureAwait( false );
+        var rCore = await stack.DefaultWorld.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "Microsoft.AspNetCore.Http", SVersion.Parse( "7.0.1" ) );
+        }
+
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update" )).ShouldBeTrue();
+            logs.Any( l => l.Contains( "can never match" ) && l.Contains( "Microsoft.AspNetCore.Http" ) )
+                .ShouldBeTrue( logs.Concatenate( Environment.NewLine ) );
+        }
+        Reference( rCore, "dev/stable", "Microsoft.AspNetCore.Http" )
+            .ShouldBe( "8.0.0", "The family rule answered: the shadowed one changed nothing." );
+    }
+
+    /// <summary>
+    /// A '*' that is not the last character of a Name, and a '*' that is the whole Name, are configuration
+    /// errors: the first would silently become a package identifier nobody publishes and the second would
+    /// bound every external package of the World to one base version.
+    /// </summary>
+    [Test]
+    public async Task an_invalid_pattern_name_is_a_configuration_error_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+
+        await CheckAsync( "Mid", "Mid*dle.Package", "is only allowed as the last character" ).ConfigureAwait( false );
+        await CheckAsync( "Twice", "Microsoft.**", "is only allowed as the last character" ).ConfigureAwait( false );
+        await CheckAsync( "Alone", "*", "alone is not a valid pattern" ).ConfigureAwait( false );
+
+        // The stacks of one test environment share the "bare" folder, so each one needs its own repository name.
+        async Task CheckAsync( string stackName, string packageName, string expected )
+        {
+            var stack = await testEnv.CreateStackAsync( stackName, BoundsConfiguration( (packageName, "1.0.0") ) ).ConfigureAwait( false );
+            var rCore = await stack.DefaultWorld.CreateRepoAsync( $"X-{stackName}", "v1.0.1" ).ConfigureAwait( false );
+            using( TestHelper.Monitor.CollectTexts( out var logs ) )
+            {
+                (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run" )).ShouldBeFalse();
+                logs.Any( l => l.Contains( expected ) ).ShouldBeTrue( logs.Concatenate( Environment.NewLine ) );
+            }
+        }
+    }
+
     // Configures the fake feeds and one <VersionTag><Packages><Package Name=".." Version=".." /> bound.
     static Action<IActivityMonitor, NormalizedPath, XElement> BoundConfiguration( string packageId, string bound )
+    {
+        return BoundsConfiguration( (packageId, bound) );
+    }
+
+    // Configures the fake feeds and the <VersionTag><Packages> bounds, in this order - which is their priority
+    // order. A Name that ends with a '*' covers the family of every identifier starting with its prefix.
+    static Action<IActivityMonitor, NormalizedPath, XElement> BoundsConfiguration( params (string Name, string Bound)[] bounds )
     {
         return ( monitor, stackPath, plugins ) =>
         {
             Helper.ConfigureFakeFeeds( monitor, stackPath, plugins );
             var versionTag = plugins.Element( "VersionTag" ).ShouldNotBeNull();
             versionTag.Add( new XElement( "Packages",
-                                new XElement( "Package",
-                                    new XAttribute( "Name", packageId ),
-                                    new XAttribute( "Version", bound ) ) ) );
+                                bounds.Select( b => new XElement( "Package",
+                                                        new XAttribute( "Name", b.Name ),
+                                                        new XAttribute( "Version", b.Bound ) ) ) ) );
         };
     }
 
