@@ -555,18 +555,49 @@ public class DepsUpdateTests
     }
 
     /// <summary>
-    /// A '*' that is not the last character of a Name, and a '*' that is the whole Name, are configuration
-    /// errors: the first would silently become a package identifier nobody publishes and the second would
-    /// bound every external package of the World to one base version.
+    /// A '*' inside a Name groups a family by role rather than by prefix: "CK.*.Engine" is the engine of
+    /// every CK sub-family, whatever sits in the middle. The bound then applies to each of them as if they
+    /// had been named one by one.
+    /// </summary>
+    [Test]
+    public async Task a_star_inside_a_name_bounds_a_role_family_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: BoundsConfiguration( ("CK.*.Engine", "2.0.0[Lock]") ) )
+                                 .ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        using( var e = rCore.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.IO.Engine", SVersion.Parse( "1.0.0" ) );
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.DB.Zone.Engine", SVersion.Parse( "1.0.0" ) );
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.IO.Engine.Tests", SVersion.Parse( "1.0.0" ) );
+            e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.Core", SVersion.Parse( "1.0.0" ) );
+        }
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update" )).ShouldBeTrue();
+        var text = display.ToString();
+        text.ShouldContain( "2 upgrade(s)", customMessage: text );
+        Reference( rCore, "dev/stable", "CK.IO.Engine" ).ShouldBe( "2.0.0" );
+        Reference( rCore, "dev/stable", "CK.DB.Zone.Engine" ).ShouldBe( "2.0.0", "A '*' crosses the dots." );
+        Reference( rCore, "dev/stable", "CK.IO.Engine.Tests" ).ShouldBe( "1.0.0", "The last literal is anchored at the end." );
+        Reference( rCore, "dev/stable", "CK.Core" ).ShouldBe( "1.0.0" );
+    }
+
+    /// <summary>
+    /// A Name made only of '*' would bound every external package of the World to one base version, and two
+    /// consecutive '*' are always a typo since one already matches any sequence: both are configuration errors.
     /// </summary>
     [Test]
     public async Task an_invalid_pattern_name_is_a_configuration_error_Async()
     {
         using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
 
-        await CheckAsync( "Mid", "Mid*dle.Package", "is only allowed as the last character" ).ConfigureAwait( false );
-        await CheckAsync( "Twice", "Microsoft.**", "is only allowed as the last character" ).ConfigureAwait( false );
-        await CheckAsync( "Alone", "*", "alone is not a valid pattern" ).ConfigureAwait( false );
+        await CheckAsync( "Twice", "Microsoft.**", "two consecutive" ).ConfigureAwait( false );
+        await CheckAsync( "Alone", "*", "made only of" ).ConfigureAwait( false );
 
         // The stacks of one test environment share the "bare" folder, so each one needs its own repository name.
         async Task CheckAsync( string stackName, string packageName, string expected )
