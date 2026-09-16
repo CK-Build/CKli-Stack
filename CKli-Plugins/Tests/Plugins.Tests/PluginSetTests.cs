@@ -48,7 +48,7 @@ public class PluginSetTests
     }
 
     /// <summary>
-    /// The 4 attributes of the 3 plugins that support them, each set through its "Plugin.Attribute" long form.
+    /// The 5 attributes of the 4 plugins that support them, each set through its "Plugin.Attribute" long form.
     /// The long form is honored: an attribute is submitted to the named plugin only.
     /// </summary>
     [Test]
@@ -62,11 +62,13 @@ public class PluginSetTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "set", "VersionTag.AutoFixRemovableTag", "true" )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "set", "VersionTag.RemoveUselessFakeTag", "true" )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "set", "Publish.KeepLocalReleaseAfterPublish", "true" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "set", "Build.DeleteBeforeBuild", "$StObjGen" )).ShouldBeTrue();
 
         PluginAttribute( stack, "BranchModel", "AutoFixUselessBranch" ).ShouldBe( "false" );
         PluginAttribute( stack, "VersionTag", "AutoFixRemovableTag" ).ShouldBe( "true" );
         PluginAttribute( stack, "VersionTag", "RemoveUselessFakeTag" ).ShouldBe( "true" );
         PluginAttribute( stack, "Publish", "KeepLocalReleaseAfterPublish" ).ShouldBe( "true" );
+        PluginAttribute( stack, "Build", "DeleteBeforeBuild" ).ShouldBe( "$StObjGen" );
 
         // The plugin short name is case insensitive (the attribute name is too).
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "unset", "publish.keeplocalreleaseafterpublish" )).ShouldBeTrue();
@@ -145,6 +147,54 @@ public class PluginSetTests
         // A plugin that supports more than one attribute describes each of them: the messages are stacked
         // rather than replacing each other (VersionTag calls AddMessage twice).
         display.ToString().ShouldContain( "AutoFixRemovableTag" );
+    }
+
+    /// <summary>
+    /// "Build.DeleteBeforeBuild" is the only non boolean attribute: it takes a ';' separated list of entries.
+    /// They are validated before being written, so an invalid one cannot be persisted into a configuration
+    /// that would then fail every build.
+    /// </summary>
+    [TestCase( "../Escape" )]
+    [TestCase( "/Rooted" )]
+    [TestCase( "$StObjGen;Some/../../Thing" )]
+    public async Task an_entry_that_escapes_the_working_folder_is_an_error_Async( string value )
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "set", "DeleteBeforeBuild", value )).ShouldBeFalse();
+            logs.ShouldContain( l => l.Contains( "an entry is relative to the repository's" ) );
+        }
+        PluginAttribute( stack, "Build", "DeleteBeforeBuild" ).ShouldBeNull();
+    }
+
+    /// <summary>
+    /// "ckli plugin info" describes the attribute in both states and echoes the configured entries, so that the
+    /// list a World actually deletes is readable without opening the definition file.
+    /// </summary>
+    [Test]
+    public async Task plugin_info_shows_the_configured_entries_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "info", "--skip-pull-stack" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "is not set (the default): nothing is deleted before a build." );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "set", "DeleteBeforeBuild", "$StObjGen;Tests/Generated" )).ShouldBeTrue();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "info", "--skip-pull-stack" )).ShouldBeTrue();
+        display.ToString().ShouldContain( """is "$StObjGen;Tests/Generated": these git ignored files and folders are deleted""" );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "unset", "DeleteBeforeBuild" )).ShouldBeTrue();
+        PluginAttribute( stack, "Build", "DeleteBeforeBuild" ).ShouldBeNull();
     }
 
     static string? PluginAttribute( FakeBuildStack stack, string pluginName, string attributeName )
