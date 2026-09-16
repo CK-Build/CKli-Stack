@@ -887,6 +887,10 @@ public class DepsUpdateTests
     /// The command fetches first and then refuses a World that is behind its remotes: it requires a coherent
     /// World instead of merging one, so its report always describes what an update would write. --no-fetch
     /// skips the fetch, and the divergence is then simply not visible - which is exactly what the fetch buys.
+    /// <para>
+    /// That fetch is parallel and --max-dop bounds it, exactly as for "ckli fetch". It bounds nothing else,
+    /// so it is refused with --no-fetch instead of silently doing nothing.
+    /// </para>
     /// </summary>
     [Test]
     public async Task a_branch_behind_its_remote_is_refused_and_only_the_fetch_reveals_it_Async()
@@ -915,6 +919,22 @@ public class DepsUpdateTests
         // Nothing has been written, and the local branch has NOT been merged.
         Reference( rCore, "dev/stable", "CK.CanaryPackage" ).ShouldBe( "0.9.0" );
         BehindBy( rCore, "main" ).ShouldBe( 1, "The command refuses, it never merges." );
+
+        // --max-dop bounds the fetch and nothing else: with --no-fetch there is nothing for it to bound.
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget", "--no-fetch", "--max-dop", "2" )).ShouldBeFalse();
+            logs.ShouldContain( "--max-dop only bounds the fetch: it cannot be used with --no-fetch." );
+        }
+        // 0 is the unbounded default, so an explicit value is at least 1 (same as "ckli fetch").
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget", "--max-dop", "0" )).ShouldBeFalse();
+            logs.ShouldContain( "Invalid --max-dop value. Must be an integer greater or equal to 1." );
+        }
+        // Bounded, the fetch happens just the same: the divergence is found again.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget", "--max-dop", "1" )).ShouldBeFalse();
+        BehindBy( rCore, "main" ).ShouldBe( 1, "The bounded fetch updated the remote tracking reference just the same." );
     }
 
     // Adds a version of a package to the fake "nuget.org" feed: an empty folder is all the V3 expanded
