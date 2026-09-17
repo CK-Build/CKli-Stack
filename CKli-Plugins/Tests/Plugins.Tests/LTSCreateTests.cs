@@ -97,7 +97,7 @@ public class LTSCreateTests
         // name WITHOUT the "@net8/" prefix (BranchNamespace prepends it when reading), and the cloned <Explo>
         // elements are gone - they named branches this main line no longer has.
         var ltsBranchModel = ltsRoot.Element( "Plugins" )!.Element( "BranchModel" )!;
-        ltsBranchModel.Attribute( "MainLine" )!.Value.ShouldBe( "stable" );
+        ltsBranchModel.Attribute( "Root" )!.Value.ShouldBe( "stable" );
         ltsBranchModel.Elements( "Explo" ).ShouldBeEmpty();
 
         // And the new World can actually be opened: its repositories are cloned into the Stack's own "@net8/"
