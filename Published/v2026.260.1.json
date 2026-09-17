@@ -1,7 +1,7 @@
 {
   "StackUrl": "https://github.com/CK-Build/CKli-Stack",
   "World": "CKli",
-  "Version": "2026.260.0--ci.0",
+  "Version": "2026.260.1",
   "IsDeprecated": false,
   "Repositories": [
     {
@@ -22,21 +22,21 @@
       "Url": "https://github.com/CK-Build/CKli",
       "Id": "T-ALflSvj28",
       "Packages": [
-        "CKli@0.26.0--ci.6",
-        "CKli.ArtifactHandler.Plugin@0.26.0--ci.6",
-        "CKli.BranchModel.Plugin@0.26.0--ci.6",
-        "CKli.Build.Plugin@0.26.0--ci.6",
-        "CKli.Build.Plugin.Testing@0.26.0--ci.6",
-        "CKli.CommonFiles.Plugin@0.26.0--ci.6",
-        "CKli.Core@0.26.0--ci.6",
-        "CKli.HotZone.Plugin@0.26.0--ci.6",
-        "CKli.Loader@0.26.0--ci.6",
-        "CKli.Migration.Plugin@0.26.0--ci.6",
-        "CKli.Plugins.Core@0.26.0--ci.6",
-        "CKli.Publish.Plugin@0.26.0--ci.6",
-        "CKli.ShallowSolution.Plugin@0.26.0--ci.6",
-        "CKli.Testing@0.26.0--ci.6",
-        "CKli.VersionTag.Plugin@0.26.0--ci.6"
+        "CKli@0.26.0",
+        "CKli.ArtifactHandler.Plugin@0.26.0",
+        "CKli.BranchModel.Plugin@0.26.0",
+        "CKli.Build.Plugin@0.26.0",
+        "CKli.Build.Plugin.Testing@0.26.0",
+        "CKli.CommonFiles.Plugin@0.26.0",
+        "CKli.Core@0.26.0",
+        "CKli.HotZone.Plugin@0.26.0",
+        "CKli.Loader@0.26.0",
+        "CKli.Migration.Plugin@0.26.0",
+        "CKli.Plugins.Core@0.26.0",
+        "CKli.Publish.Plugin@0.26.0",
+        "CKli.ShallowSolution.Plugin@0.26.0",
+        "CKli.Testing@0.26.0",
+        "CKli.VersionTag.Plugin@0.26.0"
       ]
     }
   ],
