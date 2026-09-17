@@ -144,7 +144,7 @@ public class FakeVersionTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci.0" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core            (v3.0.0) → ⏚/v3.0.0--ci.0 (CI0)          
+            1 -  X-Core            (v3.0.0) → ⏚/v3.0.0--ci.0 (RollingLocal) 
             2 -  X-ActivityMonitor (v0.1.1) → ⏚/v0.1.1--ci.4 (UpstreamBuild)
             3 ╓  X-PerfectEvent    (v0.3.3) → ⏚/v0.3.3--ci.4 (UpstreamBuild)
             4 ╙  X-Monitoring      (v0.2.4) → ⏚/v0.2.4--ci.4 (UpstreamBuild)

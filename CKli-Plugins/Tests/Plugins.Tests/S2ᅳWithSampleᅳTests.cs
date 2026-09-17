@@ -500,6 +500,7 @@ public class S2ᅳWithSampleᅳTests
               ╙      Samples/CKt-App-Sample        v0.1.0
               -  ·→  Samples/CKt-Sample-Monitoring v0.2.0
               There is nothing to build from the single pivot out of 6 repositories and nothing to publish.
+              (Use '--ci.0' to build a CI version from the 6 repositories that already carry a released version.)
               (Using '*build' may detect required builds in upstreams repositories.)
               ❰✓❱
           

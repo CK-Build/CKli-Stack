@@ -123,34 +123,31 @@ public class PrereleaseBranchTests
 
             """ );
 
-        // Not even in CI.
+        // In CI it is another matter: the two pending "v0.4.0-romeo"/"v0.1.0-romeo" are unpublished
+        // "local/" releases, so MustBuildReason.RollingLocal reclaims their commits and rolls them into CI
+        // versions. There is only one "local/" at a time per branch name, so the CI versions REPLACE them -
+        // the roadmap warns about each destroyed pending release.
+        // This is what makes a regular build run by mistake recoverable with the obvious command; the price
+        // is that a "--ci" build never leaves a pending local release behind.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--ci", "--dry-run" )).ShouldBeTrue();
-        display.ToString().ShouldBe( """
-            - →·   X-Core            v1.0.1        
-            - →·   X-ActivityMonitor v0.1.1        
-            -  ⊙   X-PerfectEvent    ⏚/v0.4.0-romeo
-            -  ·→  X-Sample          ⏚/v0.1.0-romeo
-            There is nothing to build from the single pivot out of 4 repositories but 2 can be published.
-            (Using '*build' may detect required builds in upstreams repositories.)
-            ❰✓❱
-
-            """ );
-
-        // "--ci.0" forces CI versions. The ci versions replace the non-ci ones: there is only one
-        // "local/" at a time per branch name.
-        display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--ci.0", "--dry-run" )).ShouldBeTrue();
-        display.ToString().ShouldBe( """
+        var rolled = """
               - →·   X-Core            v1.0.1        
               - →·   X-ActivityMonitor v0.1.1        
-            1 -  ⊙   X-PerfectEvent    (v0.4.0-romeo) → ⏚/v0.4.0-romeo.0.ci.4 (CI0)          
+            1 -  ⊙   X-PerfectEvent    (v0.4.0-romeo) → ⏚/v0.4.0-romeo.0.ci.4 (RollingLocal) 
             2 -  ·→  X-Sample          (v0.1.0-romeo) → ⏚/v0.1.0-romeo.0.ci.2 (UpstreamBuild)
             Required build for 2 from the single pivot out of 4 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
 
-            """ );
+            """;
+        display.ToString().ShouldBe( rolled );
+
+        // "--ci.0" adds nothing here: it only matters for a PUBLISHED version, which cannot be reclaimed and
+        // needs a new version line opened above it. A pending local release is already rolled by plain "--ci".
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--ci.0", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( rolled );
 
         // "*build" pulls the upstream closure in: the touched upstream and its downstream go to romeo.
         display.Clear();
