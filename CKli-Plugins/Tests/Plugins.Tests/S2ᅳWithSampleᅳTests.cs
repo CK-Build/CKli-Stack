@@ -671,27 +671,27 @@ public class S2ᅳWithSampleᅳTests
         display.ToString().ShouldBe(
             """
             > CKt-Core (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-ActivityMonitor (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-PerfectEvent (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-Monitoring (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > Samples/CKt-Sample-Monitoring (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > Samples/CKt-App-Sample (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             ❰✓❱
@@ -757,7 +757,7 @@ public class S2ᅳWithSampleᅳTests
             removeUselessFakeTag
             ? """
             > Samples/CKt-Sample-Monitoring (1)
-            │ > Found 1 removable version tags.
+            │ > ⚙ Found 1 removable version tags.
             │ │ v0.0.0+fake
             │ │ 
             │ │ This will be fixed by deleting them locally: a fetch from the remote will make them reappear.
@@ -765,7 +765,7 @@ public class S2ᅳWithSampleᅳTests
             │ │ tags that replace them should be pushed. Use the command 'ckli tag push/pull/list/delete' to publish
             │ │ version tags to the remote origin.
             > Samples/CKt-App-Sample (1)
-            │ > Found 1 removable version tags.
+            │ > ⚙ Found 1 removable version tags.
             │ │ v0.0.0+fake
             │ │ 
             │ │ This will be fixed by deleting them locally: a fetch from the remote will make them reappear.

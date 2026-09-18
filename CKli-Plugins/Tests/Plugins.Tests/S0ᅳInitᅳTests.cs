@@ -54,13 +54,13 @@ public class S0ᅳInitᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             > CKt-Core (3)
-            │ > Removable branches.
+            │ > Ⓘ Removable branches.
             │ │ - 'dev/stable' is merged into 'stable'.
             │ │ It can be deleted.
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ > Branch: dev/stable (1 content issue)
             │ │ │ > File must be moved: NuGet.config → nuget.config (case differ)
-            │ > 1 lightweight tags must be transformed to annotated tags.
+            │ > ⚙ 1 lightweight tags must be transformed to annotated tags.
             │ │ v1.0.0
             │ │ 
             │ │ Fixing these tags recompiles the commit to obtain the consumed/produced packages and asset files.
@@ -68,13 +68,13 @@ public class S0ᅳInitᅳTests
             │ │ When the commit cannot be successfully recompiled, the command 'ckli maintenance rebuild old'
             │ │ can try to build them and sets a "+invalid" tag on failure.
             > CKt-ActivityMonitor (3)
-            │ > Removable branches.
+            │ > Ⓘ Removable branches.
             │ │ - 'dev/stable' is merged into 'stable'.
             │ │ It can be deleted.
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ > Branch: dev/stable (1 content issue)
             │ │ │ > File must be moved: NuGet.config → nuget.config (case differ)
-            │ > 1 lightweight tags must be transformed to annotated tags.
+            │ > ⚙ 1 lightweight tags must be transformed to annotated tags.
             │ │ v0.1.0
             │ │ 
             │ │ Fixing these tags recompiles the commit to obtain the consumed/produced packages and asset files.
@@ -82,13 +82,13 @@ public class S0ᅳInitᅳTests
             │ │ When the commit cannot be successfully recompiled, the command 'ckli maintenance rebuild old'
             │ │ can try to build them and sets a "+invalid" tag on failure.
             > CKt-PerfectEvent (3)
-            │ > Removable branches.
+            │ > Ⓘ Removable branches.
             │ │ - 'dev/stable' is merged into 'stable'.
             │ │ It can be deleted.
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ > Branch: dev/stable (1 content issue)
             │ │ │ > File must be moved: NuGet.config → nuget.config (case differ)
-            │ > 4 lightweight tags must be transformed to annotated tags.
+            │ > ⚙ 4 lightweight tags must be transformed to annotated tags.
             │ │ v0.2.0, v0.2.1, v0.3.0, v0.3.2
             │ │ 
             │ │ Fixing these tags recompiles the commit to obtain the consumed/produced packages and asset files.
@@ -96,13 +96,13 @@ public class S0ᅳInitᅳTests
             │ │ When the commit cannot be successfully recompiled, the command 'ckli maintenance rebuild old'
             │ │ can try to build them and sets a "+invalid" tag on failure.
             > CKt-Monitoring (3)
-            │ > Removable branches.
+            │ > Ⓘ Removable branches.
             │ │ - 'dev/stable' is merged into 'stable'.
             │ │ It can be deleted.
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ > Branch: dev/stable (1 content issue)
             │ │ │ > File must be moved: NuGet.config → nuget.config (case differ)
-            │ > 1 lightweight tags must be transformed to annotated tags.
+            │ > ⚙ 1 lightweight tags must be transformed to annotated tags.
             │ │ v0.2.3
             │ │ 
             │ │ Fixing these tags recompiles the commit to obtain the consumed/produced packages and asset files.

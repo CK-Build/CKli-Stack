@@ -452,10 +452,10 @@ public class S1ᅳInitializedᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleFolder, "repo", "create", newRepoUrl1 )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             > Samples/CKt-Sample-Monitoring (2)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be created.
-            │ > Missing initial version.
+            │ > ⚙ Missing initial version.
             │ │ This can be fixed by creating a 'v0.0.0+fake' on 'stable' branch.
             ❰✓❱
 
@@ -467,10 +467,10 @@ public class S1ᅳInitializedᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleFolder, "repo", "create", newRepoUrl2 )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             > Samples/CKt-App-Sample (2)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be created.
-            │ > Missing initial version.
+            │ > ⚙ Missing initial version.
             │ │ This can be fixed by creating a 'v0.0.0+fake' on 'stable' branch.
             ❰✓❱
 
@@ -482,19 +482,19 @@ public class S1ᅳInitializedᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             > CKt-Core (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-ActivityMonitor (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-PerfectEvent (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-Monitoring (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             ❰✓❱
@@ -620,19 +620,19 @@ public class S1ᅳInitializedᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             > CKt-Core (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-ActivityMonitor (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-PerfectEvent (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             > CKt-Monitoring (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be updated.
             ❰✓❱

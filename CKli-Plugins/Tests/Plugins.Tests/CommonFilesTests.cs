@@ -42,11 +42,11 @@ public class CommonFilesTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             > X-Core (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'Directory.Build.props' must be created.
             > Samples/X-App-Sample (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'Directory.Build.props' must be created.
             ❰✓❱
@@ -69,11 +69,11 @@ public class CommonFilesTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             > X-Core (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'JustForTest.txt' must be created.
             > Samples/X-App-Sample (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'JustForTest.txt' must be created.
             ❰✓❱
@@ -92,11 +92,11 @@ public class CommonFilesTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             > X-Core (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ > Branch: dev/stable (1 content issue)
             │ │ │ > File must be moved: JustForTest.txt → Justfortest.txt (case differ)
             > Samples/X-App-Sample (1)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'Justfortest.txt' must be created.
             ❰✓❱

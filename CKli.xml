@@ -11,7 +11,7 @@
       </NuGet>
     </ArtifactHandler>
     <BranchModel />
-    <Build DeleteBeforeBuild="$StObjGen" />
+    <Build />
     <CommonFiles />
     <HotZone />
     <Migration />

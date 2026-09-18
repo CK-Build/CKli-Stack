@@ -110,7 +110,7 @@ public class CoworkingTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "issue" )).ShouldBeTrue();
         bobDisplay.ToString().ShouldBe( """
             > X-PerfectEvent (1)
-            │ > Desynchronized branches.
+            │ > ⚙ Desynchronized branches.
             │ │ - Branch 'stable' has 1 commits that must be in 'dev/stable'.
             │ │ Base branches can be merged without conflict into the desynchronized branches.
             ❰✓❱
@@ -162,7 +162,7 @@ public class CoworkingTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, timPivot, "issue" )).ShouldBeTrue();
         timDisplay.ToString().ShouldBe( """
             > X-PerfectEvent (1)
-            │ > Removable branches.
+            │ > Ⓘ Removable branches.
             │ │ - 'dev/stable' is merged into 'stable'.
             │ │ It can be deleted.
             ❰✓❱
