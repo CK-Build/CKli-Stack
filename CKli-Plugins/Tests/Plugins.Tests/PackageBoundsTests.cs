@@ -140,6 +140,37 @@ public class PackageBoundsTests
     }
 
     [Test]
+    public void a_bound_maps_the_versions_that_are_out_of_it_and_only_those()
+    {
+        // PackageBounds is the IPackageMapping of the World configuration (HotGraph.PackageUpdater's
+        // WorldConfiguredMapping): "ckli build" hands it to MutableSolution.UpdatePackages.
+        var bounds = Create( ("Microsoft.AspNetCore.*", "8.0.0[LockMajor]") );
+
+        // A covered identifier is KnownName and never Mapped: the bound has an opinion about the versions that
+        // are out of it and about no other, so a version it leaves alone is not one it failed to handle. This
+        // is what keeps MutableSolution.UpdateVersions silent about an in bound reference.
+        bounds.GetMappingType( "Microsoft.AspNetCore.Authentication.OpenIdConnect" ).ShouldBe( PackageMappingType.KnownName );
+        bounds.GetMappingType( "CK.CanaryPackage" ).ShouldBe( PackageMappingType.None );
+
+        // Out of the bound: back to its base version.
+        bounds.GetMappedVersion( "Microsoft.AspNetCore.Http", SVersion.Parse( "7.0.1" ) )
+              .ShouldNotBeNull().ToString().ShouldBe( "8.0.0" );
+
+        // In the bound: nothing to change. The identifier is covered AND GetMappedVersion is null - that pair
+        // is what KnownName stands for, and it is not the "unhandled version" of an exact PackageMapper.
+        bounds.GetMappedVersion( "Microsoft.AspNetCore.Http", SVersion.Parse( "8.0.31" ) ).ShouldBeNull();
+
+        // Not covered by any rule: null as well, and GetMappingType already said so.
+        bounds.GetMappedVersion( "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) ).ShouldBeNull();
+
+        // A locked bound accepts its base version and nothing else: it is a pin.
+        var locked = Create( ("CK.CanaryPackage", "1.0.0[Lock]") );
+        locked.GetMappedVersion( "CK.CanaryPackage", SVersion.Parse( "1.0.0" ) ).ShouldBeNull();
+        locked.GetMappedVersion( "CK.CanaryPackage", SVersion.Parse( "1.0.1" ) )
+              .ShouldNotBeNull().ToString().ShouldBe( "1.0.0" );
+    }
+
+    [Test]
     public void a_rule_covers_the_rules_that_it_makes_unreachable()
     {
         // Covers is what detects an unreachable <Package>: since the first match wins, a rule declared after
