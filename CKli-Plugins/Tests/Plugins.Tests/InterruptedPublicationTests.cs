@@ -61,7 +61,7 @@ public class InterruptedPublicationTests
         // the command fail on "Please fix any issue before continuing".
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release", "--dry-run" )).ShouldBeTrue();
             logs.ShouldNotContain( "No initial version found in 'X-Core'." );
         }
 

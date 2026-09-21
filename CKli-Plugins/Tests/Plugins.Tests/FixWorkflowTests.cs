@@ -58,7 +58,7 @@ public class FixWorkflowTests
         // leaves the hot zone.
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null, commitMessage: "feat: some feature." );
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-Core            v1.0.0 → ⏚/v1.1.0 (CodeChange)   
             2 -  X-ActivityMonitor v0.1.0 → ⏚/v0.2.0 (UpstreamBuild)

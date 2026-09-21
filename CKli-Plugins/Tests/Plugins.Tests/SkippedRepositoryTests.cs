@@ -51,7 +51,7 @@ public class SkippedRepositoryTests
         TestHelper.TouchAndCommit( rUp.WorkingFolderPath, branchName: "dev/stable" );
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--ci", "--branch", "stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--branch", "stable" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-ActivityMonitor v0.1.0 → ⏚/v0.1.1--ci.1 (CodeChange)   
             2 ╓  X-PerfectEvent    v0.3.3 → ⏚/v0.3.4--ci.1 (UpstreamBuild)
@@ -75,7 +75,7 @@ public class SkippedRepositoryTests
         display.Clear();
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "publish", "--ci", "--branch", "stable" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "publish", "--branch", "stable" )).ShouldBeTrue();
             logs.ShouldContain( l => l.Contains( "is skipped but its sources require dependency updates." ) );
         }
         display.ToString().ShouldBe( """
@@ -92,7 +92,7 @@ public class SkippedRepositoryTests
         // From the stack root every solution is a pivot (<==> none of them is): nothing is skippable, so the
         // very same pending update becomes a DependencyUpdate and the sibling is built.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--ci", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
               -  X-ActivityMonitor v0.1.1--ci.1
               ╓  X-PerfectEvent    v0.3.4--ci.2
@@ -107,7 +107,7 @@ public class SkippedRepositoryTests
 
         // A "*build" from the pivot produces the same plan: it prevents skipping, not pivots.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "*build", "--ci", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "*build", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
               - →·   X-ActivityMonitor v0.1.1--ci.1
               ╓  ⊙   X-PerfectEvent    v0.3.4--ci.2

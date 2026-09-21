@@ -60,7 +60,7 @@ public partial class S3ᅳSamplePublishedᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "commit", "Added package doc." )).ShouldBeTrue();
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "build", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
               - →·   CKt-Core                      v1.0.1
               - →·   CKt-ActivityMonitor           v0.1.1

@@ -24,7 +24,7 @@ public class S2ᅳWithSampleᅳTests
         // From stack root (or if --all is specified): all solutions are pivots <==> none of them is.
         // (in this case *build is the same as build).
         // The CKt(with_sample) has been "ckli publish --ci": there's nothing to build and nothing to publish in ci.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--ci", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
         -  CKt-Core                      v1.0.1--ci.4
         -  CKt-ActivityMonitor           v0.1.1--ci.5
@@ -39,7 +39,7 @@ public class S2ᅳWithSampleᅳTests
 
         // If we "ckli publish" from the root (that is the same as "ckli *publish" here), the 6 repositories must be build and published.  
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--release", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
         1 -  CKt-Core                      v1.0.0      → ⏚/v1.0.1 (CodeChange)                            
         2 -  CKt-ActivityMonitor           v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)             
@@ -61,7 +61,7 @@ public class S2ᅳWithSampleᅳTests
         // updated in the downstream repositories CKt-PerfectEvent and CKt-App-Sample (CKt-Sample-Monitoring
         // will use the CKt-PerfectEvent v0.3.3: UpstreamBuild).
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
           - →·   CKt-Core                      v1.0.0     
           - →·   CKt-ActivityMonitor           v0.1.0     
@@ -87,7 +87,7 @@ public class S2ᅳWithSampleᅳTests
             // (in this case *build is the same as build).
             // Since CKt-Core is dirty, it implies the 5 other ones.
             display.Clear();
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
             1 -  CKt-Core                      v1.0.1--ci.4 → ⏚/v1.0.1--ci.5 (CodeChange)               
             2 -  CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
@@ -106,7 +106,7 @@ public class S2ᅳWithSampleᅳTests
             // so there is eventually nothing to do.
             display.Clear();
             var inSample = context.ChangeDirectory( "Samples" );
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSample, "build", "--ci", "--dry-run" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSample, "build", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
             - →·   CKt-Core                      v1.0.1--ci.4
             - →·   CKt-ActivityMonitor           v0.1.1--ci.5
@@ -124,7 +124,7 @@ public class S2ᅳWithSampleᅳTests
             // are ignored and the CKt-Sample-Monitoring is already available in v0.0.0, there's nothing to do.
             display.Clear();
             var inSampleMonitoring = inSample.ChangeDirectory( "CKt-Sample-Monitoring" );
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleMonitoring, "build", "--ci", "--dry-run" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleMonitoring, "build", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
             - →·   CKt-Core                      v1.0.1--ci.4
             - →·   CKt-ActivityMonitor           v0.1.1--ci.5
@@ -141,7 +141,7 @@ public class S2ᅳWithSampleᅳTests
             // From Samples/CKt-App-Sample: same as above but CKt-App-Sample pivot replaces CKt-Sample-Monitoring.
             display.Clear();
             var inAppSample = inSample.ChangeDirectory( "CKt-App-Sample" );
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "build", "--ci", "--dry-run" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "build", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
             - →·   CKt-Core                      v1.0.1--ci.4
             - →·   CKt-ActivityMonitor           v0.1.1--ci.5
@@ -158,7 +158,7 @@ public class S2ᅳWithSampleᅳTests
             // From CKt-PerfectEvent: the CKt-Monitoring and App sample are "nothing". CKt-Sample-Monitoring is a downstream repo
             // that must be built.
             display.Clear();
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build", "--ci", "--dry-run" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
               - →·   CKt-Core                      v1.0.1--ci.4
               - →·   CKt-ActivityMonitor           v0.1.1--ci.5
@@ -178,7 +178,7 @@ public class S2ᅳWithSampleᅳTests
         {
             // From stack root: all solutions are pivots <==> none of them is.
             display.Clear();
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "*build", "--ci", "--dry-run" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "*build", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
             1 -  CKt-Core                      v1.0.1--ci.4 → ⏚/v1.0.1--ci.5 (CodeChange)               
             2 -  CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
@@ -195,7 +195,7 @@ public class S2ᅳWithSampleᅳTests
             // From Samples/: the 2 samples are pivots, others are upstreams.
             display.Clear();
             var inSample = context.ChangeDirectory( "Samples" );
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSample, "*build", "--ci", "--dry-run" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSample, "*build", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
             1 - →·   CKt-Core                      v1.0.1--ci.4 → ⏚/v1.0.1--ci.5 (CodeChange)               
             2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
@@ -213,7 +213,7 @@ public class S2ᅳWithSampleᅳTests
             // However, the App sample must be build because one of its upstream is built.
             display.Clear();
             var inSampleMonitoring = inSample.ChangeDirectory( "CKt-Sample-Monitoring" );
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleMonitoring, "*build", "--ci", "--dry-run" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleMonitoring, "*build", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
             1 - →·   CKt-Core                      v1.0.1--ci.4 → ⏚/v1.0.1--ci.5 (CodeChange)               
             2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
@@ -231,7 +231,7 @@ public class S2ᅳWithSampleᅳTests
             // the upstreams, every Repo must be built.
             display.Clear();
             var inAppSample = inSample.ChangeDirectory( "CKt-App-Sample" );
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "*build", "--ci", "--dry-run" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "*build", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
             1 - →·   CKt-Core                      v1.0.1--ci.4 → ⏚/v1.0.1--ci.5 (CodeChange)               
             2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
@@ -248,7 +248,7 @@ public class S2ᅳWithSampleᅳTests
             // From CKt-PerfectEvent: the CKt-Monitoring and App sample are "nothing", but as usual, because of the upstreams,
             // every Repo must be built.
             display.Clear();
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*build", "--ci", "--dry-run" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*build", "--dry-run" )).ShouldBeTrue();
             display.ToString().ShouldBe( """
             1 - →·   CKt-Core                      v1.0.1--ci.4 → ⏚/v1.0.1--ci.5 (CodeChange)               
             2 - →·   CKt-ActivityMonitor           v0.1.1--ci.5 → ⏚/v0.1.1--ci.6 (UpstreamBuild)            
@@ -285,7 +285,7 @@ public class S2ᅳWithSampleᅳTests
         // updated in the downstream repositories CKt-PerfectEvent and CKt-App-Sample (CKt-Sample-Monitoring
         // will use the CKt-PerfectEvent v0.3.3: UpstreamBuild).
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
                       - →·   CKt-Core                      v1.0.0     
                       - →·   CKt-ActivityMonitor           v0.1.0     
@@ -315,7 +315,7 @@ public class S2ᅳWithSampleᅳTests
 
         // The build fails!
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish" )).ShouldBeFalse();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release" )).ShouldBeFalse();
         display.ToString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.0     
@@ -343,7 +343,7 @@ public class S2ᅳWithSampleᅳTests
         //
         // ==> We publish this (from inPerfectEvent).
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.0     
@@ -366,7 +366,7 @@ public class S2ᅳWithSampleᅳTests
 
         // This doesn't change anything when publishing from CKt-PerfectEvent.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
               - →·   CKt-Core                      v1.0.0
@@ -389,7 +389,7 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inActivityMonitor, "commit", "feat: new feature in ActivityMonitor." )).ShouldBeTrue();
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
               - →·   CKt-Core                      v1.0.0
@@ -408,7 +408,7 @@ public class S2ᅳWithSampleᅳTests
         // The others have an increased Minor because of the "feat:" in ActivityMonitor.
         // ==> We build and publish this state.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
               1 - →·   CKt-Core                      v1.0.0 → ⏚/v1.0.1 (CodeChange)               
@@ -436,7 +436,7 @@ public class S2ᅳWithSampleᅳTests
 
         // CKt-PerfectEvent impacts CKt-Sample-Monitoring but its build fails.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "-d" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release", "-d" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.1
@@ -457,7 +457,7 @@ public class S2ᅳWithSampleᅳTests
 
         // Everything now works.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.1
@@ -472,10 +472,10 @@ public class S2ᅳWithSampleᅳTests
           
               """ );
 
-        // Everything is published. Without any change if we "build" or "build --ci" there's nothing to build,
-        // but if we "build --ci.0" then we can create the ci.0 version for all of them. 
+        // Everything is published. Without any change if we "build --release" or "build" there's nothing to
+        // build, but if we "build --ci.0" then we can create the ci.0 version for all of them.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
               - →·   CKt-Core                      v1.0.1
@@ -490,7 +490,7 @@ public class S2ᅳWithSampleᅳTests
           
               """ );
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build", "--ci" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
               - →·   CKt-Core                      v1.0.1
@@ -554,7 +554,7 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleMonitoring, "commit", "Added bug file." )).ShouldBeTrue();
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--ci" )).ShouldBeFalse();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish" )).ShouldBeFalse();
         display.ToString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.1--ci.4
@@ -575,7 +575,7 @@ public class S2ᅳWithSampleᅳTests
 
         // Note the "UpstreamVersion" that replaced the previous "UpstreamBuild".
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--ci", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.1--ci.4  
@@ -596,7 +596,7 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "commit", "Added feature." )).ShouldBeTrue();
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--ci", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.1--ci.4  
@@ -618,7 +618,7 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inActivityMonitor, "commit", "Touched." )).ShouldBeTrue();
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--ci", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.1--ci.4  
@@ -634,7 +634,7 @@ public class S2ᅳWithSampleᅳTests
               """ );
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*build", "--ci" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*build" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.1--ci.4  
@@ -725,7 +725,7 @@ public class S2ᅳWithSampleᅳTests
         TestHelper.SetFileSystemWritePAT();
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
               1 - →·   CKt-Core                      v1.0.0      → ⏚/v1.0.1 (CodeChange)                            

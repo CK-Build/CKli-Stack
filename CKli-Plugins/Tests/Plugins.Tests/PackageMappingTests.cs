@@ -60,7 +60,7 @@ public class PackageMappingTests
         // client never sees. ExtractCurrentTexts() waits for the dispatcher before returning.
         using( var logs = GrandOutput.Default!.CreateMemoryCollector( 1000 ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
             var texts = logs.ExtractCurrentTexts();
             texts.ShouldNotContain( t => t.Contains( "Unhandled version" ),
                                     customMessage: texts.Concatenate( Environment.NewLine ) );

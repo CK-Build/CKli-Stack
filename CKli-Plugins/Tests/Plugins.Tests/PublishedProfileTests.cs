@@ -42,7 +42,7 @@ public class PublishedProfileTests
 
         // New code in X-Core: publishing builds and publishes its v1.0.2 and the consumer's v0.3.4.
         await TouchDevStableAsync( rCore ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         var today = DateTime.UtcNow;
         var folder = new PublishedFolder( publishedPath );
@@ -123,7 +123,7 @@ public class PublishedProfileTests
         {
             e.AddOrUpdateReference( "X.Consumer", "Ext.Shared", SVersion.Parse( "3.1.0" ), "dev/stable" );
         }
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
                                                          .AppendPart( "Published" ) );
@@ -162,20 +162,20 @@ public class PublishedProfileTests
         var expected = $"{today.Year}.{today.DayOfYear}";
 
         await TouchDevStableAsync( rCore, "First.txt" ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         // A CI publication: the profile is a CI version at the NEXT Patch (the CI and the non CI forms of a
         // branch share one counter). Its file is in the folder's root like any stable one (SVersion.BranchName
         // is the empty string for a stable version AND its CI builds).
         await TouchDevStableAsync( rCore, "Second.txt" ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--ci" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
 
         folder.Reload();
         folder.Profiles.Select( x => x.Version.ToString() )
               .ShouldBe( [$"{expected}.1--ci.0", $"{expected}.0"] );
 
         await TouchDevStableAsync( rCore, "Third.txt" ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         folder.Reload();
         folder.LoadErrors.ShouldBeEmpty();
@@ -202,10 +202,10 @@ public class PublishedProfileTests
 
         // The first publication carries X.Core@1.0.2 and X.Consumer@0.3.4.
         await TouchDevStableAsync( rCore, "First.txt" ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
         // The second one carries X.Core@1.0.3 and X.Consumer@0.3.5.
         await TouchDevStableAsync( rCore, "Second.txt" ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
                                                          .AppendPart( "Published" ) );
@@ -265,9 +265,9 @@ public class PublishedProfileTests
         // X.Consumer@0.2.0, the second one X.Core@1.2.0 and X.Consumer@0.3.0. The second publication is also
         // what pushes v1.1 out of the hot zone so that it can be fixed.
         await TouchDevStableAsync( rCore, "First.txt", "feat: a first feature." ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
         await TouchDevStableAsync( rCore, "Second.txt", "feat: a second feature." ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
                                                          .AppendPart( "Published" ) );
@@ -334,7 +334,7 @@ public class PublishedProfileTests
 
         // The declaration feeds every subsequent fake build: publishing X-Core rebuilds it and its consumer.
         await TouchDevStableAsync( rCore ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         ReadContent( rCore, "v1.0.2" ).Transitive.Select( p => p.ToString() )
                                       .ShouldBe( ["Ext.Deep@2.0.0", "Ext.Deeper@1.5.0"] );
@@ -382,7 +382,7 @@ public class PublishedProfileTests
         rCore.TransitivePackages = [Instance( "Ext.Deep@2.0.0" )];
         rConsumer.TransitivePackages = [Instance( "Ext.Deep@2.0.0" ), Instance( "Ext.Shared@3.1.0" )];
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
                                                          .AppendPart( "Published" ) );
@@ -431,7 +431,7 @@ public class PublishedProfileTests
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
             // These are external packages nobody here references: reported, never gated.
             logs.ShouldContain( "2 transitive package(s) resolved to more than one version across this "
                                 + "publication, or to a version this publication does not carry: "
@@ -497,9 +497,9 @@ public class PublishedProfileTests
         // Two publications: X.Core@1.1.0 then X.Core@1.2.0. The second one is also what pushes v1.1 out of
         // the hot zone so that it can be fixed.
         await TouchDevStableAsync( rCore, "First.txt", "feat: a first feature." ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
         await TouchDevStableAsync( rCore, "Second.txt", "feat: a second feature." ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
                                                          .AppendPart( "Published" ) );

@@ -39,7 +39,7 @@ public class OneVersionPerPackageTests
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeFalse();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release", "--dry-run" )).ShouldBeFalse();
             logs.ShouldContain( l => l.Contains( "Package 'Ext.Clash' is referenced in two versions by this repository:" )
                                      && l.Contains( "'1.0.0' in 'X.Core/X.Core.csproj'" )
                                      && l.Contains( "'2.0.0' in 'X.Other/X.Other.csproj'" ) );
@@ -64,7 +64,7 @@ public class OneVersionPerPackageTests
             e.AddOrUpdateReference( "X.Other", "Ext.Shared", SVersion.Parse( "1.0.0" ), "dev/stable" );
         }
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
                                                          .AppendPart( "Published" ) );

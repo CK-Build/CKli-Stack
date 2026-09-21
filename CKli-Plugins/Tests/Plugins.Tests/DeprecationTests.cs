@@ -33,7 +33,7 @@ public class DeprecationTests
 
         // Publishing makes v1.0.2 the alive one (and moves the consumer to v0.3.4)...
         await TouchDevStableAsync( rCore ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         // ...so v1.0.1 can now be deprecated, and v1.0.2 takes its place as the protected one.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "deprecate", "v1.0.1", "--days", "30" )).ShouldBeTrue();
@@ -59,7 +59,7 @@ public class DeprecationTests
 
         // New code in the pivot: v0.3.4 supersedes v0.3.3 and the downstream follows with v0.0.1.
         await TouchDevStableAsync( rPivot ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         // Deprecate the superseded X.PerfectEvent v0.3.3 package, 30 days from now.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "version", "deprecate", "v0.3.3", "--days", "30", "--reason", "For fun." )).ShouldBeTrue();
@@ -74,7 +74,7 @@ public class DeprecationTests
 
         // The alive versions are untouched: there is nothing to build.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             -  X-Core                      v1.0.1
             -  X-PerfectEvent              v0.3.4
@@ -110,7 +110,7 @@ public class DeprecationTests
 
         // X-Core alone moves to v1.0.2: v1.0.1 becomes superseded, hence deprecatable.
         await TouchDevStableAsync( rCore ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         // The consumer is created afterwards: CreateRepoAsync references its upstreams at their
         // InitialVersion, so this repository's alive v0.3.3 consumes the superseded X.Core v1.0.1.

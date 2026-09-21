@@ -390,7 +390,7 @@ public class DepsUpdateTests
         var refStack = await testEnv.CreateStackAsync( "Ref", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var rLib = await refStack.DefaultWorld.CreateRepoAsync( "R-Lib", "v1.0.1" ).ConfigureAwait( false );
         TestHelper.TouchAndCommit( rLib.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         // The consuming Stack holds "R.Lib" at 1.0.1.
         var stack = await testEnv.CreateStackAsync( "Test", BoundConfiguration( "R.Lib", "1.0.1[Lock]" ) ).ConfigureAwait( false );
@@ -648,7 +648,7 @@ public class DepsUpdateTests
         var refStack = await testEnv.CreateStackAsync( "Ref", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var rLib = await refStack.DefaultWorld.CreateRepoAsync( "R-Lib", "v1.0.1" ).ConfigureAwait( false );
         TestHelper.TouchAndCommit( rLib.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         // The consuming Stack: it is behind on the referenced package.
         var stack = await testEnv.CreateStackAsync( "Test", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
@@ -689,9 +689,9 @@ public class DepsUpdateTests
         var rLib = await refStack.DefaultWorld.CreateRepoAsync( "R-Lib", "v1.0.1" ).ConfigureAwait( false );
         // A release, then a CI publication on top of it.
         TestHelper.TouchAndCommit( rLib.WorkingFolderPath, branchName: null, fileName: "First.txt" );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish", "--release" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( rLib.WorkingFolderPath, branchName: null, fileName: "Second.txt" );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish", "--ci" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish" )).ShouldBeTrue();
 
         var stack = await testEnv.CreateStackAsync( "Test", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var world = stack.DefaultWorld;
@@ -795,7 +795,7 @@ public class DepsUpdateTests
         var refStack = await testEnv.CreateStackAsync( "Ref", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var rLib = await refStack.DefaultWorld.CreateRepoAsync( "R-Lib", "v1.0.1" ).ConfigureAwait( false );
         TestHelper.TouchAndCommit( rLib.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         var stack = await testEnv.CreateStackAsync( "Test", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var world = stack.DefaultWorld;

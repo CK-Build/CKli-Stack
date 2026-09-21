@@ -39,9 +39,9 @@ public class CoworkingFixTests
         // a publication puts a version tag on the remotes - the initial versions the harness creates are
         // local - so fixing v1.0 instead would give Bob a version to fix that his clone cannot even see.
         await TouchDevStableAsync( rCore, "feat: a first feature.", "Tim-feature-1.txt" ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, tim, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, tim, "publish", "--release" )).ShouldBeTrue();
         await TouchDevStableAsync( rCore, "feat: a second feature.", "Tim-feature-2.txt" ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, tim, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, tim, "publish", "--release" )).ShouldBeTrue();
 
         // Tim starts the fix of the published v1.1: one "fix/vMajor.Minor" branch per impacted repository.
         timDisplay.Clear();

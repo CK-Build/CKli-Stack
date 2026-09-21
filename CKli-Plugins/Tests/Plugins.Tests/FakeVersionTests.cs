@@ -37,7 +37,7 @@ public class FakeVersionTests
 
         // The +fake sets the version: the build produces v5.4.3, not a successor of v1.0.1.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
 
         // "local/v5.4.3" and not a successor of v1.0.1: the +fake decided the version.
         // v1.0.1 is untouched on its own commit and the +fake is kept until v5.4.3 is published.
@@ -93,7 +93,7 @@ public class FakeVersionTests
             """ );
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-Core            v4.3.2+fake → ⏚/v4.3.2--ci.0 (FakeVersion)              
             2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.2 (UpstreamBuild, CodeChange)
@@ -107,7 +107,7 @@ public class FakeVersionTests
 
         // Building this in CI: the CKt-Core TagCommit is the ci.0 that has an associated FakeVersion.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-Core            v4.3.2+fake → ⏚/v4.3.2--ci.0 (FakeVersion)              
             2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.2 (UpstreamBuild, CodeChange)
@@ -126,7 +126,7 @@ public class FakeVersionTests
 
         // Building stable.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-Core            v3.0.0+fake → ⏚/v3.0.0 (FakeVersion)              
             2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)
@@ -172,7 +172,7 @@ public class FakeVersionTests
             """ );
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--release", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-Core            v2.0.0+fake → ⏚/v2.0.0 (FakeVersion)              
             2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)

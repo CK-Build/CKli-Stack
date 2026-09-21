@@ -50,7 +50,7 @@ public class DeleteBeforeBuildTests
         Directory.CreateDirectory( generated );
         File.WriteAllText( generated.AppendPart( "G0.cs" ), "public class Stale {}" );
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "build", "--release" )).ShouldBeTrue();
 
         Directory.Exists( generated ).ShouldBeFalse();
     }
@@ -77,7 +77,7 @@ public class DeleteBeforeBuildTests
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "build" )).ShouldBeFalse();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "build", "--release" )).ShouldBeFalse();
             logs.ShouldContain( t => t.Contains( "is not git ignored" ) );
         }
         // The build failed before touching it.

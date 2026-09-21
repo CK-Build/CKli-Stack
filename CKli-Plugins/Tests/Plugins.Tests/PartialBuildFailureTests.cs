@@ -43,7 +43,7 @@ public class PartialBuildFailureTests
 
         // A first build succeeds: X-Core carries a pending "local/v1.0.2" release.
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
         VersionTags( rCore ).ShouldBe( ["local/v1.0.2", "v1.0.1"], ignoreOrder: true );
         var firstBuildCommit = CommitOf( rCore, "local/v1.0.2" );
 
@@ -52,7 +52,7 @@ public class PartialBuildFailureTests
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: "stable" );
         rConsumer.FailBuild = true;
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeFalse( "The roadmap failed." );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeFalse( "The roadmap failed." );
 
         // One version, one tag: the "local/v1.0.2" of the first build has been dropped by the "building/v1.0.2"
         // that took over, and the promotion that would have renamed it never ran.
@@ -84,7 +84,7 @@ public class PartialBuildFailureTests
 
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
         rConsumer.FailBuild = true;
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeFalse();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeFalse();
         VersionTags( rCore ).ShouldBe( ["building/v1.0.2", "v1.0.1"], ignoreOrder: true );
         var failedBuildCommit = CommitOf( rCore, "building/v1.0.2" );
 
@@ -92,7 +92,7 @@ public class PartialBuildFailureTests
         // leaves X-Core alone: its "building/v1.0.2" reads as the version it already carries.
         rConsumer.FailBuild = false;
         stack.Screen.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
         stack.Screen.ToString().ShouldContain( "Required build for 1 repositories across the 2 repositories" );
 
         // Both are promoted: X-Consumer because it was just built, X-Core because the promotion loop covers
@@ -120,19 +120,19 @@ public class PartialBuildFailureTests
 
         // Both repositories reach v1.0.2/v0.1.2 first: this is what makes the LAST build have nothing to do.
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
 
         // A new commit and a failing downstream: X-Core is tagged "building/" and never promoted.
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: "stable" );
         rConsumer.FailBuild = true;
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeFalse();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeFalse();
         VersionTags( rCore ).ShouldBe( ["building/v1.0.2", "v1.0.1"], ignoreOrder: true );
         var failedBuildCommit = CommitOf( rCore, "building/v1.0.2" );
 
         // Nothing changed since, so this build has nothing to do - and still repairs the tag.
         rConsumer.FailBuild = false;
         stack.Screen.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
         stack.Screen.ToString().ShouldContain( "There is nothing to build across the 2 repositories" );
 
         VersionTags( rCore ).ShouldBe( ["local/v1.0.2", "v1.0.1"], ignoreOrder: true );
@@ -161,7 +161,7 @@ public class PartialBuildFailureTests
         // sees. ExtractCurrentTexts() waits for the dispatcher (DispatcherSink.SyncWait) before returning.
         using( var logs = GrandOutput.Default!.CreateMemoryCollector( 1000 ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeFalse();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeFalse();
             var texts = logs.ExtractCurrentTexts();
             texts.ShouldContain( t => t.Contains( "Fake build failure requested by FakeBuildRepo.FailBuild" )
                                       && t.Contains( "X-Consumer" ) );
@@ -175,7 +175,7 @@ public class PartialBuildFailureTests
 
         // Cleared: the same roadmap now goes through.
         rConsumer.FailBuild = false;
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
         VersionTags( rConsumer ).ShouldContain( "local/v0.1.2" );
     }
 

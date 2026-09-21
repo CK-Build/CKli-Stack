@@ -31,7 +31,7 @@ public class LocalReleaseTests
 
         // Both repositories are up to date with regard to their version.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             -  X-Core     v0.3.3
             -  X-Consumer v0.0.0
@@ -45,7 +45,7 @@ public class LocalReleaseTests
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, "dev/stable" );
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "build", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  ⊙   X-Core     v0.3.3 → ⏚/v0.3.4 (CodeChange)   
             2 -  ·→  X-Consumer v0.0.0 → ⏚/v0.0.1 (UpstreamBuild)
@@ -63,7 +63,7 @@ public class LocalReleaseTests
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, "dev/stable" );
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "build", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  ⊙   X-Core     (v0.3.4) → ⏚/v0.3.4 (CodeChange)   
             2 -  ·→  X-Consumer (v0.0.1) → ⏚/v0.0.1 (UpstreamBuild)

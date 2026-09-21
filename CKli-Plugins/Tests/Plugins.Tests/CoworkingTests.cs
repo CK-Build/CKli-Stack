@@ -46,7 +46,7 @@ public class CoworkingTests
         await TouchDevStableAsync( bob.ChangeDirectory( "X-Core" ), useCheckout, fileName: "Bob-init.txt" ).ConfigureAwait( false );
 
         bobDisplay.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--release" )).ShouldBeTrue();
         bobDisplay.ToString().ShouldBe( """
             1 -  X-Core         v1.0.1 → ⏚/v1.0.2 (CodeChange)   
             2 -  X-PerfectEvent v0.3.3 → ⏚/v0.3.4 (UpstreamBuild)
@@ -89,7 +89,7 @@ public class CoworkingTests
         await TouchDevStableAsync( timPivot, useCheckout, fileName: "Tim-work.txt" ).ConfigureAwait( false );
 
         timDisplay.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, timPivot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, timPivot, "publish", "--release" )).ShouldBeTrue();
         timDisplay.ToString().ShouldBe( """
               - →·   X-Core         v1.0.2
             1 -  ⊙   X-PerfectEvent v0.3.4 → ⏚/v0.3.5 (CodeChange)
@@ -103,8 +103,8 @@ public class CoworkingTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "pull" )).ShouldBeTrue();
 
         // Bob cannot publish his contribution, in CI or not: he must incorporate Tim's work first.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, bobPivot, "publish", "--ci", "-d" )).ShouldBeFalse();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, bobPivot, "publish", "-d" )).ShouldBeFalse();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, bobPivot, "publish", "--release", "-d" )).ShouldBeFalse();
 
         bobDisplay.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "issue" )).ShouldBeTrue();
@@ -121,7 +121,7 @@ public class CoworkingTests
         await TouchDevStableAsync( timPivot, useCheckout, fileName: "Tim-work.txt" ).ConfigureAwait( false );
 
         timDisplay.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, timPivot, "publish", "--ci" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, timPivot, "publish" )).ShouldBeTrue();
         timDisplay.ToString().ShouldBe( """
               - →·   X-Core         v1.0.2
             1 -  ⊙   X-PerfectEvent v0.3.5 → ⏚/v0.3.6--ci.1 (CodeChange)
@@ -144,7 +144,7 @@ public class CoworkingTests
 
         // Bob publishes his breaking change. In a 0.X.Y version only the Minor is incremented.
         bobDisplay.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, bobPivot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, bobPivot, "publish", "--release" )).ShouldBeTrue();
         bobDisplay.ToString().ShouldBe( """
               - →·   X-Core         v1.0.2
             1 -  ⊙   X-PerfectEvent v0.3.5 → ⏚/v0.4.0 (CodeChange)

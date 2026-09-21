@@ -43,7 +43,7 @@ public class MigrationScopeTests
 
         // A non-CI build integrates "dev/stable" into "stable" and deletes it. This is also what puts the
         // solution file on "stable": the migration's ".slnx" normalization needs it there.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
         BranchExists( rA, "dev/stable" ).ShouldBeFalse( "The build integrated and deleted it." );
         BranchExists( rB, "dev/stable" ).ShouldBeFalse( "The build integrated and deleted it." );
 

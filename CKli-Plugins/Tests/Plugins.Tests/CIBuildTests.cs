@@ -9,7 +9,7 @@ using static CK.Testing.MonitorTestHelper;
 namespace Plugins.Tests;
 
 /// <summary>
-/// Behavior of the CI builds ("--ci" and "--ci.0"). These tests use the fake build harness only
+/// Behavior of the CI builds (the default mode and "--ci.0"). These tests use the fake build harness only
 /// (<see cref="CKliBuildPluginTestHelperExtensions.CKliCreateFakeBuildTestEnvAsync"/>).
 /// </summary>
 public class CIBuildTests
@@ -86,7 +86,7 @@ public class CIBuildTests
         await TouchDevStableAsync( rCore, useCheckout ).ConfigureAwait( false );
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--ci" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-Core     v0.3.3 → ⏚/v0.3.4--ci.1 (CodeChange)   
             2 -  X-Consumer v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
@@ -98,7 +98,7 @@ public class CIBuildTests
 
         // Same code, non-CI: the CI publication above did not consume v0.3.4.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-Core     v0.3.3 → ⏚/v0.3.4 (CodeChange)               
             2 -  X-Consumer v0.0.0 → ⏚/v0.0.1 (UpstreamBuild, CodeChange)

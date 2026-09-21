@@ -72,7 +72,7 @@ public class S1ᅳInitializedᅳTests
             if( firstModeCI )
             {
                 display.Clear();
-                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--ci" ).ConfigureAwait( false )).ShouldBeTrue();
+                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish" ).ConfigureAwait( false )).ShouldBeTrue();
                 display.ToString().ShouldBe( """
                       ╓      CKt-Core            v1.0.0     
                     1 ╙  ⊙   Test-Repo-Create    v0.0.0+fake → ⏚/v0.0.0--ci.2 (FakeVersion, CodeChange)
@@ -88,7 +88,7 @@ public class S1ᅳInitializedᅳTests
             else
             {
                 display.Clear();
-                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish" ).ConfigureAwait( false )).ShouldBeTrue();
+                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--release" ).ConfigureAwait( false )).ShouldBeTrue();
                 display.ToString().ShouldBe( """
                       ╓      CKt-Core            v1.0.0     
                     1 ╙  ⊙   Test-Repo-Create    v0.0.0+fake → ⏚/v0.0.0 (FakeVersion, CodeChange)
@@ -114,7 +114,7 @@ public class S1ᅳInitializedᅳTests
             if( secondModeCI )
             {
                 display.Clear();
-                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--ci" ).ConfigureAwait( false )).ShouldBeTrue();
+                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish" ).ConfigureAwait( false )).ShouldBeTrue();
                 if( firstModeCI )
                 {
                     display.ToString().ShouldBe( """
@@ -147,7 +147,7 @@ public class S1ᅳInitializedᅳTests
             else
             {
                 display.Clear();
-                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish" ).ConfigureAwait( false )).ShouldBeTrue();
+                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--release" ).ConfigureAwait( false )).ShouldBeTrue();
                 if( firstModeCI )
                 {
                     display.ToString().ShouldBe( """
@@ -194,7 +194,7 @@ public class S1ᅳInitializedᅳTests
             // Touch and publish: Non-CI publication here (a CI publication would let the dev/stable).
             // => We publish "stable" here: it MUST be restored as the default branch (because it is the BranchModel's root "stable").
             TestHelper.TouchAndCommit( testRepo.CurrentDirectory, "dev/stable" );
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish" ).ConfigureAwait( false )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--release" ).ConfigureAwait( false )).ShouldBeTrue();
 
             info = await gitHubProvider.GetRepositoryInfoAsync( TestHelper.Monitor, "CK-Build/Test-Repo-Create", true ).ConfigureAwait( false );
             while( info.ShouldNotBeNull().DefaultBranch != "stable" )
@@ -257,7 +257,7 @@ public class S1ᅳInitializedᅳTests
         // a minor's increment.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "branch", "switch", "dev/stable" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( cktCoreContext.CurrentDirectory, "dev/stable", "feat: some feature." );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "publish", "--release" )).ShouldBeTrue();
 
         // Now we can do: ckli fix start v1.0
         display.Clear();
@@ -651,7 +651,7 @@ public class S1ᅳInitializedᅳTests
 
         // Let's build (but not publish yet) the CI versions.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  CKt-Core                      v1.0.0      → ⏚/v1.0.1--ci.4 (CodeChange)                            
             2 -  CKt-ActivityMonitor           v0.1.0      → ⏚/v0.1.1--ci.5 (UpstreamBuild, CodeChange)             
@@ -667,7 +667,7 @@ public class S1ᅳInitializedᅳTests
 
         // Everything has been built but nothing has been published.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             -  CKt-Core                      ⏚/v1.0.1--ci.4
             -  CKt-ActivityMonitor           ⏚/v0.1.1--ci.5
@@ -683,7 +683,7 @@ public class S1ᅳInitializedᅳTests
 
         // Now we publish.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--ci" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             -  CKt-Core                      ⏚/v1.0.1--ci.4
             -  CKt-ActivityMonitor           ⏚/v0.1.1--ci.5
@@ -783,7 +783,7 @@ public class S1ᅳInitializedᅳTests
 
             """ );
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--ci" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
     }
 
 

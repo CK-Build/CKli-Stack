@@ -116,7 +116,7 @@ public class BranchStartCommitTests
         // A change on "dev/stable" (the checked out branch of a fresh repository) and a build: the build
         // integrates "dev/stable" into "stable" and tags it.
         TestHelper.TouchAndCommit( repo.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "build" ).ConfigureAwait( false )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "build", "--release" ).ConfigureAwait( false )).ShouldBeTrue();
         var built = BranchTip( repo, "stable" );
         VersionTagsOn( repo, built ).ShouldNotBeEmpty( "The build tagged the tip of 'stable'." );
 

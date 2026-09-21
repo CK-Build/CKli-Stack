@@ -46,7 +46,7 @@ public class LTSCreateTests
         // its "dev/" branches. Touching X-Core drags its consumer along, so both are published.
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-Core v1.2.3 → ⏚/v1.2.4 (CodeChange)   
             2 -  X-App  v0.4.0 → ⏚/v0.4.1 (UpstreamBuild)
@@ -83,7 +83,7 @@ public class LTSCreateTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue", "--fix" )).ShouldBeTrue();
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-Core v2.0.0+fake → ⏚/v2.0.0 (FakeVersion)               
             2 -  X-App  v1.0.0+fake → ⏚/v1.0.0 (UpstreamBuild, FakeVersion)
@@ -136,7 +136,7 @@ public class LTSCreateTests
         }
 
         // A non-CI build produces a "local/" version: it lives in the developer's own feed, unpublished.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
@@ -148,7 +148,7 @@ public class LTSCreateTests
         // Building X-Core too gives it a pending local release: two repositories, two different causes, and
         // the final error names both of them.
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
@@ -179,7 +179,7 @@ public class LTSCreateTests
         var rApp = await world.CreateRepoAsync( "X-App", "v0.4.0", references: [rCore] ).ConfigureAwait( false );
 
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         // The publication has integrated everything: an LTS can be created at this point.
         // Committing on "dev/stable" without publishing takes that away.
@@ -220,13 +220,13 @@ public class LTSCreateTests
         var rApp = await world.CreateRepoAsync( "X-App", "v0.4.0", references: [rCore] ).ConfigureAwait( false );
 
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         // A non-CI build: X-Core gets a "local/v1.2.5" that only exists in this developer's own feed.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "branch", "switch", "dev/stable", "-c" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: "dev/stable" );
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-Core v1.2.4 → ⏚/v1.2.5 (CodeChange)   
             2 -  X-App  v0.4.1 → ⏚/v0.4.2 (UpstreamBuild)
@@ -250,7 +250,7 @@ public class LTSCreateTests
             .ShouldBe( [("X-Core", null, null), ("X-App", null, null)] );
 
         // Publishing them resolves it: the local versions become the published ones.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "create", "@net8" )).ShouldBeTrue();
         VersionBounds( LoadWorldDefinition( stack, "Test@net8.xml" ) )
             .ShouldBe( [("X-Core", null, "2.0.0-0"), ("X-App", null, "1.0.0-0")] );
@@ -279,7 +279,7 @@ public class LTSCreateTests
         // An LTS World can only be created from a World whose "dev/" branches are integrated: only a
         // publication does that. It also writes the default World's first profile.
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
 
         var defaultPublished = StackFolder( stack ).AppendPart( "Published" );
         new PublishedFolder( defaultPublished ).Profiles.Count().ShouldBe( 1 );
