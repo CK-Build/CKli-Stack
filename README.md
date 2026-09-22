@@ -78,7 +78,7 @@ understanding *why* the Standard Plugins are shaped the way they are.
 A guide to every README in this Stack, roughly host-tool-first then plugins:
 
 **The CKli tool** (`../CKli/`, repo `CK-Build/CKli`):
-- [`CKli` — command reference](https://github.com/CK-Build/CKli/blob/stable/README.md) — the `ckli` CLI itself: `clone`, `pull`, `push`, `plugin ...`, `tag ...`, etc.
+- [`CKli`](https://github.com/CK-Build/CKli/blob/stable/README.md) — the tool itself: getting started, and the map of every `ckli` command with where each one is documented. The reference of the intrinsic commands (`clone`, `pull`, `push`, `plugin ...`, `tag ...`, ...) is [`CKli.Core/CKliCommands`](https://github.com/CK-Build/CKli/blob/stable/CKli.Core/CKliCommands/README.md).
 - [`CKli.Core`](https://github.com/CK-Build/CKli/blob/stable/CKli.Core/README.md) — the core library: Stack/World/Repo model, Git hosting providers, the plugin system, command dispatch.
 - [`CKli.Loader`](https://github.com/CK-Build/CKli/blob/stable/CKli.Loader/README.md) — the collectible `AssemblyLoadContext` used to hot-load and unload compiled plugin assemblies.
 - [`CKli.Plugins.Core`](https://github.com/CK-Build/CKli/blob/stable/CKli.Plugins.Core/README.md) — the shared contract/runtime library between `CKli.Core` and plugin assemblies (reflection-based and compiled/generated discovery).
