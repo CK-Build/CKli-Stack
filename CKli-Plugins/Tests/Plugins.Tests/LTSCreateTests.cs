@@ -56,7 +56,7 @@ public class LTSCreateTests
 
             """ );
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "create", "@net8" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeTrue();
 
         // The new World's definition file is a "{StackName}{LTSName}.xml" file in the Stack folder. Its root
         // element keeps the Stack name ('@' is not a valid XML name character) and carries the LTSName.
@@ -103,7 +103,7 @@ public class LTSCreateTests
         // And the new World can actually be opened: its repositories are cloned into the Stack's own "@net8/"
         // folder and its plugins instantiate. Its root branch is "@net8/stable" - it does not exist in the
         // repositories yet, which is the ordinary bootstrap state of a brand new LTS World.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "clone", "@net8" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "clone", "@net8" )).ShouldBeTrue();
         var ltsWorld = world.WorldRoot.ChangeDirectory( stack.StackRoot.AppendPart( "@net8" ) );
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, ltsWorld, "issue" )).ShouldBeTrue();
@@ -129,7 +129,7 @@ public class LTSCreateTests
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "create", "@net8" )).ShouldBeFalse();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeFalse();
             logs.ShouldContain( l => l.Contains( "Repository 'X-App' has a current fake or a deprecated version 'v0.0.0+fake'." ) );
             // The final error names the actual cause: it is not a catch-all "the world must be published".
             logs.ShouldContain( l => l.Contains( "Unable to create a Long Term Support world: a current fake or deprecated version." ) );
@@ -140,7 +140,7 @@ public class LTSCreateTests
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "create", "@net8" )).ShouldBeFalse();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeFalse();
             logs.ShouldContain( l => l.Contains( "Repository 'X-App' has a non published version 'local/v0.0.0'." ) );
             logs.ShouldContain( l => l.Contains( "Unable to create a Long Term Support world: no published version at all." ) );
         }
@@ -152,7 +152,7 @@ public class LTSCreateTests
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "create", "@net8" )).ShouldBeFalse();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeFalse();
             logs.ShouldContain( l => l.Contains( "Unable to create a Long Term Support world: no published version at all and pending local releases." ) );
         }
 
@@ -188,7 +188,7 @@ public class LTSCreateTests
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "create", "@net8" )).ShouldBeFalse();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeFalse();
             logs.ShouldContain( l => l.Contains( "Repository 'X-App' has a 'dev/stable' branch with non published code in it." ) );
             logs.ShouldContain( l => l.Contains( "Unable to create a Long Term Support world: non published code in a 'dev/stable' branch." ) );
         }
@@ -239,7 +239,7 @@ public class LTSCreateTests
         // Both repositories have been built, so both have a pending local release.
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "create", "@net8" )).ShouldBeFalse();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeFalse();
             logs.ShouldContain( l => l.Contains( "2 repositories have pending local releases:" )
                                      && l.Contains( "'X-Core': local/v1.2.5" )
                                      && l.Contains( "'X-App': local/v0.4.2" ) );
@@ -251,7 +251,7 @@ public class LTSCreateTests
 
         // Publishing them resolves it: the local versions become the published ones.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "create", "@net8" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeTrue();
         VersionBounds( LoadWorldDefinition( stack, "Test@net8.xml" ) )
             .ShouldBe( [("X-Core", null, "2.0.0-0"), ("X-App", null, "1.0.0-0")] );
     }
@@ -284,8 +284,8 @@ public class LTSCreateTests
         var defaultPublished = StackFolder( stack ).AppendPart( "Published" );
         new PublishedFolder( defaultPublished ).Profiles.Count().ShouldBe( 1 );
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "create", "@net8" )).ShouldBeTrue();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "lts", "clone", "@net8" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "clone", "@net8" )).ShouldBeTrue();
 
         // Opening the LTS World and asking its PublishPlugin where it publishes is enough: the folder is
         // created on demand, so its existence is the assertion. Publishing there would need its brand new

@@ -3,4 +3,6 @@ Logs/
 .vs/
 .idea/
 /CKli-Plugins/CKli.Plugins/CKli.CompiledPlugins.cs
+CKli.CompiledPlugins.cs
+CKli.Version.props
 !.gitignore
