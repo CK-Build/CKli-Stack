@@ -1,4 +1,4 @@
-<CKli MinCKliVersion="0.14.0">
+<CKli MinCKliVersion="0.14.0" LockPrefix="refs/ckli-locks">
   <Plugins CompileMode="Debug">
     <ArtifactHandler>
       <NuGet>
