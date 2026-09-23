@@ -58,9 +58,9 @@ public class LTSCreateTests
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeTrue();
 
-        // The new World's definition file is a "{StackName}{LTSName}.xml" file in the Stack folder. Its root
+        // The new World's definition file is a "{StackName}{LTSName}.xml" file in its "{LTSName}/" folder of the Stack. Its root
         // element keeps the Stack name ('@' is not a valid XML name character) and carries the LTSName.
-        var ltsRoot = LoadWorldDefinition( stack, "Test@net8.xml" );
+        var ltsRoot = LoadWorldDefinition( stack, "@net8/Test@net8.xml" );
         ltsRoot.Name.LocalName.ShouldBe( "Test" );
         ltsRoot.Attribute( "LTSName" )!.Value.ShouldBe( "@net8" );
 
@@ -100,14 +100,59 @@ public class LTSCreateTests
         ltsBranchModel.Attribute( "Root" )!.Value.ShouldBe( "stable" );
         ltsBranchModel.Elements( "Explo" ).ShouldBeEmpty();
 
-        // And the new World can actually be opened: its repositories are cloned into the Stack's own "@net8/"
-        // folder and its plugins instantiate. Its root branch is "@net8/stable" - it does not exist in the
-        // repositories yet, which is the ordinary bootstrap state of a brand new LTS World.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "clone", "@net8" )).ShouldBeTrue();
+        // The new World has been cloned by the command: its repositories are in the Stack's own "@net8/" folder.
+        // Its root branch "@net8/stable" has been created and pushed on the commit of the last published version
+        // of each repository - the LTS starts there, the future stays in the default World - so the new World
+        // has no issue at all.
         var ltsWorld = world.WorldRoot.ChangeDirectory( stack.StackRoot.AppendPart( "@net8" ) );
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, ltsWorld, "issue" )).ShouldBeTrue();
-        display.ToString().ShouldContain( "@net8/stable" );
+        display.ToString().ShouldBe( """
+            ❰✓❱
+
+            """ );
+        foreach( var (name, version) in new[] { ("X-Core", "v1.2.4"), ("X-App", "v0.4.1") } )
+        {
+            using var lts = new LibGit2Sharp.Repository( stack.StackRoot.Combine( $"@net8/{name}" ) );
+            lts.Branches["origin/@net8/stable"].ShouldNotBeNull().Tip
+               .ShouldBe( (LibGit2Sharp.Commit)lts.Tags[version].ShouldNotBeNull().PeeledTarget,
+                          $"'{name}' LTS starts with its last published version." );
+            using var dflt = new LibGit2Sharp.Repository( stack.StackRoot.AppendPart( name ) );
+            dflt.Branches["@net8/stable"].ShouldBeNull( "The default World's clone doesn't keep the LTS root branch." );
+        }
+    }
+
+    /// <summary>
+    /// The checks are made on the local repositories: a root branch that is not the remote one (here another
+    /// developer has published since the last pull) would cut the LTS below that publication. It is refused.
+    /// </summary>
+    [Test]
+    public async Task lts_create_requires_the_root_branches_to_be_the_remote_ones_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.2.3" ).ConfigureAwait( false );
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
+
+        // The remote "stable" moves ahead of the local one.
+        using( var bare = new LibGit2Sharp.Repository( stack.Remotes.GetUriFor( "X-Core" ).LocalPath ) )
+        {
+            var tip = bare.Branches["stable"].Tip;
+            var sig = new LibGit2Sharp.Signature( "Other", "other@example.com", System.DateTimeOffset.Now );
+            var ahead = bare.ObjectDatabase.CreateCommit( sig, sig, "Somebody else's work.", tip.Tree, [tip], prettifyMessage: false );
+            bare.Refs.UpdateTarget( bare.Refs["refs/heads/stable"], ahead.Id );
+        }
+
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeFalse();
+            logs.ShouldContain( l => l.Contains( "The 'stable' branch differs from 'origin/stable' in repository X-Core." ) );
+            logs.ShouldContain( l => l.Contains( "Unable to create a Long Term Support world: 'stable' branches not synchronized with their remote." ) );
+        }
+        Directory.Exists( StackFolder( stack ).AppendPart( "@net8" ) ).ShouldBeFalse();
     }
 
     /// <summary>
@@ -156,7 +201,7 @@ public class LTSCreateTests
             logs.ShouldContain( l => l.Contains( "Unable to create a Long Term Support world: no published version at all and pending local releases." ) );
         }
 
-        File.Exists( StackFolder( stack ).AppendPart( "Test@net8.xml" ) )
+        File.Exists( StackFolder( stack ).Combine( "@net8/Test@net8.xml" ) )
             .ShouldBeFalse( "The new World has not been created." );
         VersionBounds( LoadWorldDefinition( stack, "Test.xml" ) )
             .ShouldBe( [("X-Core", null, null), ("X-App", null, null)],
@@ -192,7 +237,7 @@ public class LTSCreateTests
             logs.ShouldContain( l => l.Contains( "Repository 'X-App' has a 'dev/stable' branch with non published code in it." ) );
             logs.ShouldContain( l => l.Contains( "Unable to create a Long Term Support world: non published code in a 'dev/stable' branch." ) );
         }
-        File.Exists( StackFolder( stack ).AppendPart( "Test@net8.xml" ) ).ShouldBeFalse();
+        File.Exists( StackFolder( stack ).Combine( "@net8/Test@net8.xml" ) ).ShouldBeFalse();
         VersionBounds( LoadWorldDefinition( stack, "Test.xml" ) )
             .ShouldBe( [("X-Core", null, null), ("X-App", null, null)] );
     }
@@ -236,6 +281,14 @@ public class LTSCreateTests
 
             """ );
 
+        // The default World's "Common/" folder and its "TestRun.Sha" cache (this one is written by a real build,
+        // the fake one runs no tests).
+        var commonFile = StackFolder( stack ).Combine( "Common/.editorconfig" );
+        Directory.CreateDirectory( commonFile.RemoveLastPart() );
+        File.WriteAllText( commonFile, "root = true" );
+        var testRunSha = StackFolder( stack ).Combine( "$Local/TestRun.Sha.txt" );
+        File.WriteAllText( testRunSha, "0123456789abcdef" );
+
         // Both repositories have been built, so both have a pending local release.
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
@@ -245,15 +298,28 @@ public class LTSCreateTests
                                      && l.Contains( "'X-App': local/v0.4.2" ) );
             logs.ShouldContain( l => l.Contains( "Unable to create a Long Term Support world: pending local releases." ) );
         }
-        File.Exists( StackFolder( stack ).AppendPart( "Test@net8.xml" ) ).ShouldBeFalse();
+        File.Exists( StackFolder( stack ).Combine( "@net8/Test@net8.xml" ) ).ShouldBeFalse();
         VersionBounds( LoadWorldDefinition( stack, "Test.xml" ) )
             .ShouldBe( [("X-Core", null, null), ("X-App", null, null)] );
+        // A refused creation writes nothing: the creation steps have not run.
+        Directory.Exists( StackFolder( stack ).AppendPart( "@net8" ) ).ShouldBeFalse();
+        Directory.Exists( StackFolder( stack ).Combine( "$Local/@net8" ) ).ShouldBeFalse();
+        File.Exists( testRunSha ).ShouldBeTrue( "The TestRun.Sha cache has not been moved." );
 
         // Publishing them resolves it: the local versions become the published ones.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeTrue();
-        VersionBounds( LoadWorldDefinition( stack, "Test@net8.xml" ) )
+        VersionBounds( LoadWorldDefinition( stack, "@net8/Test@net8.xml" ) )
             .ShouldBe( [("X-Core", null, "2.0.0-0"), ("X-App", null, "1.0.0-0")] );
+
+        // The CommonFiles plugin has snapshot the "Common/" folder in the new World's one: both now evolve
+        // independently.
+        File.ReadAllText( StackFolder( stack ).Combine( "@net8/Common/.editorconfig" ) ).ShouldBe( "root = true" );
+        File.Exists( commonFile ).ShouldBeTrue( "The default World keeps its own." );
+        // The Build plugin has moved the TestRun.Sha cache to the new World's local folder: the LTS World is the
+        // one that keeps the code whose tests have run.
+        File.ReadAllText( StackFolder( stack ).Combine( "$Local/@net8/TestRun.Sha.txt" ) ).ShouldBe( "0123456789abcdef" );
+        File.Exists( testRunSha ).ShouldBeFalse();
     }
 
     /// <summary>
@@ -307,9 +373,10 @@ public class LTSCreateTests
 
     static NormalizedPath StackFolder( FakeBuildStack stack ) => stack.StackRoot.AppendPart( ".PublicStack" );
 
-    static XElement LoadWorldDefinition( FakeBuildStack stack, string fileName )
+    // A LTS World definition file is in the world's own folder: "@net8/Test@net8.xml".
+    static XElement LoadWorldDefinition( FakeBuildStack stack, string filePath )
     {
-        return XDocument.Load( StackFolder( stack ).AppendPart( fileName ) ).Root!;
+        return XDocument.Load( StackFolder( stack ).Combine( filePath ) ).Root!;
     }
 
     /// <summary>
