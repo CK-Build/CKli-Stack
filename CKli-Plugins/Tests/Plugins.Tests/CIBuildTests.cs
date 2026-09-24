@@ -127,4 +127,48 @@ public class CIBuildTests
         TestHelper.TouchAndCommit( repo.WorkingFolderPath, branchName: "dev/stable" );
     }
 
+    /// <summary>
+    /// A CI version built without any "dev/" branch comes from the regular branch: here the "--ci.0" of a
+    /// "+fake" set on "stable" once "dev/stable" has been integrated by a release publication. Its CI
+    /// publication pushes "stable" rather than failing on the missing "dev/stable".
+    /// </summary>
+    [Test]
+    public async Task ci_publish_without_dev_branch_pushes_the_regular_branch_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
+
+        // A change committed straight on "stable" carries the "+fake" (as a migration does). The CI build produces
+        // the "--ci.0" of the "+fake" on the "stable" tip, from a "dev/stable" created there.
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: "stable" );
+        using( var e = rCore.CreateEditor() )
+        {
+            var git = e.GitRepository.Repository;
+            git.Tags.Add( "v2.0.0+fake", git.Branches["stable"].Tip );
+        }
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+
+        // That "dev/stable" is useless (it is the "stable" tip and has no remote): the next command deletes it.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
+        using( var e = rCore.CreateEditor() )
+        {
+            e.GitRepository.Repository.Branches["dev/stable"].ShouldBeNull();
+        }
+
+        // Nothing to build: the "local/v2.0.0--ci.0" is published from "stable".
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+
+        using var bare = new LibGit2Sharp.Repository( stack.Remotes.GetUriFor( "X-Core" ).LocalPath );
+        bare.Branches["dev/stable"].ShouldBeNull();
+        var ci0 = bare.Tags["v2.0.0--ci.0"];
+        ci0.ShouldNotBeNull();
+        bare.Branches["stable"].Tip.Sha.ShouldBe( ci0.Target.Sha );
+        bare.Tags["v2.0.0+fake"].ShouldNotBeNull();
+    }
+
 }
