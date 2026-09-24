@@ -119,6 +119,19 @@ public class FakeVersionTests
 
             """ );
 
+        // Nothing to build: X-Core displays its "local/v4.3.2--ci.0", not the "v4.3.2+fake" that carries it.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            -  X-Core            ⏚/v4.3.2--ci.0
+            -  X-ActivityMonitor ⏚/v0.1.1--ci.2
+            ╓  X-PerfectEvent    ⏚/v0.3.3--ci.2
+            ╙  X-Monitoring      ⏚/v0.2.4--ci.2
+            There is nothing to build across the 4 repositories but 4 can be published.
+            ❰✓❱
+
+            """ );
+
         // Because we have NOT published the v4.3.2, we can bump to v3.0.0.
         // => This destroys the "local/v4.3.2--ci.0" release and deletes the "v4.3.2+fake" tag.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "bump", "v3.0.0" )).ShouldBeTrue();
