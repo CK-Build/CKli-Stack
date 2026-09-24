@@ -296,6 +296,30 @@ public class BranchNamespaceTests
         new BranchNamespace( "@net8", ltsRoot.ToConfiguration() ).ShouldBe( ltsRoot );
     }
 
+    /// <summary>
+    /// The "dev/" branch of a branch "X" is "dev/X" for the commands and "dev/X" (default World) or "@lts/dev/X" (LTS
+    /// World, see BranchName.DevName) for git: all of these spellings designate the "dev/" branch of "X".
+    /// </summary>
+    [TestCase( null, "dev/stable", "stable", true )]
+    [TestCase( null, "Dev/stable", "stable", true )]
+    [TestCase( null, "stable", "stable", false )]
+    [TestCase( null, "@net8/dev/stable", "@net8/dev/stable", false )]
+    [TestCase( "@net8", "dev/@net8/stable", "@net8/stable", true )]
+    [TestCase( "@net8", "@net8/dev/stable", "@net8/stable", true )]
+    [TestCase( "@net8", "dev/stable", "stable", true )]
+    [TestCase( "@net8", "@net8/stable", "@net8/stable", false )]
+    [TestCase( "@net8", "@net8/developer", "@net8/developer", false )]
+    [TestCase( "@net8", "@net9/dev/stable", "@net9/dev/stable", false )]
+    public void RemoveDevPrefix_normalizes_the_dev_branch_names( string? ltsName, string name, string expected, bool expectedIsDev )
+    {
+        var ns = ltsName == null
+                    ? Namespace( """<BranchModel Root="stable" />""" )
+                    : new BranchNamespace( ltsName, Namespace( """<BranchModel Root="stable" />""" ).ToConfiguration() );
+        ns.RemoveDevPrefix( name, out var isDev ).ShouldBe( expected );
+        isDev.ShouldBe( expectedIsDev );
+        if( expectedIsDev ) ns.FindRequired( expected ).DevName.ShouldBe( ltsName == null ? $"dev/{expected}" : $"{ltsName}/dev/stable" );
+    }
+
     [Test]
     public void explo_updates()
     {

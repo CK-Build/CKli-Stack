@@ -72,15 +72,26 @@ public class LTSCreateTests
         VersionBounds( LoadWorldDefinition( stack, "Test.xml" ) )
             .ShouldBe( [("X-Core", "2.0.0-0", null), ("X-App", "1.0.0-0", null)] );
 
-        // The cut is usable: the default World has no version left, and the fix that the Build plugin offers
-        // for it starts each repository exactly AT the cut (the "-0" prerelease is dropped). This is what an
-        // InfVersion set on the cut's own Major.Minor.Patch would forbid.
+        // The cut is usable: the default World has no version left, and the command has given each repository
+        // its initial version exactly AT the cut (the "-0" prerelease is dropped) - this is what an InfVersion
+        // set on the cut's own Major.Minor.Patch would forbid. The "+fake" is on a new empty commit of the root
+        // branch: the tip carried the last published version, which now belongs to the LTS World. Both are pushed.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue" )).ShouldBeTrue();
-        display.ToString().ShouldContain( "This can be fixed by creating a 'v2.0.0+fake' on 'stable' branch." );
-        display.ToString().ShouldContain( "This can be fixed by creating a 'v1.0.0+fake' on 'stable' branch." );
+        display.ToString().ShouldBe( """
+            ❰✓❱
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue", "--fix" )).ShouldBeTrue();
+            """ );
+        foreach( var (name, published, fake) in new[] { ("X-Core", "v1.2.4", "v2.0.0+fake"), ("X-App", "v0.4.1", "v1.0.0+fake") } )
+        {
+            using var git = new LibGit2Sharp.Repository( stack.StackRoot.AppendPart( name ) );
+            var fakeCommit = (LibGit2Sharp.Commit)git.Tags[fake].ShouldNotBeNull().PeeledTarget;
+            fakeCommit.Parents.Single().ShouldBe( (LibGit2Sharp.Commit)git.Tags[published].ShouldNotBeNull().PeeledTarget );
+            git.Branches["stable"].Tip.ShouldBe( fakeCommit );
+            git.Branches["origin/stable"].Tip.ShouldBe( fakeCommit, "The new commit is pushed." );
+            using var bare = new LibGit2Sharp.Repository( stack.Remotes.GetUriFor( name ).LocalPath );
+            bare.Tags[fake].ShouldNotBeNull( "The +fake tag is pushed." );
+        }
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release", "--dry-run" )).ShouldBeTrue();
@@ -120,6 +131,19 @@ public class LTSCreateTests
             using var dflt = new LibGit2Sharp.Repository( stack.StackRoot.AppendPart( name ) );
             dflt.Branches["@net8/stable"].ShouldBeNull( "The default World's clone doesn't keep the LTS root branch." );
         }
+
+        // In the LTS World, a breaking change never changes the Major: it is a Minor one (and the SupVersion is
+        // respected by construction since the cut is the next Major).
+        // The git name of the "dev/" branch ("@net8/dev/stable") is understood by the commands, and no --branch is
+        // needed: X-Core is on "@net8/dev/stable" and X-App on "@net8/stable", which is the same branch.
+        var ltsCore = stack.StackRoot.Combine( "@net8/X-Core" );
+        // A fresh clone is on the remote's default branch: the LTS repositories are first switched to their root.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, ltsWorld, "branch", "switch", "@net8/stable", "--all" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, ltsWorld.ChangeDirectory( ltsCore ), "branch", "switch", "@net8/dev/stable", "-c" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( ltsCore, branchName: "@net8/dev/stable", commitMessage: "feat!: A breaking change." );
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, ltsWorld, "build", "--release", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "X-Core v1.2.4 → ⏚/v1.3.0 (CodeChange)" );
     }
 
     /// <summary>
@@ -234,8 +258,8 @@ public class LTSCreateTests
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
             (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeFalse();
-            logs.ShouldContain( l => l.Contains( "Repository 'X-App' has a 'dev/stable' branch with non published code in it." ) );
-            logs.ShouldContain( l => l.Contains( "Unable to create a Long Term Support world: non published code in a 'dev/stable' branch." ) );
+            logs.ShouldContain( l => l.Contains( "Repository has a 'dev/stable' branch (locally or on the remote): X-App." ) );
+            logs.ShouldContain( l => l.Contains( "Unable to create a Long Term Support world: a 'dev/stable' branch." ) );
         }
         File.Exists( StackFolder( stack ).Combine( "@net8/Test@net8.xml" ) ).ShouldBeFalse();
         VersionBounds( LoadWorldDefinition( stack, "Test.xml" ) )
@@ -331,6 +355,11 @@ public class LTSCreateTests
     /// of a Stack shared one folder: an LTS World's profiles landed in the default World's, in its index, and
     /// competed for the next free Patch of the day.
     /// </para>
+    /// <para>
+    /// The folder is bound to the World: when a LTS World is created, what the default World has published so far
+    /// (its versions are below the cut) moves to the LTS World's folder, and the default World starts with an empty
+    /// one - with its index - waiting for its first publication.
+    /// </para>
     /// </summary>
     [Test]
     public async Task the_Published_folder_is_World_scoped_Async()
@@ -351,11 +380,8 @@ public class LTSCreateTests
         new PublishedFolder( defaultPublished ).Profiles.Count().ShouldBe( 1 );
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeTrue();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "clone", "@net8" )).ShouldBeTrue();
 
-        // Opening the LTS World and asking its PublishPlugin where it publishes is enough: the folder is
-        // created on demand, so its existence is the assertion. Publishing there would need its brand new
-        // "@net8/stable" branch to be opened in the repositories first.
+        // Opening the LTS World and asking its PublishPlugin where it publishes: its folder is the moved one.
         var ltsEnv = world.WorldRoot.ChangeDirectory( stack.StackRoot.AppendPart( "@net8" ) );
         var (ltsStack, ltsWorld) = StackRepository.TryOpenWorldFromPath( TestHelper.Monitor, ltsEnv, out var error, skipPullStack: true );
         error.ShouldBeFalse();
@@ -364,11 +390,12 @@ public class LTSCreateTests
             var publish = ltsWorld.ShouldNotBeNull().GetRequiredPlugin<PublishPlugin>( TestHelper.Monitor ).ShouldNotBeNull();
             var ltsPublished = StackFolder( stack ).AppendPart( "@net8" ).AppendPart( "Published" );
             publish.PublishedFolder.RootPath.ShouldBe( Path.GetFullPath( ltsPublished ) + Path.DirectorySeparatorChar );
-            Directory.Exists( ltsPublished ).ShouldBeTrue( "Created on demand." );
-            new PublishedFolder( ltsPublished ).Profiles.ShouldBeEmpty( "The LTS World has published nothing." );
+            new PublishedFolder( ltsPublished ).Profiles.Count().ShouldBe( 1, "The default World's profile has moved to the LTS World." );
         }
-        // And the default World's folder is untouched: the two are independent.
-        new PublishedFolder( defaultPublished ).Profiles.Count().ShouldBe( 1 );
+        // The default World's folder is empty, but it has its index.
+        var emptied = new PublishedFolder( defaultPublished );
+        emptied.Profiles.ShouldBeEmpty();
+        File.Exists( emptied.IndexFilePath ).ShouldBeTrue();
     }
 
     static NormalizedPath StackFolder( FakeBuildStack stack ) => stack.StackRoot.AppendPart( ".PublicStack" );
