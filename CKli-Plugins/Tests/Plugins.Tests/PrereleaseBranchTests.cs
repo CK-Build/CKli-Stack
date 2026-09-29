@@ -59,7 +59,7 @@ public class PrereleaseBranchTests
         display.ToString().ShouldBe( """
               - →·   X-Core            v1.0.1
               - →·   X-ActivityMonitor v0.1.1
-            1 -  ⊙   X-PerfectEvent    v0.3.3 → ⏚/v0.3.4-romeo.0.ci.0 (CI0)          
+            1 -  ⊙   X-PerfectEvent    v0.3.3 → ⏚/v0.3.4-romeo.0.ci.1 (CI0+branch)   
             2 -  ·→  X-Sample          v0.0.0 → ⏚/v0.0.1-romeo.0.ci.1 (UpstreamBuild)
             Required build for 2 from the single pivot out of 4 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
@@ -201,6 +201,95 @@ public class PrereleaseBranchTests
             3 -  ·→  X-Sample          v0.0.0 → ⏚/v0.1.0-romeo (UpstreamBuild, CodeChange)
             Required build for 3 from the single pivot out of 4 repositories and 3 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+    }
+
+    /// <summary>
+    /// The first build of a prerelease branch on the commit of a stable version cannot be a "ci.0" of that
+    /// version: a "ci.0" is on the branch of its base. It gets its own commit and survives the next read.
+    /// <para>
+    /// It used to be tagged as a '1.0.1-romeo.0.ci.0' on the 'v1.0.0' commit: the tag was then found baseless,
+    /// hence removable, and the "romeo" branch silently lost its only version.
+    /// </para>
+    /// </summary>
+    [Test]
+    public async Task first_prerelease_build_on_a_stable_commit_is_not_a_ci0_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
+        var rPivot = await world.CreateRepoAsync( "X-Pivot", "v2.0.0", references: [rCore] ).ConfigureAwait( false );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "branch", "open", "romeo", "--link", "Full" )).ShouldBeTrue();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--ci.0" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+              - →·   X-Core  v1.0.0
+            1 -  ⊙   X-Pivot v2.0.0 → ⏚/v2.0.1-romeo.0.ci.1 (CI0+branch)
+            Required build for 1 from the single pivot out of 2 repositories and 1 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+
+        // The romeo version is still there: nothing to build.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            - →·   X-Core  v1.0.0               
+            -  ⊙   X-Pivot ⏚/v2.0.1-romeo.0.ci.1
+            There is nothing to build from the single pivot out of 2 repositories but 1 can be published.
+            (Use '--ci.0' to build a CI version from the repository that already carries a released version.)
+            (Using '*build' may detect required builds in upstreams repositories.)
+            ❰✓❱
+
+            """ );
+    }
+
+    /// <summary>
+    /// A "CI" linked "juliet" starts at its parent's last BUILT commit (see <c>HotBranch.GetStartCommit</c>), so
+    /// an upstream that has no "juliet" yet and an unbuilt commit on its "dev/stable" has nothing new for it:
+    /// the unbuilt commit reaches "juliet" only once it has been built.
+    /// <para>
+    /// The code change used to be detected on the "dev/stable" tip while the build happened at the start
+    /// commit: the upstream was rebuilt from the very content of its last build under a "juliet" version.
+    /// </para>
+    /// </summary>
+    [Test]
+    public async Task unbuilt_parent_commit_is_not_a_code_change_for_a_CI_linked_branch_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
+        var rPivot = await world.CreateRepoAsync( "X-Pivot", "v2.0.0", references: [rCore] ).ConfigureAwait( false );
+
+        // Gives "stable" a published commit to start "juliet" from (a pending "local/" release would be
+        // reclaimed by the CI build below as a RollingLocal).
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "branch", "open", "juliet", "--link", "CI" )).ShouldBeTrue();
+
+        // The unbuilt commit on the upstream's "dev/stable".
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "branch", "switch", "dev/stable" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null, commitMessage: "Unbuilt change." );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "*build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            - →·   X-Core  v1.0.1
+            -  ⊙   X-Pivot v2.0.1
+            There is nothing to build from the single pivot out of 2 repositories and nothing to publish.
+            (Use '--ci.0' to build a CI version from the 2 repositories that already carry a released version.)
             ❰✓❱
 
             """ );

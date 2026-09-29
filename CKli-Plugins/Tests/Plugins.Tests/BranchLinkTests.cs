@@ -42,7 +42,9 @@ public class BranchLinkTests
         using var repo = folder.CreateOrphanGitRepository( "SomeRepo" );
         var monitor = TestHelper.Monitor;
 
-        // Useless Ahead vanishes even with empty initialization commit.
+        // An empty commit is a commit: the ahead branch that holds only the empty initialization commit is not
+        // useless, and integrating it fast-forwards the base branch. This is about commits, not content: an empty
+        // "Producing 'vX' from unchanged head." commit carries a version that must not be lost.
         {
             var mainBranch = repo.GetBranch( monitor, "main" ).ShouldNotBeNull();
             var mainLink = BranchLink.Create( mainBranch, "dev/main" );
@@ -51,10 +53,11 @@ public class BranchLinkTests
 
             mainLink = mainLink.EnsureAhead( repo, withEmptyInitializationCommit: true ).ShouldNotBeNull();
             mainLink.Ahead.ShouldNotBeNull();
-            mainLink.Issue.ShouldBe( BranchLink.IssueKind.Useless );
+            mainLink.Issue.ShouldBe( BranchLink.IssueKind.None );
+            var emptyCommit = mainLink.Ahead.Tip;
 
             mainLink = mainLink.IntegrateAhead( monitor, repo ).ShouldNotBeNull();
-            mainLink.Branch.Tip.Sha.ShouldBe( mainBranch.Tip.Sha, "Empty commit is silently skipped." );
+            mainLink.Branch.Tip.Sha.ShouldBe( emptyCommit.Sha, "Fast-forwarded to the empty commit." );
             mainLink.Ahead.ShouldBeNull();
             mainLink.Issue.ShouldBe( BranchLink.IssueKind.None );
         }
@@ -84,8 +87,10 @@ public class BranchLinkTests
 
             // main -> + "Some message. (1)"
             //         |
+            //         + "Initializing 'dev/main'."
+            //         |
             //         + "Initial commit automatically created."
-            mainLink.Branch.Commits.Count().ShouldBe( 2 );
+            mainLink.Branch.Commits.Count().ShouldBe( 3 );
         }
 
         // Integrating ahead (while base branch is checked out).
@@ -118,8 +123,10 @@ public class BranchLinkTests
             //         |
             //         + "Some message. (1)"
             //         |
+            //         + "Initializing 'dev/main'."
+            //         |
             //         + "Initial commit automatically created."
-            mainLink.Branch.Commits.Count().ShouldBe( 3 );
+            mainLink.Branch.Commits.Count().ShouldBe( 4 );
         }
 
         // Integrating ahead (amending the "empty ahead commit").
@@ -131,7 +138,7 @@ public class BranchLinkTests
             mainLink = mainLink.EnsureAhead( repo, withEmptyInitializationCommit: true );
             mainLink.Ahead.ShouldNotBeNull();
             repo.Checkout( monitor, mainLink.Ahead );
-            mainLink.Issue.ShouldBe( BranchLink.IssueKind.Useless );
+            mainLink.Issue.ShouldBe( BranchLink.IssueKind.None );
             TouchFile( repo, "3" );
             repo.Commit( monitor, "Some message. (3)", CommitBehavior.AmendIfPossibleAndOverwritePreviousMessage ).ShouldBe( CommitResult.Amended );
             mainLink = mainLink.CommitAhead( monitor, repo, "Unused message because there's nothing to commit." ).ShouldNotBeNull();
@@ -147,8 +154,10 @@ public class BranchLinkTests
             //         |
             //         + "Some message. (1)"
             //         |
+            //         + "Initializing 'dev/main'."
+            //         |
             //         + "Initial commit automatically created."
-            mainLink.Branch.Commits.Count().ShouldBe( 4 );
+            mainLink.Branch.Commits.Count().ShouldBe( 5 );
         }
     }
 
@@ -168,7 +177,8 @@ public class BranchLinkTests
             var mainLink = BranchLink.Create( repo.EnsureBranch( monitor, "main" ).ShouldNotBeNull(), "dev/main" )
                                      .EnsureAhead( repo, withEmptyInitializationCommit: true )
                                      .ShouldNotBeNull();
-            mainLink.Issue.ShouldBe( BranchLink.IssueKind.Useless );
+            // The "empty ahead commit" is a commit: the ahead branch is not useless.
+            mainLink.Issue.ShouldBe( BranchLink.IssueKind.None );
 
             // Commit in the base branch: we never commit in the base branch, there's no API for this.
             repo.Checkout( monitor, mainLink.Branch ).ShouldBeTrue();
@@ -179,8 +189,9 @@ public class BranchLinkTests
             mainLink = mainLink.Refresh( monitor, repo ).ShouldNotBeNull();
             mainLink.Issue.ShouldBe( BranchLink.IssueKind.Desynchronized );
 
+            // The ahead branch now has the same content as its base, but it has its own commits.
             mainLink = mainLink.SynchronizeAhead( monitor, repo ).ShouldNotBeNull();
-            mainLink.Issue.ShouldBe( BranchLink.IssueKind.Useless );
+            mainLink.Issue.ShouldBe( BranchLink.IssueKind.None );
 
             mainLink = mainLink.IntegrateAhead( monitor, repo ).ShouldNotBeNull();
             mainLink.Issue.ShouldBe( BranchLink.IssueKind.None );
@@ -261,7 +272,8 @@ public class BranchLinkTests
             mainLink.Refresh( monitor, repo ).ShouldBeNull();
         }
 
-        // When same content is eventually in base and ahead: the link is Useless.
+        // When same content is eventually in base and ahead, through different commits: the link is Desynchronized
+        // (this is about commits, not content) and synchronizing it creates an empty merge commit.
         {
             var mainLink = BranchLink.Create( repo.EnsureBranch( monitor, "main" ).ShouldNotBeNull(), "dev/main" )
                                      .EnsureAhead( repo )
@@ -278,15 +290,22 @@ public class BranchLinkTests
             TouchFile( repo, content: "Kif Kif" );
             repo.Commit( monitor, "On Base! (4)", CommitBehavior.CreateNewCommit ).ShouldBe( CommitResult.Committed );
 
-            // Refresh: the contents are the same. Ahead is useless.
+            // Refresh: the contents are the same but the commits differ.
             mainLink = mainLink.Refresh( monitor, repo ).ShouldNotBeNull();
-            mainLink.Issue.ShouldBe( BranchLink.IssueKind.Useless );
+            mainLink.Issue.ShouldBe( BranchLink.IssueKind.Desynchronized );
 
-            // No error.
+            // The (empty) merge commit makes the base branch reachable from the ahead one: skipping it
+            // would leave the link Desynchronized forever.
+            var baseTip = mainLink.Branch.Tip;
             mainLink = mainLink.SynchronizeAhead( monitor, repo ).ShouldNotBeNull();
-            mainLink.Issue.ShouldBe( BranchLink.IssueKind.Useless );
+            mainLink.Ahead.ShouldNotBeNull().Tip.Parents.Select( p => p.Sha ).ShouldContain( baseTip.Sha );
+            mainLink.Ahead.Tip.Tree.Sha.ShouldBe( baseTip.Tree.Sha );
+            mainLink.Issue.ShouldBe( BranchLink.IssueKind.None );
 
+            // The integration fast-forwards the base branch.
+            var aheadTip = mainLink.Ahead.Tip;
             mainLink = mainLink.IntegrateAhead( monitor, repo ).ShouldNotBeNull();
+            mainLink.Branch.Tip.Sha.ShouldBe( aheadTip.Sha );
             mainLink.Issue.ShouldBe( BranchLink.IssueKind.None );
 
             // Cleanup "main" for subsequent tests.
