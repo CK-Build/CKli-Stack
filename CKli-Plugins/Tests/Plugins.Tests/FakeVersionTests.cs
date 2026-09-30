@@ -198,7 +198,48 @@ public class FakeVersionTests
             """ );
     }
 
+    /// <summary>
+    /// A "--ci.0" published on a "+fake" stays with the version that eventually replaces the "+fake" on the
+    /// same commit. Such a TagCommit is indexed under two versions: it must still be seen once, or the
+    /// release database of the next publication claims its packages are produced twice
+    /// ("Package 'X-Core@2.0.0' is claimed to be produced by 'X-Core/v2.0.0' and 'X-Core/v2.0.0'.").
+    /// </summary>
+    [Test]
+    public async Task ci_0_on_fake_then_released_can_be_published_again_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var context = world.WorldRoot;
 
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
+        var rConsumer = await world.CreateRepoAsync( "X-Consumer", "v0.1.0", references: [rCore] ).ConfigureAwait( false );
 
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "bump", "v2.0.0" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--ci.0" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--release" )).ShouldBeTrue();
+
+        // The v2.0.0 is on the commit of the "v2.0.0--ci.0" (and of the now useless "v2.0.0+fake").
+        using( var e = rCore.CreateEditor() )
+        {
+            var tags = e.GitRepository.Repository.Tags;
+            tags["v2.0.0"].ShouldNotBeNull();
+            tags["v2.0.0--ci.0"].ShouldNotBeNull();
+            tags["v2.0.0"].Target.Sha.ShouldBe( tags["v2.0.0--ci.0"].Target.Sha );
+        }
+
+        // In CI, X-Core is consumed at its v2.0.0, not at the lower "v2.0.0--ci.0" it still carries.
+        TestHelper.TouchAndCommit( rConsumer.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish" )).ShouldBeTrue();
+
+        // A pending "local/" release on "stable" seen from "juliet" makes the publication indirect:
+        // this is what builds the release database.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rConsumer.Root, "branch", "open", "juliet", "--link", "CI" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--release", "--branch", "stable" )).ShouldBeTrue();
+        stack.Screen.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--branch", "juliet", "--release", "--dry-run" )).ShouldBeTrue();
+        stack.Screen.ToString().ShouldContain( "(publishing requires publications from other branches)" );
+    }
 
 }
