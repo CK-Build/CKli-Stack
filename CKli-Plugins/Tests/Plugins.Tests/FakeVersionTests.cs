@@ -239,7 +239,10 @@ public class FakeVersionTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--release", "--branch", "stable" )).ShouldBeTrue();
         stack.Screen.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--branch", "juliet", "--release", "--dry-run" )).ShouldBeTrue();
-        stack.Screen.ToString().ShouldContain( "(publishing requires publications from other branches)" );
+        stack.Screen.ToString().ShouldContain( "(publishing requires publications from parent branches)" );
+        // The releases of the parent branches that this publication also publishes, grouped by branch.
+        stack.Screen.ToString().ShouldContain( "Also publishing 2 releases from parent branches:" );
+        stack.Screen.ToString().ShouldContain( "  stable  X-Core/local/v2.0.1, X-Consumer/local/v0.1.2" );
     }
 
 }
