@@ -205,6 +205,130 @@ public class BranchSyncTests
     }
 
     /// <summary>
+    /// The real life case: two branches built independently both rewrite the references to the World's packages, so
+    /// merging the parent's build into the child conflicts on the very same &lt;PackageReference Version="..." /&gt;
+    /// line. The version is resolved the way a build of the child would update it: X-App keeps the "juliet" build of
+    /// X-Core. "ckli branch list" announces it as a merge, not as a conflict.
+    /// </summary>
+    [Test]
+    public async Task conflicting_package_versions_are_resolved_like_a_build_of_the_branch_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var (core, app) = await ArrangeVersionConflictAsync( world ).ConfigureAwait( false );
+        var julietVersion = Reference( app, "dev/juliet", core.DefaultProjectName );
+        Reference( app, "dev/stable", core.DefaultProjectName ).ShouldNotBe( julietVersion, "Both branches have rewritten the reference." );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "list" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "2 merges" );
+        display.ToString().ShouldNotContain( "conflict" );
+
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "sync", "juliet", "--all" )).ShouldBeTrue();
+            logs.ShouldContain( l => l.Contains( "into 'dev/juliet' in 'X-App' aligned 1 package version(s):" ) );
+        }
+        Reference( app, "dev/juliet", core.DefaultProjectName ).ShouldBe( julietVersion );
+        ParentsOf( app, WorkTip( app, "juliet" ) ).Length.ShouldBe( 2, "A merge commit." );
+        Contains( app, "juliet", WorkTip( app, "stable" ) ).ShouldBeTrue( "The parent's CI build is merged." );
+    }
+
+    /// <summary>
+    /// A synchronized CI link merges a build of its parent: the merge commit has version tags on both of its sides.
+    /// The tag commit tree of such a history (VersionTagInfo.HotZoneInfo.CreateTagCommitTree) is walked breadth-first
+    /// by level, so that the closest build of "juliet" is found on both sides and the branch's own one wins. Here X-Core
+    /// is synchronized alone (no conflict, no resolver): a CI build of "juliet" still produces X-Core's next "juliet"
+    /// version, not one derived from the "stable" CI build it merged.
+    /// </summary>
+    [Test]
+    public async Task the_closest_build_of_a_synchronized_CI_link_is_its_own_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var (core, app) = await ArrangeVersionConflictAsync( world ).ConfigureAwait( false );
+        var julietVersion = Reference( app, "dev/juliet", core.DefaultProjectName );
+        julietVersion.ShouldContain( "-juliet." );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, core.Root, "branch", "sync", "juliet" )).ShouldBeTrue();
+        ParentsOf( core, WorkTip( core, "juliet" ) ).Length.ShouldBe( 2, "A merge commit: tags on both sides." );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "-juliet." );
+        display.ToString().ShouldNotContain( "--ci." );
+    }
+
+    /// <summary>
+    /// Aligning the package versions removes their conflicts only: a project file that also conflicts elsewhere is
+    /// a real conflict and the merge fails.
+    /// </summary>
+    [Test]
+    public async Task a_project_file_conflict_beyond_package_versions_fails_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var (_, app) = await ArrangeVersionConflictAsync( world ).ConfigureAwait( false );
+        var projectFolder = app.WorkingFolderPath.AppendPart( app.DefaultProjectName );
+        var projectFile = app.DefaultProjectName + ".csproj";
+        TestHelper.TouchAndCommit( projectFolder, "dev/juliet", fileContent: s => s!.Replace( "</Project>", "<!-- juliet --></Project>" ), fileName: projectFile );
+        TestHelper.TouchAndCommit( projectFolder, "dev/stable", fileContent: s => s!.Replace( "</Project>", "<!-- stable --></Project>" ), fileName: projectFile );
+        // A CI link only merges built commits: "stable" must be built again.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "juliet" )).ShouldBeTrue();
+        var before = WorkTip( app, "juliet" );
+
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "sync", "juliet", "--all" )).ShouldBeFalse();
+            logs.ShouldContain( l => l.Contains( "into 'dev/juliet' in 'X-App'. Beyond the package versions, conflicts in:" )
+                                     && l.Contains( $"{app.DefaultProjectName}/{projectFile}" ) );
+        }
+        WorkTip( app, "juliet" ).ShouldBe( before );
+    }
+
+    /// <summary>
+    /// X-Core &lt;- X-App released on "stable", "juliet" opened as a CI link, then a CI build of "juliet" and a CI build
+    /// of "stable" (each one with a change in X-Core): both rewrite the X-Core reference of X-App, "dev/juliet" is
+    /// checked out.
+    /// </summary>
+    static async Task<(FakeBuildRepo Core, FakeBuildRepo App)> ArrangeVersionConflictAsync( FakeBuildWorld world )
+    {
+        var core = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
+        var app = await world.CreateRepoAsync( "X-App", "v1.0.0", default, core ).ConfigureAwait( false );
+        TestHelper.TouchAndCommit( core.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" ).ConfigureAwait( false )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "juliet", "--link", "CI" ).ConfigureAwait( false )).ShouldBeTrue();
+
+        TestHelper.TouchAndCommit( core.WorkingFolderPath, branchName: null, fileName: "Juliet.txt" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" ).ConfigureAwait( false )).ShouldBeTrue();
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "stable" ).ConfigureAwait( false )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( core.WorkingFolderPath, branchName: null, fileName: "Stable.txt" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" ).ConfigureAwait( false )).ShouldBeTrue();
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "juliet" ).ConfigureAwait( false )).ShouldBeTrue();
+        return (core, app);
+    }
+
+    // The version a project of a branch references.
+    static string Reference( FakeBuildRepo repo, string branchName, string packageId )
+    {
+        using var e = repo.CreateEditor();
+        var p = e.ReadProjects( branchName ).Single( x => x.ProjectName == repo.DefaultProjectName );
+        return p.References.Single( x => x.PackageId == packageId ).Version.ToString();
+    }
+
+    /// <summary>
     /// Commits the same new file with different contents on "dev/sierra" and on "dev/stable".
     /// </summary>
     /// <returns>The sha of the "dev/sierra" tip.</returns>
