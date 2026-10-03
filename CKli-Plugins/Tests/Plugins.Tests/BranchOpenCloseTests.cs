@@ -66,10 +66,9 @@ public class BranchOpenCloseTests
     }
 
     /// <summary>
-    /// A branch is closed by integrating it in its closest OPEN PARENT branch. Since the branch being closed
-    /// exists, looking for the closest existing branch from itself answered itself: the branch was merged into
-    /// itself and its deletion then failed with "cannot delete branch 'refs/heads/romeo' as it is the current
-    /// HEAD of the repository".
+    /// A branch is closed by integrating it in the "dev/" branch of its closest OPEN PARENT branch: the parent's base
+    /// branch only moves when its "dev/" branch is integrated. The closest existing branch is looked for from the
+    /// parent: from the branch being closed, which exists, it would answer the branch itself.
     /// </summary>
     [Test]
     public async Task branch_close_integrates_the_branch_in_its_parent_Async()
@@ -81,8 +80,13 @@ public class BranchOpenCloseTests
         var r = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "romeo", "--link", "Full" )).ShouldBeTrue();
-        // The work done on the opened branch is what the close integrates in "stable".
+        // The work done on the opened branch is what the close integrates in "dev/stable".
         TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: null, fileName: "OnRomeo.txt", fileContent: _ => "Done on romeo." );
+        string stableTip;
+        using( var e = r.CreateEditor() )
+        {
+            stableTip = e.GitRepository.Repository.Branches["stable"].Tip.Sha;
+        }
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "close", "romeo" )).ShouldBeTrue();
 
@@ -92,8 +96,10 @@ public class BranchOpenCloseTests
             var branches = e.GitRepository.Repository.Branches;
             branches["romeo"].ShouldBeNull( "The closed branch has been deleted." );
             branches["dev/romeo"].ShouldBeNull( "...and so has its \"dev/\" branch." );
-            branches["stable"].ShouldNotBeNull()
-                              .Tip.Tree["OnRomeo.txt"].ShouldNotBeNull( "The work has been integrated in 'stable'." );
+            var devStable = branches["dev/stable"];
+            devStable.ShouldNotBeNull();
+            devStable.Tip.Tree["OnRomeo.txt"].ShouldNotBeNull( "The work has been integrated in 'dev/stable'." );
+            branches["stable"].Tip.Sha.ShouldBe( stableTip, "The base branch only moves when 'dev/stable' is integrated." );
             e.GitRepository.Repository.Head.FriendlyName.ShouldNotBe( "romeo", "The repository is no more on the closed branch." );
         }
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "status" )).ShouldBeTrue( "The World still opens." );

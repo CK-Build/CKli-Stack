@@ -304,7 +304,7 @@ public class BranchSyncTests
     /// of "stable" (each one with a change in X-Core): both rewrite the X-Core reference of X-App, "dev/juliet" is
     /// checked out.
     /// </summary>
-    static async Task<(FakeBuildRepo Core, FakeBuildRepo App)> ArrangeVersionConflictAsync( FakeBuildWorld world,
+    internal static async Task<(FakeBuildRepo Core, FakeBuildRepo App)> ArrangeVersionConflictAsync( FakeBuildWorld world,
                                                                                             Action<FakeBuildRepo>? onAppBeforeSwitchingToJuliet = null,
                                                                                             bool withTemplateProject = false )
     {
@@ -411,7 +411,7 @@ public class BranchSyncTests
     }
 
     // The version a project of a branch references.
-    static string Reference( FakeBuildRepo repo, string branchName, string packageId )
+    internal static string Reference( FakeBuildRepo repo, string branchName, string packageId )
     {
         using var e = repo.CreateEditor();
         var p = e.ReadProjects( branchName ).Single( x => x.ProjectName == repo.DefaultProjectName );
@@ -540,7 +540,7 @@ public class BranchSyncTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "build" ).ConfigureAwait( false )).ShouldBeTrue();
     }
 
-    static string BranchTip( FakeBuildRepo repo, string branchName )
+    internal static string BranchTip( FakeBuildRepo repo, string branchName )
     {
         using var e = repo.CreateEditor();
         var b = e.GitRepository.Repository.Branches[branchName];
@@ -567,7 +567,7 @@ public class BranchSyncTests
         return e.GitRepository.Repository.Head.FriendlyName;
     }
 
-    static string[] ParentsOf( FakeBuildRepo repo, string sha )
+    internal static string[] ParentsOf( FakeBuildRepo repo, string sha )
     {
         using var e = repo.CreateEditor();
         return e.GitRepository.Repository.Lookup<Commit>( sha ).Parents.Select( p => p.Sha ).ToArray();
