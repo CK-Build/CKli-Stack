@@ -59,12 +59,16 @@ public class BranchCloseMergeTests
         TestHelper.TouchAndCommit( r.WorkingFolderPath, "dev/stable", fileContent: _ => "stable", fileName: "Conflict.txt" );
         var devStableTip = BranchSyncTests.BranchTip( r, "dev/stable" );
 
-        using( TestHelper.Monitor.CollectTexts( out var logs ) )
-        {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "close", "romeo" )).ShouldBeFalse();
-            logs.ShouldContain( l => l.Contains( "into 'dev/stable' in 'X-Core' conflicts beyond the package versions." )
-                                     && l.Contains( "Conflict.txt" ) );
-        }
+        var display = stack.Screen;
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "close", "romeo" )).ShouldBeFalse();
+        display.ToString().ShouldBe( """
+            A merge is left in progress: resolve its conflicts, commit it (or abort it) and close 'romeo' again.
+            > X-Core  ⎇ dev/stable ← branch 'romeo'  1 conflict
+            │ Conflict.txt
+            ❌ Failed
+
+            """ );
         string romeoTip;
         using( var e = r.CreateEditor() )
         {

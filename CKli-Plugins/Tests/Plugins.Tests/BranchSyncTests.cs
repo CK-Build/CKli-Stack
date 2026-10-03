@@ -436,12 +436,15 @@ public class BranchSyncTests
         var before = MakeConflict( r );
         var stableTip = BranchTip( r, "dev/stable" );
 
-        using( TestHelper.Monitor.CollectTexts( out var logs ) )
-        {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra" )).ShouldBeFalse();
-            logs.ShouldContain( l => l.Contains( "The merge is in progress in the working folder: resolve the conflicts in" )
-                                     && l.Contains( "Conflict.txt" ) );
-        }
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra" )).ShouldBeFalse();
+        display.ToString().ShouldBe( """
+            A merge is left in progress: resolve its conflicts and commit it (or abort it).
+            > X-Core  ⎇ dev/sierra ← branch 'dev/stable'  1 conflict
+            │ Conflict.txt
+            ❌ Failed
+
+            """ );
         WorkTip( r, "sierra" ).ShouldBe( before, "Nothing is committed." );
         using( var e = r.CreateEditor() )
         {
