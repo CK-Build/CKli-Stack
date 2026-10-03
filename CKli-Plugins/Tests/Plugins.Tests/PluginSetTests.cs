@@ -58,13 +58,13 @@ public class PluginSetTests
         var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var world = stack.DefaultWorld;
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "set", "BranchModel.AutoFixUselessBranch", "false" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "set", "BranchModel.AutoFixDevBranch", "false" )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "set", "VersionTag.AutoFixRemovableTag", "true" )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "set", "VersionTag.RemoveUselessFakeTag", "true" )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "set", "Publish.KeepLocalReleaseAfterPublish", "true" )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "plugin", "set", "Build.DeleteBeforeBuild", "$StObjGen" )).ShouldBeTrue();
 
-        PluginAttribute( stack, "BranchModel", "AutoFixUselessBranch" ).ShouldBe( "false" );
+        PluginAttribute( stack, "BranchModel", "AutoFixDevBranch" ).ShouldBe( "false" );
         PluginAttribute( stack, "VersionTag", "AutoFixRemovableTag" ).ShouldBe( "true" );
         PluginAttribute( stack, "VersionTag", "RemoveUselessFakeTag" ).ShouldBe( "true" );
         PluginAttribute( stack, "Publish", "KeepLocalReleaseAfterPublish" ).ShouldBe( "true" );

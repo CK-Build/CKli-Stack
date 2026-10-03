@@ -72,13 +72,13 @@ public class BranchNamespaceTests
 
     /// <summary>
     /// WriteConfiguration updates the element in place: the attributes and elements that are not the branch
-    /// model's (AutoFixUselessBranch here) are left untouched - it is the live plugin configuration element.
+    /// model's (AutoFixDevBranch here) are left untouched - it is the live plugin configuration element.
     /// </summary>
     [Test]
     public void writing_the_configuration_keeps_the_other_attributes()
     {
         var e = XElement.Parse( """
-            <BranchModel AutoFixUselessBranch="false">
+            <BranchModel AutoFixDevBranch="false">
               <Prerelease Name="zulu" Link="Release" />
             </BranchModel>
             """ );
@@ -87,7 +87,7 @@ public class BranchNamespaceTests
         ns.WriteConfiguration( e );
 
         e.ToString().ShouldBe( """
-            <BranchModel AutoFixUselessBranch="false" Root="stable">
+            <BranchModel AutoFixDevBranch="false" Root="stable">
               <Prerelease Name="zulu" Link="Release" />
               <Prerelease Name="romeo" Link="Full" />
             </BranchModel>
