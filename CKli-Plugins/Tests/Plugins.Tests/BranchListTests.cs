@@ -140,7 +140,7 @@ public class BranchListTests
 
             """ );
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "sync", "sierra", "--all" )).ShouldBeFalse();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "sync", "sierra", "--all", "--fail-on-conflict" )).ShouldBeFalse();
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "list" )).ShouldBeTrue();

@@ -127,7 +127,7 @@ public class BranchSyncTests
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra" )).ShouldBeFalse();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra", "--fail-on-conflict" )).ShouldBeFalse();
             logs.ShouldContain( l => l.Contains( "Failed merging branch 'dev/stable' into 'dev/sierra'" )
                                      && l.Contains( "This must be fixed manually." ) );
         }
@@ -155,7 +155,7 @@ public class BranchSyncTests
         var cleanParentTip = BranchTip( rClean, "dev/stable" );
 
         // From one repository: --all is what brings the other one in.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rConflict.Root, "branch", "sync", "sierra", "--all" )).ShouldBeFalse();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rConflict.Root, "branch", "sync", "sierra", "--all", "--fail-on-conflict" )).ShouldBeFalse();
 
         WorkTip( rConflict, "sierra" ).ShouldBe( conflictBefore );
         WorkTip( rClean, "sierra" ).ShouldBe( cleanParentTip );
@@ -292,7 +292,7 @@ public class BranchSyncTests
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "sync", "juliet", "--all" )).ShouldBeFalse();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "sync", "juliet", "--all", "--fail-on-conflict" )).ShouldBeFalse();
             logs.ShouldContain( l => l.Contains( "into 'dev/juliet' in 'X-App'. Beyond the package versions, conflicts in:" )
                                      && l.Contains( $"{app.DefaultProjectName}/{projectFile}" ) );
         }
@@ -416,6 +416,94 @@ public class BranchSyncTests
         using var e = repo.CreateEditor();
         var p = e.ReadProjects( branchName ).Single( x => x.ProjectName == repo.DefaultProjectName );
         return p.References.Single( x => x.PackageId == packageId ).Version.ToString();
+    }
+
+    /// <summary>
+    /// By default, a conflict is left in progress in the working folder: "dev/sierra" is checked out with a merge in
+    /// progress that "ckli status" shows. Once resolved and committed (here with LibGit2Sharp, like any Git tool would),
+    /// the merge commit has the two original commits as parents and the branch is synchronized.
+    /// </summary>
+    [Test]
+    public async Task by_default_a_conflict_is_left_in_progress_in_the_working_folder_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var r = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "sierra", "--link", "Full" )).ShouldBeTrue();
+        var before = MakeConflict( r );
+        var stableTip = BranchTip( r, "dev/stable" );
+
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra" )).ShouldBeFalse();
+            logs.ShouldContain( l => l.Contains( "The merge is in progress in the working folder: resolve the conflicts in" )
+                                     && l.Contains( "Conflict.txt" ) );
+        }
+        WorkTip( r, "sierra" ).ShouldBe( before, "Nothing is committed." );
+        using( var e = r.CreateEditor() )
+        {
+            var status = e.GitRepository.GetSimpleStatusInfo();
+            status.CurrentBranchName.ShouldBe( "dev/sierra" );
+            status.Operation.ShouldBe( CurrentOperation.Merge );
+            status.ConflictCount.ShouldBe( 1 );
+        }
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "status" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "(merging, 1 conflict)" );
+
+        File.WriteAllText( r.WorkingFolderPath.AppendPart( "Conflict.txt" ), "resolved" );
+        using( var e = r.CreateEditor() )
+        {
+            var git = e.GitRepository.Repository;
+            Commands.Stage( git, "Conflict.txt" );
+            var signature = new Signature( "CKli.Testing", "none", DateTimeOffset.Now );
+            git.Commit( "Merged branch 'dev/stable'.", signature, signature );
+        }
+        ParentsOf( r, WorkTip( r, "sierra" ) ).ShouldBe( [before, stableTip] );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra" )).ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// The prepared merge has its package versions aligned: in the project file that also conflicts elsewhere, the
+    /// X-Core reference already is the "juliet" one and the only conflict markers are around the real conflict.
+    /// </summary>
+    [Test]
+    public async Task the_merge_left_in_progress_has_its_package_versions_aligned_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var (core, app) = await ArrangeVersionConflictAsync( world ).ConfigureAwait( false );
+        var projectFolder = app.WorkingFolderPath.AppendPart( app.DefaultProjectName );
+        var projectFile = app.DefaultProjectName + ".csproj";
+        TestHelper.TouchAndCommit( projectFolder, "dev/juliet", fileContent: s => s!.Replace( "</Project>", "<!-- juliet --></Project>" ), fileName: projectFile );
+        TestHelper.TouchAndCommit( projectFolder, "dev/stable", fileContent: s => s!.Replace( "</Project>", "<!-- stable --></Project>" ), fileName: projectFile );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "juliet" )).ShouldBeTrue();
+        var julietVersion = Reference( app, "dev/juliet", core.DefaultProjectName );
+        var stableVersion = Reference( app, "dev/stable", core.DefaultProjectName );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "sync", "juliet", "--all" )).ShouldBeFalse();
+
+        using( var e = app.CreateEditor() )
+        {
+            var status = e.GitRepository.GetSimpleStatusInfo();
+            status.Operation.ShouldBe( CurrentOperation.Merge );
+            status.ConflictCount.ShouldBe( 1 );
+        }
+        var text = File.ReadAllText( projectFolder.AppendPart( projectFile ) );
+        text.ShouldContain( $"Include=\"{core.DefaultProjectName}\" Version=\"{julietVersion}\"" );
+        text.ShouldNotContain( stableVersion );
+        text.ShouldContain( "<<<<<<<" );
+        text.ShouldContain( "<!-- juliet -->" );
+        text.ShouldContain( "<!-- stable -->" );
     }
 
     /// <summary>
