@@ -3,7 +3,10 @@ using CKli;
 using LibGit2Sharp;
 using NUnit.Framework;
 using Shouldly;
+using System;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using static CK.Testing.MonitorTestHelper;
 
@@ -301,7 +304,8 @@ public class BranchSyncTests
     /// of "stable" (each one with a change in X-Core): both rewrite the X-Core reference of X-App, "dev/juliet" is
     /// checked out.
     /// </summary>
-    static async Task<(FakeBuildRepo Core, FakeBuildRepo App)> ArrangeVersionConflictAsync( FakeBuildWorld world )
+    static async Task<(FakeBuildRepo Core, FakeBuildRepo App)> ArrangeVersionConflictAsync( FakeBuildWorld world,
+                                                                                            Action<FakeBuildRepo>? onAppBeforeSwitchingToJuliet = null )
     {
         var core = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
         var app = await world.CreateRepoAsync( "X-App", "v1.0.0", default, core ).ConfigureAwait( false );
@@ -316,8 +320,55 @@ public class BranchSyncTests
         TestHelper.TouchAndCommit( core.WorkingFolderPath, branchName: null, fileName: "Stable.txt" );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" ).ConfigureAwait( false )).ShouldBeTrue();
 
+        // "dev/juliet" is not checked out here: it can be changed directly.
+        onAppBeforeSwitchingToJuliet?.Invoke( app );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "juliet" ).ConfigureAwait( false )).ShouldBeTrue();
         return (core, app);
+    }
+
+    /// <summary>
+    /// A project renamed on one side and whose version is updated on the other: the alignment applies to all the
+    /// project files of each side, so git merges the rename and the aligned version like any rename.
+    /// </summary>
+    [Test]
+    public async Task a_renamed_project_with_conflicting_package_versions_is_merged_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var (core, app) = await ArrangeVersionConflictAsync( world, app => MoveProjectFolder( app, "dev/juliet", "Src" ) ).ConfigureAwait( false );
+        var julietVersion = Reference( app, "dev/juliet", core.DefaultProjectName );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "sync", "juliet", "--all" )).ShouldBeTrue();
+
+        Reference( app, "dev/juliet", core.DefaultProjectName ).ShouldBe( julietVersion );
+        using var e = app.CreateEditor();
+        var tree = e.GitRepository.Repository.Branches["dev/juliet"].Tip.Tree;
+        tree[$"Src/{app.DefaultProjectName}/{app.DefaultProjectName}.csproj"].ShouldNotBeNull();
+        tree[app.DefaultProjectName].ShouldBeNull( "The project stays where juliet moved it." );
+    }
+
+    // Moves the default project folder of a repository under a folder, on a branch that is not checked out.
+    static void MoveProjectFolder( FakeBuildRepo repo, string branchName, string under )
+    {
+        using var e = repo.CreateEditor();
+        var git = e.GitRepository.Repository;
+        var branch = git.Branches[branchName];
+        var tip = branch.Tip;
+        var name = repo.DefaultProjectName;
+        var definition = TreeDefinition.From( tip );
+        definition.Remove( name );
+        foreach( var entry in (Tree)tip.Tree[name].Target )
+        {
+            definition.Add( $"{under}/{name}/{entry.Name}", entry );
+        }
+        var slnx = tip.Tree[repo.SolutionFileName];
+        var solution = ((Blob)slnx.Target).GetContentText().Replace( $"\"{name}/", $"\"{under}/{name}/" );
+        definition.Add( repo.SolutionFileName, git.ObjectDatabase.CreateBlob( new MemoryStream( Encoding.UTF8.GetBytes( solution ) ) ), slnx.Mode );
+        var signature = new Signature( "CKli.Testing", "none", DateTimeOffset.Now );
+        var commit = git.ObjectDatabase.CreateCommit( signature, signature, $"Moving '{name}' to '{under}'.", git.ObjectDatabase.CreateTree( definition ), [tip], prettifyMessage: false );
+        git.Refs.UpdateTarget( branch.Reference, commit.Id );
     }
 
     // The version a project of a branch references.
