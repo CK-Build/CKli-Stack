@@ -305,10 +305,27 @@ public class BranchSyncTests
     /// checked out.
     /// </summary>
     static async Task<(FakeBuildRepo Core, FakeBuildRepo App)> ArrangeVersionConflictAsync( FakeBuildWorld world,
-                                                                                            Action<FakeBuildRepo>? onAppBeforeSwitchingToJuliet = null )
+                                                                                            Action<FakeBuildRepo>? onAppBeforeSwitchingToJuliet = null,
+                                                                                            bool withTemplateProject = false )
     {
         var core = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
         var app = await world.CreateRepoAsync( "X-App", "v1.0.0", default, core ).ConfigureAwait( false );
+        if( withTemplateProject )
+        {
+            // A project file that is not in the solution: a template whose references are placeholders.
+            // Its folder comes before the solution's project in the tree.
+            Directory.CreateDirectory( app.WorkingFolderPath.AppendPart( "A-Templates" ) );
+            TestHelper.TouchAndCommit( app.WorkingFolderPath.AppendPart( "A-Templates" ),
+                                       branchName: null,
+                                       fileContent: _ => $"""
+                                                          <Project Sdk="Microsoft.NET.Sdk">
+                                                            <ItemGroup>
+                                                              <PackageReference Include="{core.DefaultProjectName}" Version="0.0.0-placeholder" />
+                                                            </ItemGroup>
+                                                          </Project>
+                                                          """,
+                                       fileName: "Template.csproj" );
+        }
         TestHelper.TouchAndCommit( core.WorkingFolderPath, branchName: null );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" ).ConfigureAwait( false )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "juliet", "--link", "CI" ).ConfigureAwait( false )).ShouldBeTrue();
@@ -347,6 +364,28 @@ public class BranchSyncTests
         var tree = e.GitRepository.Repository.Branches["dev/juliet"].Tip.Tree;
         tree[$"Src/{app.DefaultProjectName}/{app.DefaultProjectName}.csproj"].ShouldNotBeNull();
         tree[app.DefaultProjectName].ShouldBeNull( "The project stays where juliet moved it." );
+    }
+
+    /// <summary>
+    /// The versions that are aligned are the ones of the solution's project files: a project file that is not in the
+    /// solution (a template with placeholder versions) is neither read nor rewritten.
+    /// </summary>
+    [Test]
+    public async Task a_project_file_outside_the_solution_is_ignored_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var (core, app) = await ArrangeVersionConflictAsync( world, withTemplateProject: true ).ConfigureAwait( false );
+        var julietVersion = Reference( app, "dev/juliet", core.DefaultProjectName );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "sync", "juliet", "--all" )).ShouldBeTrue();
+
+        Reference( app, "dev/juliet", core.DefaultProjectName ).ShouldBe( julietVersion );
+        using var e = app.CreateEditor();
+        var template = (Blob)e.GitRepository.Repository.Branches["dev/juliet"].Tip.Tree["A-Templates/Template.csproj"].Target;
+        template.GetContentText().ShouldContain( "Version=\"0.0.0-placeholder\"" );
     }
 
     // Moves the default project folder of a repository under a folder, on a branch that is not checked out.
