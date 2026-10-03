@@ -43,6 +43,34 @@ public class BranchCloseMergeTests
     }
 
     /// <summary>
+    /// A dry run of a close that conflicts fails, displays the merge that would be left in progress and changes nothing:
+    /// the branch is still there and nothing is merged in "dev/stable".
+    /// </summary>
+    [Test]
+    public async Task a_dry_run_of_a_conflicting_close_fails_and_changes_nothing_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var r = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "romeo", "--link", "Full" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( r.WorkingFolderPath, "dev/romeo", fileContent: _ => "romeo", fileName: "Conflict.txt" );
+        TestHelper.TouchAndCommit( r.WorkingFolderPath, "dev/stable", fileContent: _ => "stable", fileName: "Conflict.txt" );
+        var devStableTip = BranchSyncTests.BranchTip( r, "dev/stable" );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "close", "romeo", "--dry-run" )).ShouldBeFalse();
+        display.ToString().ShouldContain( "Dry run: 1 conflict. Nothing has been changed." );
+        display.ToString().ShouldContain( "⎇ dev/stable ← branch 'romeo'  1 conflict" );
+        BranchSyncTests.BranchTip( r, "dev/stable" ).ShouldBe( devStableTip );
+        using var e = r.CreateEditor();
+        e.GitRepository.Repository.Branches["romeo"].ShouldNotBeNull();
+        e.GitRepository.GetSimpleStatusInfo().Operation.ShouldBe( CurrentOperation.None );
+    }
+
+    /// <summary>
     /// A real conflict is left in progress on "dev/stable" and the branch stays opened: once the merge is committed,
     /// closing the branch again finds it merged and completes the close.
     /// </summary>

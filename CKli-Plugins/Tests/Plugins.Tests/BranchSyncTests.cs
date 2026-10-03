@@ -111,27 +111,57 @@ public class BranchSyncTests
     }
 
     /// <summary>
-    /// A conflicting merge is computed without touching anything: the command fails, says that this must be fixed
-    /// manually and the branch stays where it was.
+    /// A dry run computes the merges without changing anything: it displays the merge that would be left in progress
+    /// and fails like the synchronization would. The branch stays where it was and no merge is in progress.
     /// </summary>
     [Test]
-    public async Task a_conflict_fails_and_leaves_the_branch_unchanged_Async()
+    public async Task a_dry_run_reports_the_conflict_fails_and_changes_nothing_Async()
     {
         using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
         var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
         var world = stack.DefaultWorld;
+        var display = stack.Screen;
 
         var r = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "sierra", "--link", "Full" )).ShouldBeTrue();
         var before = MakeConflict( r );
 
-        using( TestHelper.Monitor.CollectTexts( out var logs ) )
-        {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra", "--fail-on-conflict" )).ShouldBeFalse();
-            logs.ShouldContain( l => l.Contains( "Failed merging branch 'dev/stable' into 'dev/sierra'" )
-                                     && l.Contains( "This must be fixed manually." ) );
-        }
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra", "-d" )).ShouldBeFalse();
+        display.ToString().ShouldBe( """
+            Dry run: 1 conflict. Nothing has been changed.
+            A merge would be left in progress:
+            > X-Core  ⎇ dev/sierra ← branch 'dev/stable'  1 conflict
+            │ Conflict.txt
+            ❌ Failed
+
+            """ );
         WorkTip( r, "sierra" ).ShouldBe( before );
+        using var e = r.CreateEditor();
+        e.GitRepository.GetSimpleStatusInfo().Operation.ShouldBe( CurrentOperation.None, "No merge is left in progress." );
+    }
+
+    /// <summary>
+    /// The package version conflicts are resolved: the dry run succeeds, says what the synchronization would do and
+    /// changes nothing.
+    /// </summary>
+    [Test]
+    public async Task a_dry_run_succeeds_when_only_package_versions_conflict_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var (core, app) = await ArrangeVersionConflictAsync( world ).ConfigureAwait( false );
+        var coreBefore = WorkTip( core, "juliet" );
+        var appBefore = WorkTip( app, "juliet" );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "sync", "juliet", "--all", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "Dry run: 2 merges. Nothing has been changed." );
+        WorkTip( core, "juliet" ).ShouldBe( coreBefore );
+        WorkTip( app, "juliet" ).ShouldBe( appBefore );
     }
 
     /// <summary>
@@ -155,7 +185,7 @@ public class BranchSyncTests
         var cleanParentTip = BranchTip( rClean, "dev/stable" );
 
         // From one repository: --all is what brings the other one in.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rConflict.Root, "branch", "sync", "sierra", "--all", "--fail-on-conflict" )).ShouldBeFalse();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rConflict.Root, "branch", "sync", "sierra", "--all" )).ShouldBeFalse();
 
         WorkTip( rConflict, "sierra" ).ShouldBe( conflictBefore );
         WorkTip( rClean, "sierra" ).ShouldBe( cleanParentTip );
@@ -290,12 +320,11 @@ public class BranchSyncTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "juliet" )).ShouldBeTrue();
         var before = WorkTip( app, "juliet" );
 
-        using( TestHelper.Monitor.CollectTexts( out var logs ) )
-        {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "sync", "juliet", "--all", "--fail-on-conflict" )).ShouldBeFalse();
-            logs.ShouldContain( l => l.Contains( "into 'dev/juliet' in 'X-App'. Beyond the package versions, conflicts in:" )
-                                     && l.Contains( $"{app.DefaultProjectName}/{projectFile}" ) );
-        }
+        var display = stack.Screen;
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "sync", "juliet", "--all", "--dry-run" )).ShouldBeFalse();
+        display.ToString().ShouldContain( "A merge would be left in progress:" );
+        display.ToString().ShouldContain( $"{app.DefaultProjectName}/{projectFile}" );
         WorkTip( app, "juliet" ).ShouldBe( before );
     }
 
