@@ -3,7 +3,6 @@ using CKli;
 using CKli.Core;
 using NUnit.Framework;
 using Shouldly;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using static CK.Testing.MonitorTestHelper;
@@ -44,8 +43,8 @@ public class ParallelPublishTests
     }
 
     /// <summary>
-    /// X-Broken's remote already has the version tag that its publication pushes, on another commit: the push is
-    /// refused and its publication fails (its packages are pushed, its tag is not). Its consumer X-Top is not even
+    /// X-Broken's remote refuses its branch push: its publication fails after its packages and its version tag have
+    /// been pushed, and the tag is compensated (removed from the remote). Its consumer X-Top is not even
     /// attempted, while X-Core, their upstream, is published. X-Sibling (a sibling of X-Broken) may or may not have
     /// been published: it runs concurrently and nothing is said about it.
     /// </summary>
@@ -64,8 +63,10 @@ public class ParallelPublishTests
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
 
-        // Breaks the X-Broken publication: its remote "dev/stable" holds a commit that the local one doesn't have,
-        // so the branch push (after the tag push) is not a fast-forward and is refused.
+        // Breaks the X-Broken publication: its remote holds a "dev/stable/blocker" branch, so a "dev/stable" branch
+        // cannot be created there (a reference cannot also be a folder of references) and the branch push (after the
+        // tag push) is refused. The pull that the publication does first has no local branch to merge it into: it
+        // is not affected.
         string localTag;
         using( var e = rBroken.CreateEditor() )
         {
@@ -73,10 +74,7 @@ public class ParallelPublishTests
         }
         using( var bare = new LibGit2Sharp.Repository( stack.Remotes.GetUriFor( "X-Broken" ).LocalPath ) )
         {
-            var tip = bare.Head.Tip;
-            var sig = new LibGit2Sharp.Signature( "Other", "other@example.com", System.DateTimeOffset.Now );
-            var other = bare.ObjectDatabase.CreateCommit( sig, sig, "Somebody else's work.", tip.Tree, [tip], prettifyMessage: false );
-            bare.Refs.Add( "refs/heads/dev/stable", other.Id );
+            bare.Refs.Add( "refs/heads/dev/stable/blocker", bare.Head.Tip.Id );
         }
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
