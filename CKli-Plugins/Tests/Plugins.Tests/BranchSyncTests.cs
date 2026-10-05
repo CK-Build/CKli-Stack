@@ -16,7 +16,7 @@ namespace Plugins.Tests;
 /// "ckli branch sync" integrates into a branch what its link propagates from its closest existing parent (see
 /// <see cref="CKli.BranchModel.Plugin.HotBranch.GetLinkCommit"/>): a "Full" link the parent's "dev/" tip, a "CI"
 /// link the parent's last built commit (CI builds included) and a "Regular" link its last released one. The merge
-/// always targets the "dev/" branch and the optional mode overrides the configured link type.
+/// always targets the "dev/" branch and the optional "--link" overrides the configured link type.
 /// <para>
 /// These tests use the fake build harness only. As in <see cref="BranchStartCommitTests"/>, each link type has its
 /// own branch name (a name carries its link type in the World's BranchNamespace).
@@ -87,11 +87,11 @@ public class BranchSyncTests
     }
 
     /// <summary>
-    /// A "Regular" link ignores the CI builds of its parent. The mode overrides the configured link type: a "Full"
+    /// A "Regular" link ignores the CI builds of its parent. The "--link" option overrides the configured link type: a "Full"
     /// synchronization of the same branch integrates the parent's tip, built or not.
     /// </summary>
     [Test]
-    public async Task a_Regular_link_ignores_CI_builds_unless_the_mode_overrides_it_Async()
+    public async Task a_Regular_link_ignores_CI_builds_unless_the_link_is_overridden_Async()
     {
         using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
         var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
@@ -106,7 +106,7 @@ public class BranchSyncTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "quebec" )).ShouldBeTrue();
         Contains( r, "quebec", unbuilt ).ShouldBeFalse( "A CI build is not a release." );
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "quebec", "--mode", "Full" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "quebec", "--link", "Full" )).ShouldBeTrue();
         Contains( r, "quebec", unbuilt ).ShouldBeTrue( "Full integrates the parent's tip." );
     }
 
@@ -221,7 +221,7 @@ public class BranchSyncTests
     /// A "Manual" link propagates nothing, so there is nothing to synchronize it with.
     /// </summary>
     [Test]
-    public async Task the_mode_cannot_be_Manual_Async()
+    public async Task the_link_override_cannot_be_Manual_Async()
     {
         using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
         var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
@@ -232,7 +232,7 @@ public class BranchSyncTests
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra", "--mode", "Manual" )).ShouldBeFalse();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra", "--link", "Manual" )).ShouldBeFalse();
             logs.ShouldContain( "Invalid link type 'Manual'. Must be Regular, CI or Full." );
         }
     }

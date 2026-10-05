@@ -86,6 +86,7 @@ public class BranchListTests
             Branch        Repositories                                                                   
             stable        4 repositories                                                                 
               => bravo    No change, 4 unchanged.                                                        
+                   ↖ 2 fast-forwards                                                                     
                 => alpha  X-Core and 1 other repository, 2 unchanged, weight: 3 repositories, 3 projects.
 
             Links:
@@ -93,15 +94,19 @@ public class BranchListTests
               |> Regular: a version built on the parent is merged.
               -> CI (the default): any commit built on the parent is merged.
               => Full: every commit of the parent's "dev/" branch is merged.
+
+            Merges:
+              ↖ "ckli branch close": what closing the branch would merge into its parent.
+              ↘ "ckli branch sync": what synchronizing the branch would merge into it.
             ❰✓❱
 
             """ );
     }
 
     /// <summary>
-    /// The sync column tells what "ckli branch sync" would do to each branch from its link: here a "Full" link in
-    /// four repositories, one per outcome (the up to date one says nothing). Once synchronized, only the conflict is
-    /// left: the column predicts what the command does.
+    /// Above a branch, "↘" tells what "ckli branch sync" would do to it from its link: here a "Full" link in four
+    /// repositories, one per outcome (the up to date one says nothing). "↖" tells what "ckli branch close" would merge
+    /// into the parent. Once synchronized, only the conflicts are left: the lines predict what the commands do.
     /// </summary>
     [Test]
     public async Task branch_list_displays_what_branch_sync_would_do_Async()
@@ -127,15 +132,21 @@ public class BranchListTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "list" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             Opened branches of 'Test':
-            Branch       Branch sync                                       Repositories                                                         
-            stable                                                         4 repositories                                                       
-              => sierra  1 fast-forward, 1 merge, 1 conflict (X-Conflict)  X-Merge, X-Conflict, 2 unchanged, weight: 2 repositories, 2 projects.
+            Branch       Repositories                                                         
+            stable       4 repositories                                                       
+                 ↖ 1 merge, 1 conflict (X-Conflict)                                           
+                 ↘ 1 fast-forward, 1 merge, 1 conflict (X-Conflict)                           
+              => sierra  X-Merge, X-Conflict, 2 unchanged, weight: 2 repositories, 2 projects.
 
             Links:
               |✋ Manual: nothing is propagated from the parent.
               |> Regular: a version built on the parent is merged.
               -> CI (the default): any commit built on the parent is merged.
               => Full: every commit of the parent's "dev/" branch is merged.
+
+            Merges:
+              ↖ "ckli branch close": what closing the branch would merge into its parent.
+              ↘ "ckli branch sync": what synchronizing the branch would merge into it.
             ❰✓❱
 
             """ );
@@ -146,15 +157,21 @@ public class BranchListTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "list" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             Opened branches of 'Test':
-            Branch       Branch sync              Repositories                                                         
-            stable                                4 repositories                                                       
-              => sierra  1 conflict (X-Conflict)  X-Merge, X-Conflict, 2 unchanged, weight: 2 repositories, 2 projects.
+            Branch       Repositories                                                         
+            stable       4 repositories                                                       
+                 ↖ 1 fast-forward, 1 conflict (X-Conflict)                                    
+                 ↘ 1 conflict (X-Conflict)                                                    
+              => sierra  X-Merge, X-Conflict, 2 unchanged, weight: 2 repositories, 2 projects.
 
             Links:
               |✋ Manual: nothing is propagated from the parent.
               |> Regular: a version built on the parent is merged.
               -> CI (the default): any commit built on the parent is merged.
               => Full: every commit of the parent's "dev/" branch is merged.
+
+            Merges:
+              ↖ "ckli branch close": what closing the branch would merge into its parent.
+              ↘ "ckli branch sync": what synchronizing the branch would merge into it.
             ❰✓❱
 
             """ );
@@ -162,7 +179,8 @@ public class BranchListTests
 
     /// <summary>
     /// A "CI" link only propagates built commits: an unbuilt commit of the parent shows nothing, a CI build of the
-    /// parent makes it a fast-forward.
+    /// parent makes it a fast-forward. The "--link" option predicts the synchronization with another link: with "Full",
+    /// the unbuilt commit is a fast-forward.
     /// </summary>
     [Test]
     public async Task branch_list_sync_status_of_a_CI_link_follows_the_parent_builds_Async()
@@ -180,13 +198,20 @@ public class BranchListTests
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "list" )).ShouldBeTrue();
-        display.ToString().ShouldNotContain( "Branch sync" );
+        display.ToString().ShouldNotContain( "↘" );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "list", "--link", "Full" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "↘ 1 fast-forward" );
+        display.ToString().ShouldContain( """↘ "ckli branch sync --link Full": """ );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "list", "-l", "Manual" )).ShouldBeFalse();
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "switch", "stable" )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "build" )).ShouldBeTrue();
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "list" )).ShouldBeTrue();
-        display.ToString().ShouldContain( "1 fast-forward" );
+        display.ToString().ShouldContain( "↘ 1 fast-forward" );
     }
 }
