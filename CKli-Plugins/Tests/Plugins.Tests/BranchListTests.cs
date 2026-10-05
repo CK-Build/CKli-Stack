@@ -159,8 +159,8 @@ public class BranchListTests
             Opened branches of 'Test':
             Branch       Repositories                                                         
             stable       4 repositories                                                       
-                 ↖ 1 fast-forward, 1 conflict (X-Conflict)                                    
-                 ↘ 1 conflict (X-Conflict)                                                    
+                 ↖ 1 fast-forward, 1 conflict (✱ X-Conflict)                                  
+                 ↘ 1 conflict (✱ X-Conflict)                                                  
               => sierra  X-Merge, X-Conflict, 2 unchanged, weight: 2 repositories, 2 projects.
 
             Links:
