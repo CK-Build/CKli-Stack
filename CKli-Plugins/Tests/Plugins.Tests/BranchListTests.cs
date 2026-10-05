@@ -47,10 +47,10 @@ public class BranchListTests
                 |✋ delta  No change, 1 unchanged.
 
             Links:
-              |✋ Manual: nothing is propagated from the parent.
-              |> Regular: a version built on the parent is merged.
-              -> CI (the default): any commit built on the parent is merged.
-              => Full: every commit of the parent's "dev/" branch is merged.
+              |✋ Manual: nothing is synchronized from the parent.
+              |> Regular: the parent's last regular version is merged.
+              -> CI (the default): the parent's last version, regular or CI, is merged.
+              => Full: the parent's "dev/" branch is merged.
             ❰✓❱
 
             """ );
@@ -90,10 +90,10 @@ public class BranchListTests
                 => alpha  X-Core and 1 other repository, 2 unchanged, weight: 3 repositories, 3 projects.
 
             Links:
-              |✋ Manual: nothing is propagated from the parent.
-              |> Regular: a version built on the parent is merged.
-              -> CI (the default): any commit built on the parent is merged.
-              => Full: every commit of the parent's "dev/" branch is merged.
+              |✋ Manual: nothing is synchronized from the parent.
+              |> Regular: the parent's last regular version is merged.
+              -> CI (the default): the parent's last version, regular or CI, is merged.
+              => Full: the parent's "dev/" branch is merged.
 
             Merges:
               ↖ "ckli branch close": what closing the branch would merge into its parent.
@@ -139,10 +139,10 @@ public class BranchListTests
               => sierra  X-Merge, X-Conflict, 2 unchanged, weight: 2 repositories, 2 projects.
 
             Links:
-              |✋ Manual: nothing is propagated from the parent.
-              |> Regular: a version built on the parent is merged.
-              -> CI (the default): any commit built on the parent is merged.
-              => Full: every commit of the parent's "dev/" branch is merged.
+              |✋ Manual: nothing is synchronized from the parent.
+              |> Regular: the parent's last regular version is merged.
+              -> CI (the default): the parent's last version, regular or CI, is merged.
+              => Full: the parent's "dev/" branch is merged.
 
             Merges:
               ↖ "ckli branch close": what closing the branch would merge into its parent.
@@ -164,10 +164,10 @@ public class BranchListTests
               => sierra  X-Merge, X-Conflict, 2 unchanged, weight: 2 repositories, 2 projects.
 
             Links:
-              |✋ Manual: nothing is propagated from the parent.
-              |> Regular: a version built on the parent is merged.
-              -> CI (the default): any commit built on the parent is merged.
-              => Full: every commit of the parent's "dev/" branch is merged.
+              |✋ Manual: nothing is synchronized from the parent.
+              |> Regular: the parent's last regular version is merged.
+              -> CI (the default): the parent's last version, regular or CI, is merged.
+              => Full: the parent's "dev/" branch is merged.
 
             Merges:
               ↖ "ckli branch close": what closing the branch would merge into its parent.
