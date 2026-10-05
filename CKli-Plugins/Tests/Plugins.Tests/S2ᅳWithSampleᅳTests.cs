@@ -39,7 +39,7 @@ public class S2ᅳWithSampleᅳTests
 
         // If we "ckli publish" from the root (that is the same as "ckli *publish" here), the 6 repositories must be build and published.  
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--release", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--regular", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
         1 -  CKt-Core                      v1.0.0      → ⏚/v1.0.1 (CodeChange)                            
         2 -  CKt-ActivityMonitor           v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)             
@@ -61,7 +61,7 @@ public class S2ᅳWithSampleᅳTests
         // updated in the downstream repositories CKt-PerfectEvent and CKt-App-Sample (CKt-Sample-Monitoring
         // will use the CKt-PerfectEvent v0.3.3: UpstreamBuild).
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--regular", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
           - →·   CKt-Core                      v1.0.0     
           - →·   CKt-ActivityMonitor           v0.1.0     
@@ -285,7 +285,7 @@ public class S2ᅳWithSampleᅳTests
         // updated in the downstream repositories CKt-PerfectEvent and CKt-App-Sample (CKt-Sample-Monitoring
         // will use the CKt-PerfectEvent v0.3.3: UpstreamBuild).
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--regular", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
                       - →·   CKt-Core                      v1.0.0     
                       - →·   CKt-ActivityMonitor           v0.1.0     
@@ -315,7 +315,7 @@ public class S2ᅳWithSampleᅳTests
 
         // The build fails!
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release" )).ShouldBeFalse();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--regular" )).ShouldBeFalse();
         display.ToString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.0     
@@ -343,7 +343,7 @@ public class S2ᅳWithSampleᅳTests
         //
         // ==> We publish this (from inPerfectEvent).
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.0     
@@ -366,7 +366,7 @@ public class S2ᅳWithSampleᅳTests
 
         // This doesn't change anything when publishing from CKt-PerfectEvent.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
               - →·   CKt-Core                      v1.0.0
@@ -389,7 +389,7 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inActivityMonitor, "commit", "feat: new feature in ActivityMonitor." )).ShouldBeTrue();
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
               - →·   CKt-Core                      v1.0.0
@@ -408,7 +408,7 @@ public class S2ᅳWithSampleᅳTests
         // The others have an increased Minor because of the "feat:" in ActivityMonitor.
         // ==> We build and publish this state.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
               1 - →·   CKt-Core                      v1.0.0 → ⏚/v1.0.1 (CodeChange)               
@@ -436,7 +436,7 @@ public class S2ᅳWithSampleᅳTests
 
         // CKt-PerfectEvent impacts CKt-Sample-Monitoring but its build fails.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release", "-d" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--regular", "-d" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.1
@@ -457,7 +457,7 @@ public class S2ᅳWithSampleᅳTests
 
         // Everything now works.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.1
@@ -472,10 +472,10 @@ public class S2ᅳWithSampleᅳTests
           
               """ );
 
-        // Everything is published. Without any change if we "build --release" or "build" there's nothing to
+        // Everything is published. Without any change if we "build --regular" or "build" there's nothing to
         // build, but if we "build --ci.0" then we can create the ci.0 version for all of them.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
               - →·   CKt-Core                      v1.0.1
@@ -725,7 +725,7 @@ public class S2ᅳWithSampleᅳTests
         TestHelper.SetFileSystemWritePAT();
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe(
               """
               1 - →·   CKt-Core                      v1.0.0      → ⏚/v1.0.1 (CodeChange)                            

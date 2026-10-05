@@ -98,7 +98,7 @@ public class CIBuildTests
 
         // Same code, non-CI: the CI publication above did not consume v0.3.4.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-Core     v0.3.3 → ⏚/v0.3.4 (CodeChange)               
             2 -  X-Consumer v0.0.0 → ⏚/v0.0.1 (UpstreamBuild, CodeChange)
@@ -141,7 +141,7 @@ public class CIBuildTests
 
         var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
 
         // A change committed straight on "stable" carries the "+fake" (as a migration does). The CI build produces
         // the "--ci.0" of the "+fake" on the "stable" tip, from a "dev/stable" created there.

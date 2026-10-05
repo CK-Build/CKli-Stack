@@ -94,7 +94,7 @@ public class PullTests
         var core = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
         var app = await world.CreateRepoAsync( "X-App", "v1.0.0", references: [core] ).ConfigureAwait( false );
         await TouchDevStableAsync( bob.ChangeDirectory( "X-Core" ), "Init.txt", "Init" ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--regular" )).ShouldBeTrue();
 
         var tim = await bobStack.Remotes.CloneAsync( testEnv.Path.AppendPart( "Tim" ),
                                                     allowDuplicateStack: true,

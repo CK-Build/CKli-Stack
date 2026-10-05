@@ -148,8 +148,8 @@ public class FocusBuildTests
 
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus", "--release", "--dry-run" )).ShouldBeFalse();
-            logs.ShouldContain( "'--release' and '--focus' are exclusive: '--focus' needs the \"dev/\" branches of the upstreams that only a CI build considers." );
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus", "--regular", "--dry-run" )).ShouldBeFalse();
+            logs.ShouldContain( "'--regular' and '--focus' are exclusive: '--focus' needs the \"dev/\" branches of the upstreams that only a CI build considers." );
         }
     }
 

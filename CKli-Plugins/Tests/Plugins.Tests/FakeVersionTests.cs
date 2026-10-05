@@ -37,7 +37,7 @@ public class FakeVersionTests
 
         // The +fake sets the version: the build produces v5.4.3, not a successor of v1.0.1.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--regular" )).ShouldBeTrue();
 
         // "local/v5.4.3" and not a successor of v1.0.1: the +fake decided the version.
         // v1.0.1 is untouched on its own commit and the +fake is kept until v5.4.3 is published.
@@ -139,7 +139,7 @@ public class FakeVersionTests
 
         // Building stable.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-Core            v3.0.0+fake → ⏚/v3.0.0 (FakeVersion)              
             2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)
@@ -185,7 +185,7 @@ public class FakeVersionTests
             """ );
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--release", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             1 -  X-Core            v2.0.0+fake → ⏚/v2.0.0 (FakeVersion)              
             2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)
@@ -217,7 +217,7 @@ public class FakeVersionTests
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "bump", "v2.0.0" )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--ci.0" )).ShouldBeTrue();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--regular" )).ShouldBeTrue();
 
         // The v2.0.0 is on the commit of the "v2.0.0--ci.0" (and of the now useless "v2.0.0+fake").
         using( var e = rCore.CreateEditor() )
@@ -236,9 +236,9 @@ public class FakeVersionTests
         // this is what builds the release database.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rConsumer.Root, "branch", "open", "juliet", "--link", "CI" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--release", "--branch", "stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--regular", "--branch", "stable" )).ShouldBeTrue();
         stack.Screen.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--branch", "juliet", "--release", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--branch", "juliet", "--regular", "--dry-run" )).ShouldBeTrue();
         stack.Screen.ToString().ShouldContain( "(publishing requires publications from parent branches)" );
         // The releases of the parent branches that this publication also publishes, grouped by branch.
         stack.Screen.ToString().ShouldContain( "Also publishing 2 releases from parent branches:" );

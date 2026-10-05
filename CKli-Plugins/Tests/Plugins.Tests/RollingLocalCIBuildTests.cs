@@ -9,7 +9,7 @@ using static CK.Testing.MonitorTestHelper;
 namespace Plugins.Tests;
 
 /// <summary>
-/// Switching to CI after a release build. A "ckli build --release" leaves a pending "local/" release on the
+/// Switching to CI after a release build. A "ckli build --regular" leaves a pending "local/" release on the
 /// commit; asking for a CI build afterwards must not be a dead end.
 /// <para>
 /// The two halves are deliberately asymmetric. A pending "local/" release is unpublished, so a plain CI build
@@ -21,7 +21,7 @@ namespace Plugins.Tests;
 public class RollingLocalCIBuildTests
 {
     /// <summary>
-    /// "ckli build --release" then "ckli build": the pending local releases are rolled into CI versions. Before
+    /// "ckli build --regular" then "ckli build": the pending local releases are rolled into CI versions. Before
     /// MustBuildReason.RollingLocal this answered "There is nothing to build" and only "--ci.0" could do it.
     /// </summary>
     [Test]
@@ -38,7 +38,7 @@ public class RollingLocalCIBuildTests
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
 
         // The regular build: this is the "by mistake" one. It leaves "local/" releases behind.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--regular" )).ShouldBeTrue();
         VersionTags( rCore ).ShouldContain( "local/v1.0.2" );
 
         display.Clear();
@@ -92,7 +92,7 @@ public class RollingLocalCIBuildTests
 
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
         VersionTags( rCore ).ShouldContain( "v1.0.2" );
 
         display.Clear();
@@ -121,7 +121,7 @@ public class RollingLocalCIBuildTests
     }
 
     /// <summary>
-    /// The hint is about the plain CI build only: a "--release" build is not asking for a CI version, and
+    /// The hint is about the plain CI build only: a "--regular" build is not asking for a CI version, and
     /// "--ci.0" is the option the user already used.
     /// </summary>
     [Test]
@@ -135,10 +135,10 @@ public class RollingLocalCIBuildTests
         var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
 
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldNotContain( "--ci.0" );
 
         // "--ci.0" itself builds, so it never reaches the empty roadmap here: run it twice to get there.

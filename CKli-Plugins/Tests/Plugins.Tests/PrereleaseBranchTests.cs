@@ -41,7 +41,7 @@ public class PrereleaseBranchTests
 
         // Opening the branch changed no code: nothing to build.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--release", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             - →·   X-Core            v1.0.1
             - →·   X-ActivityMonitor v0.1.1
@@ -71,7 +71,7 @@ public class PrereleaseBranchTests
         TestHelper.TouchAndCommit( rPivot.WorkingFolderPath, branchName: null );
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--release", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
               - →·   X-Core            v1.0.1
               - →·   X-ActivityMonitor v0.1.1
@@ -90,7 +90,7 @@ public class PrereleaseBranchTests
         TestHelper.TouchAndCommit( rPivot.WorkingFolderPath, branchName: null, commitMessage: "fix 2" );
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
               - →·   X-Core            v1.0.1
               - →·   X-ActivityMonitor v0.1.1
@@ -111,7 +111,7 @@ public class PrereleaseBranchTests
 
         // From the pivot, that upstream change is not visible: nothing to build.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--release", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
             - →·   X-Core            v1.0.1        
             - →·   X-ActivityMonitor v0.1.1        
@@ -127,7 +127,7 @@ public class PrereleaseBranchTests
         // "local/" releases, so MustBuildReason.RollingLocal reclaims their commits and rolls them into CI
         // versions. There is only one "local/" at a time per branch name, so the CI versions REPLACE them -
         // the roadmap warns about each destroyed pending release.
-        // This is what makes a "--release" build run by mistake recoverable with the obvious command; the
+        // This is what makes a "--regular" build run by mistake recoverable with the obvious command; the
         // price is that a CI build never leaves a pending local release behind.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--dry-run" )).ShouldBeTrue();
@@ -151,7 +151,7 @@ public class PrereleaseBranchTests
 
         // "*build" pulls the upstream closure in: the touched upstream and its downstream go to romeo.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "*build", "--release", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "*build", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
               - →·   X-Core            v1.0.1        
             1 - →·   X-ActivityMonitor v0.1.1         → ⏚/v0.1.2-romeo (CodeChange)   
@@ -193,7 +193,7 @@ public class PrereleaseBranchTests
 
         // And now in non-CI.
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "*build", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "*build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
               - →·   X-Core            v1.0.1
             1 - →·   X-ActivityMonitor v0.1.1 → ⏚/v0.1.2-romeo (CodeChange)               
@@ -275,7 +275,7 @@ public class PrereleaseBranchTests
         // Gives "stable" a published commit to start "juliet" from (a pending "local/" release would be
         // reclaimed by the CI build below as a RollingLocal).
         TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "branch", "open", "juliet", "--link", "CI" )).ShouldBeTrue();
 

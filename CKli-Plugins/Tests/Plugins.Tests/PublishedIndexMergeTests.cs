@@ -31,7 +31,7 @@ public class PublishedIndexMergeTests
 
         var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
         await TouchDevStableAsync( bob.ChangeDirectory( "X-Core" ) ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--regular" )).ShouldBeTrue();
 
         var bobStackFolder = bobStack.StackRoot.AppendPart( StackRepository.PublicStackName );
         File.ReadAllText( bobStackFolder.AppendPart( ".gitattributes" ) )
@@ -60,7 +60,7 @@ public class PublishedIndexMergeTests
 
         // Tim publishes (and pushes the Stack): his version is at the top of the same list.
         await TouchDevStableAsync( tim.ChangeDirectory( "X-Core" ) ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, tim, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, tim, "publish", "--regular" )).ShouldBeTrue();
         var timVersion = new PublishedFolder( tim.CurrentStackPath.AppendPart( "Published" ) )
                             .Profiles.Select( p => p.Version ).Max().ShouldNotBeNull();
 

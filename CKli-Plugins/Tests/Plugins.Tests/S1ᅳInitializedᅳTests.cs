@@ -88,7 +88,7 @@ public class S1ᅳInitializedᅳTests
             else
             {
                 display.Clear();
-                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--release" ).ConfigureAwait( false )).ShouldBeTrue();
+                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--regular" ).ConfigureAwait( false )).ShouldBeTrue();
                 display.ToString().ShouldBe( """
                       ╓      CKt-Core            v1.0.0     
                     1 ╙  ⊙   Test-Repo-Create    v0.0.0+fake → ⏚/v0.0.0 (FakeVersion, CodeChange)
@@ -147,7 +147,7 @@ public class S1ᅳInitializedᅳTests
             else
             {
                 display.Clear();
-                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--release" ).ConfigureAwait( false )).ShouldBeTrue();
+                (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--regular" ).ConfigureAwait( false )).ShouldBeTrue();
                 if( firstModeCI )
                 {
                     display.ToString().ShouldBe( """
@@ -194,7 +194,7 @@ public class S1ᅳInitializedᅳTests
             // Touch and publish: Non-CI publication here (a CI publication would let the dev/stable).
             // => We publish "stable" here: it MUST be restored as the default branch (because it is the BranchModel's root "stable").
             TestHelper.TouchAndCommit( testRepo.CurrentDirectory, "dev/stable" );
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--release" ).ConfigureAwait( false )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "publish", "--regular" ).ConfigureAwait( false )).ShouldBeTrue();
 
             info = await gitHubProvider.GetRepositoryInfoAsync( TestHelper.Monitor, "CK-Build/Test-Repo-Create", true ).ConfigureAwait( false );
             while( info.ShouldNotBeNull().DefaultBranch != "stable" )
@@ -257,7 +257,7 @@ public class S1ᅳInitializedᅳTests
         // a minor's increment.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "branch", "switch", "dev/stable" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( cktCoreContext.CurrentDirectory, "dev/stable", "feat: some feature." );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, cktCoreContext, "publish", "--regular" )).ShouldBeTrue();
 
         // Now we can do: ckli fix start v1.0
         display.Clear();

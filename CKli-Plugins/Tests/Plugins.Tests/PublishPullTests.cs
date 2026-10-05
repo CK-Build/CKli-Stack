@@ -29,10 +29,10 @@ public class PublishPullTests
         var (bob, tim, bobStackPath) = await ArrangeBobAndTimAsync( testEnv ).ConfigureAwait( false );
 
         await TouchDevStableAsync( tim.ChangeDirectory( "X-Two" ) ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, tim.ChangeDirectory( "X-Two" ), "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, tim.ChangeDirectory( "X-Two" ), "publish", "--regular" )).ShouldBeTrue();
 
         await TouchDevStableAsync( bob.ChangeDirectory( "X-One" ) ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob.ChangeDirectory( "X-One" ), "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob.ChangeDirectory( "X-One" ), "publish", "--regular" )).ShouldBeTrue();
 
         var bobProfiles = new PublishedFolder( bobStackPath.AppendPart( "Published" ) ).Profiles.Select( p => p.Version ).ToList();
         bobProfiles.Count.ShouldBe( 3, "The first publication, Tim's and Bob's." );
@@ -65,14 +65,14 @@ public class PublishPullTests
         await TouchDevStableAsync( bob.ChangeDirectory( "X-One" ) ).ConfigureAwait( false );
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, bob.ChangeDirectory( "X-One" ), "publish", "--release" )).ShouldBeFalse();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, bob.ChangeDirectory( "X-One" ), "publish", "--regular" )).ShouldBeFalse();
             logs.ShouldContain( l => l.StartsWith( "The remote Stack changed what this World has loaded: '" )
                                      && l.Contains( Path.GetFileName( timDefinition ) )
                                      && l.EndsWith( "Run 'ckli pull' and then the command again." ) );
         }
         // Once pulled, the publication works.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "pull" )).ShouldBeTrue();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob.ChangeDirectory( "X-One" ), "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob.ChangeDirectory( "X-One" ), "publish", "--regular" )).ShouldBeTrue();
     }
 
     // Bob creates 2 independent repositories and publishes them; Tim clones the remotes.
@@ -85,7 +85,7 @@ public class PublishPullTests
         await world.CreateRepoAsync( "X-Two", "v2.0.0" ).ConfigureAwait( false );
         await TouchDevStableAsync( bob.ChangeDirectory( "X-One" ) ).ConfigureAwait( false );
         await TouchDevStableAsync( bob.ChangeDirectory( "X-Two" ) ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--regular" )).ShouldBeTrue();
 
         var tim = await bobStack.Remotes.CloneAsync( testEnv.Path.AppendPart( "Tim" ),
                                                     allowDuplicateStack: true,

@@ -34,7 +34,7 @@ public class PublishLockTests
         // A first publication is what puts the repository's content on the remotes for Tim to clone. It also
         // settles the Stack's LockPrefix: taking a lock is what determines it, and this is the first one.
         await TouchDevStableAsync( rCore ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--regular" )).ShouldBeTrue();
 
         // Tim: a second working copy of the same remotes. He is one folder deeper than Bob, hence the extra
         // RemoveLastPart so that both resolve the SAME shared "FakeFeed/" folder.
@@ -51,7 +51,7 @@ public class PublishLockTests
         await TouchDevStableAsync( rCore ).ConfigureAwait( false );
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--release" )).ShouldBeFalse();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--regular" )).ShouldBeFalse();
             logs.ShouldContain( l => l.Contains( "Unable to publish: 'refs/ckli-locks/" )
                                      && l.Contains( "is held by" )
                                      && l.Contains( "ckli world unlock publish" ) );
@@ -59,7 +59,7 @@ public class PublishLockTests
 
         // Tim frees it - and Bob's publication, which was blocked by nothing else, goes through.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, tim, "world", "unlock", "publish" )).ShouldBeTrue();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--regular" )).ShouldBeTrue();
     }
 
     /// <summary>
@@ -77,11 +77,11 @@ public class PublishLockTests
         var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
 
         await TouchDevStableAsync( rCore ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
 
         // Nothing left to publish: the lock is taken, the roadmap says there is nothing to do, and it is
         // released again.
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
 
         // Releasing DELETES the reference (that is what keeps the lease chain short), so a lock that is free
         // has no reference at all: "world unlock" finds nothing to release.

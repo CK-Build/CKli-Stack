@@ -174,7 +174,7 @@ public class BranchListTests
 
         var r = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
         TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "build", "--release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "build", "--regular" )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "romeo", "--link", "CI" )).ShouldBeTrue();
         TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: "stable" );
 

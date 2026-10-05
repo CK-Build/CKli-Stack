@@ -356,7 +356,7 @@ public class BranchSyncTests
                                        fileName: "Template.csproj" );
         }
         TestHelper.TouchAndCommit( core.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--release" ).ConfigureAwait( false )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--regular" ).ConfigureAwait( false )).ShouldBeTrue();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "juliet", "--link", "CI" ).ConfigureAwait( false )).ShouldBeTrue();
 
         TestHelper.TouchAndCommit( core.WorkingFolderPath, branchName: null, fileName: "Juliet.txt" );
@@ -558,7 +558,7 @@ public class BranchSyncTests
         // A change on "dev/stable" (the checked out branch of a fresh repository) and a build: the build
         // integrates "dev/stable" into "stable" and tags it.
         TestHelper.TouchAndCommit( repo.WorkingFolderPath, branchName: null );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "build", "--release" ).ConfigureAwait( false )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "build", "--regular" ).ConfigureAwait( false )).ShouldBeTrue();
         TestHelper.TouchAndCommit( repo.WorkingFolderPath, branchName: "stable" );
         return BranchTip( repo, "stable" );
     }
