@@ -15,3 +15,7 @@
 *.nupkg binary
 *.ico binary
 *.snk binary
+
+# The Published index is derived from the profile files: a merge keeps the lines of both sides
+# and the Publish plugin rebuilds it.
+**/Published/index.json merge=union
