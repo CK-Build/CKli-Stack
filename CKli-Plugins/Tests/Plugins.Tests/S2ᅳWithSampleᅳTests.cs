@@ -336,11 +336,10 @@ public class S2ᅳWithSampleᅳTests
                    W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/Samples/CKt-App-Sample/nuget.config):
                       Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
                       Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
-               E  Samples/CKt-Sample-Monitoring ⏚/v0.0.0 build failed.
+               E  Samples/CKt-Sample-Monitoring ⏚/v0.0.0 dotnet build failed.
                    W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/Samples/CKt-Sample-Monitoring/nuget.config):
                       Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
                       Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
-                   E  Dotnet build fails for 'Samples/CKt-Sample-Monitoring'.
               ❌ Failed
 
               """ );
@@ -618,11 +617,10 @@ public class S2ᅳWithSampleᅳTests
                    W  The 'nuget.config' file must be updated (<Cloned>/intermediate_ci_build_error_Async/CKt/CKt-PerfectEvent/nuget.config):
                       Source 'NuGet' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
                       Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
-               E  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.5 build failed.
+               E  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.5 dotnet build failed.
                    W  The 'nuget.config' file must be updated (<Cloned>/intermediate_ci_build_error_Async/CKt/Samples/CKt-Sample-Monitoring/nuget.config):
                       Source 'NuGet' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
                       Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
-                   E  Dotnet build fails for 'Samples/CKt-Sample-Monitoring'.
               ❌ Failed
 
               """ );
