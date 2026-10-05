@@ -59,6 +59,10 @@ public class SkippedRepositoryTests
             4 -  X-Sample          v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
             Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-ActivityMonitor ⏚/v0.1.1--ci.1 built: 1 package.
+             i  X-PerfectEvent ⏚/v0.3.4--ci.1 built: 1 package.
+             i  X-Monitoring ⏚/v0.2.5--ci.1 built: 1 package.
+             i  X-Sample ⏚/v0.0.1--ci.1 built: 1 package.
             ❰✓❱
 
             """ );
@@ -85,6 +89,8 @@ public class SkippedRepositoryTests
             2 -  ·→  X-Sample          v0.0.1--ci.1 → ⏚/v0.0.1--ci.2                        (UpstreamBuild)
             Required build for 2 from the single pivot out of 4 repositories and 2 can be published.
             U 1 update from upstreams.
+             i  X-PerfectEvent ⏚/v0.3.4--ci.2 built: 1 package.
+             i  X-Sample ⏚/v0.0.1--ci.2 built: 1 package.
             ❰✓❱
 
             """ );

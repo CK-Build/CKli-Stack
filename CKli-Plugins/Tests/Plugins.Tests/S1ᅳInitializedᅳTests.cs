@@ -661,6 +661,12 @@ public class S1ᅳInitializedᅳTests
             6 -  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0--ci.3 (UpstreamBuild, FakeVersion, CodeChange)
             Required build for 6 repositories across the 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  CKt-Core ⏚/v1.0.1--ci.4 built: 1 package.
+             i  CKt-ActivityMonitor ⏚/v0.1.1--ci.5 built: 1 package.
+             i  CKt-PerfectEvent ⏚/v0.3.3--ci.5 built: 1 package.
+             i  CKt-Monitoring ⏚/v0.2.4--ci.5 built: 1 package.
+             i  Samples/CKt-App-Sample ⏚/v0.0.0--ci.3 built: 1 package.
+             i  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.3 built: 1 package.
             ❰✓❱
 
             """ );

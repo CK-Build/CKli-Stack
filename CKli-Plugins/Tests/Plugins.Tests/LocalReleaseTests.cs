@@ -51,6 +51,8 @@ public class LocalReleaseTests
             2 -  ·→  X-Consumer v0.0.0 → ⏚/v0.0.1 (UpstreamBuild)
             Required build for 2 from the single pivot out of 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Core ⏚/v0.3.4 built: 1 package.
+             i  X-Consumer ⏚/v0.0.1 built: 1 package.
             ❰✓❱
 
             """ );
@@ -69,6 +71,8 @@ public class LocalReleaseTests
             2 -  ·→  X-Consumer (v0.0.1) → ⏚/v0.0.1 (UpstreamBuild)
             Required build for 2 from the single pivot out of 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Core ⏚/v0.3.4 built: 1 package.
+             i  X-Consumer ⏚/v0.0.1 built: 1 package.
             ❰✓❱
 
             """ );

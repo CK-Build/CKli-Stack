@@ -115,6 +115,10 @@ public class FakeVersionTests
             4 ╙  X-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.2 (UpstreamBuild, CodeChange)
             Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Core ⏚/v4.3.2--ci.0 built: 1 package.
+             i  X-ActivityMonitor ⏚/v0.1.1--ci.2 built: 1 package.
+             i  X-PerfectEvent ⏚/v0.3.3--ci.2 built: 1 package.
+             i  X-Monitoring ⏚/v0.2.4--ci.2 built: 1 package.
             ❰✓❱
 
             """ );
@@ -147,6 +151,10 @@ public class FakeVersionTests
             4 ╙  X-Monitoring      v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)
             Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Core ⏚/v3.0.0 built: 1 package.
+             i  X-ActivityMonitor ⏚/v0.1.1 built: 1 package.
+             i  X-PerfectEvent ⏚/v0.3.3 built: 1 package.
+             i  X-Monitoring ⏚/v0.2.4 built: 1 package.
             ❰✓❱
 
             """ );
@@ -163,6 +171,10 @@ public class FakeVersionTests
             4 ╙  X-Monitoring      (v0.2.4) → ⏚/v0.2.4--ci.4 (UpstreamBuild)
             Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Core ⏚/v3.0.0--ci.0 built: 1 package.
+             i  X-ActivityMonitor ⏚/v0.1.1--ci.4 built: 1 package.
+             i  X-PerfectEvent ⏚/v0.3.3--ci.4 built: 1 package.
+             i  X-Monitoring ⏚/v0.2.4--ci.4 built: 1 package.
             ❰✓❱
 
             """ );
@@ -180,6 +192,10 @@ public class FakeVersionTests
             4 ╙  X-Monitoring      (v0.2.4--ci.4) → ⏚/v0.2.4--ci.5 (UpstreamBuild)
             Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Core ⏚/v2.0.0--ci.0 built: 1 package.
+             i  X-ActivityMonitor ⏚/v0.1.1--ci.5 built: 1 package.
+             i  X-PerfectEvent ⏚/v0.3.3--ci.5 built: 1 package.
+             i  X-Monitoring ⏚/v0.2.4--ci.5 built: 1 package.
             ❰✓❱
 
             """ );

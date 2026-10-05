@@ -316,20 +316,33 @@ public class S2ᅳWithSampleᅳTests
         // The build fails!
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--regular" )).ShouldBeFalse();
-        display.ToString().ShouldBe(
+        display.ToPortableString().ShouldBe(
               """
-                - →·   CKt-Core                      v1.0.0     
-                - →·   CKt-ActivityMonitor           v0.1.0     
-              1 ╓  ⊙   CKt-PerfectEvent              v0.3.2      → ⏚/v0.3.3 (DependencyUpdate, CodeChange)             
-                                                                            U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
-                ║      CKt-Monitoring                v0.2.3     
+                - →·   CKt-Core                      v1.0.0
+                - →·   CKt-ActivityMonitor           v0.1.0
+              1 ╓  ⊙   CKt-PerfectEvent              v0.3.2      → ⏚/v0.3.3 (DependencyUpdate, CodeChange)
+                                                                            U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0
+                ║      CKt-Monitoring                v0.2.3
               2 ╙      Samples/CKt-App-Sample        v0.0.0+fake → ⏚/v0.0.0 (FakeVersion, DependencyUpdate, CodeChange)
-                                                                            U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0 
-              3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)   
+                                                                            U CKt.ActivityMonitor: 0.1.1--ci.5 → 0.1.0
+              3 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)
               Required build for 3 from the single pivot out of 6 repositories and 3 can be published.
               U 2 updates from upstreams.
+               i  CKt-PerfectEvent ⏚/v0.3.3 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/CKt-PerfectEvent/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+               i  Samples/CKt-App-Sample ⏚/v0.0.0 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/Samples/CKt-App-Sample/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+               E  Samples/CKt-Sample-Monitoring ⏚/v0.0.0 build failed.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/Samples/CKt-Sample-Monitoring/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+                   E  Dotnet build fails for 'Samples/CKt-Sample-Monitoring'.
               ❌ Failed
-          
+
               """ );
 
         // Fix the bug: The "dev/" branch has been recreated and checked out on error.
@@ -344,18 +357,22 @@ public class S2ᅳWithSampleᅳTests
         // ==> We publish this (from inPerfectEvent).
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--regular" )).ShouldBeTrue();
-        display.ToString().ShouldBe(
+        display.ToPortableString().ShouldBe(
               """
-                - →·   CKt-Core                      v1.0.0     
-                - →·   CKt-ActivityMonitor           v0.1.0     
-                ╓  ⊙   CKt-PerfectEvent              ⏚/v0.3.3   
-                ║      CKt-Monitoring                v0.2.3     
-                ╙      Samples/CKt-App-Sample        ⏚/v0.0.0   
+                - →·   CKt-Core                      v1.0.0
+                - →·   CKt-ActivityMonitor           v0.1.0
+                ╓  ⊙   CKt-PerfectEvent              ⏚/v0.3.3
+                ║      CKt-Monitoring                v0.2.3
+                ╙      Samples/CKt-App-Sample        ⏚/v0.0.0
               1 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (FakeVersion, CodeChange)
               Required build for 1 from the single pivot out of 6 repositories and 3 can be published.
               (No dependency updates other than the ones from the upstreams are needed.)
+               i  Samples/CKt-Sample-Monitoring ⏚/v0.0.0 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/Samples/CKt-Sample-Monitoring/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
               ❰✓❱
-          
+
               """ );
 
         // Make a code change in CKt-App-Sample.
@@ -409,18 +426,42 @@ public class S2ᅳWithSampleᅳTests
         // ==> We build and publish this state.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish", "--regular" )).ShouldBeTrue();
-        display.ToString().ShouldBe(
+        display.ToPortableString().ShouldBe(
               """
-              1 - →·   CKt-Core                      v1.0.0 → ⏚/v1.0.1 (CodeChange)               
+              1 - →·   CKt-Core                      v1.0.0 → ⏚/v1.0.1 (CodeChange)
               2 - →·   CKt-ActivityMonitor           v0.1.0 → ⏚/v0.2.0 (UpstreamBuild, CodeChange)
-              3 ╓  ⊙   CKt-PerfectEvent              v0.3.3 → ⏚/v0.4.0 (UpstreamBuild)            
+              3 ╓  ⊙   CKt-PerfectEvent              v0.3.3 → ⏚/v0.4.0 (UpstreamBuild)
               4 ║      CKt-Monitoring                v0.2.3 → ⏚/v0.3.0 (UpstreamBuild, CodeChange)
               5 ╙      Samples/CKt-App-Sample        v0.0.0 → ⏚/v0.1.0 (UpstreamBuild, CodeChange)
-              6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.1.0 (UpstreamBuild)            
+              6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0 → ⏚/v0.1.0 (UpstreamBuild)
               Required build for 6 from the single pivot out of 6 repositories and 6 can be published.
               (No dependency updates other than the ones from the upstreams are needed.)
+               i  CKt-Core ⏚/v1.0.1 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/CKt-Core/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+               i  CKt-ActivityMonitor ⏚/v0.2.0 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/CKt-ActivityMonitor/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+               i  CKt-PerfectEvent ⏚/v0.4.0 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/CKt-PerfectEvent/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+               i  CKt-Monitoring ⏚/v0.3.0 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/CKt-Monitoring/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+               i  Samples/CKt-App-Sample ⏚/v0.1.0 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/Samples/CKt-App-Sample/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+               i  Samples/CKt-Sample-Monitoring ⏚/v0.1.0 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/Samples/CKt-Sample-Monitoring/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
               ❰✓❱
-          
+
               """ );
 
         // Make a MAJOR code change in CKt-PerfectEvent.
@@ -458,18 +499,26 @@ public class S2ᅳWithSampleᅳTests
         // Everything now works.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish", "--regular" )).ShouldBeTrue();
-        display.ToString().ShouldBe(
+        display.ToPortableString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.1
                 - →·   CKt-ActivityMonitor           v0.2.0
-              1 ╓  ⊙   CKt-PerfectEvent              v0.4.0 → ⏚/v0.5.0 (CodeChange)   
+              1 ╓  ⊙   CKt-PerfectEvent              v0.4.0 → ⏚/v0.5.0 (CodeChange)
                 ║      CKt-Monitoring                v0.3.0
                 ╙      Samples/CKt-App-Sample        v0.1.0
               2 -  ·→  Samples/CKt-Sample-Monitoring v0.1.0 → ⏚/v0.2.0 (UpstreamBuild)
               Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
               (No dependency updates other than the ones from the upstreams are needed.)
+               i  CKt-PerfectEvent ⏚/v0.5.0 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/CKt-PerfectEvent/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+               i  Samples/CKt-Sample-Monitoring ⏚/v0.2.0 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/Samples/CKt-Sample-Monitoring/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
               ❰✓❱
-          
+
               """ );
 
         // Everything is published. Without any change if we "build --regular" or "build" there's nothing to
@@ -555,18 +604,27 @@ public class S2ᅳWithSampleᅳTests
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "publish" )).ShouldBeFalse();
-        display.ToString().ShouldBe(
+        display.ToPortableString().ShouldBe(
               """
                 - →·   CKt-Core                      v1.0.1--ci.4
                 - →·   CKt-ActivityMonitor           v0.1.1--ci.5
-              1 ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.6 (CodeChange)               
+              1 ╓  ⊙   CKt-PerfectEvent              v0.3.3--ci.5 → ⏚/v0.3.3--ci.6 (CodeChange)
                 ║      CKt-Monitoring                v0.2.4--ci.5
                 ╙      Samples/CKt-App-Sample        v0.0.0--ci.3
               2 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.3 → ⏚/v0.0.0--ci.5 (UpstreamBuild, CodeChange)
               Required build for 2 from the single pivot out of 6 repositories and 2 can be published.
               (No dependency updates other than the ones from the upstreams are needed.)
+               i  CKt-PerfectEvent ⏚/v0.3.3--ci.6 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_ci_build_error_Async/CKt/CKt-PerfectEvent/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+               E  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.5 build failed.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_ci_build_error_Async/CKt/Samples/CKt-Sample-Monitoring/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+                   E  Dotnet build fails for 'Samples/CKt-Sample-Monitoring'.
               ❌ Failed
-          
+
               """ );
 
         // Fix the bug (just to be coherent: since we --dry-run, this is useless).
@@ -635,18 +693,38 @@ public class S2ᅳWithSampleᅳTests
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*build" )).ShouldBeTrue();
-        display.ToString().ShouldBe(
+        display.ToPortableString().ShouldBe(
               """
-                - →·   CKt-Core                      v1.0.1--ci.4  
-              1 - →·   CKt-ActivityMonitor           v0.1.1--ci.5   → ⏚/v0.1.1--ci.6 (CodeChange)               
-              2 ╓  ⊙   CKt-PerfectEvent              (v0.3.3--ci.6) → ⏚/v0.3.3--ci.7 (UpstreamBuild)            
-              3 ║      CKt-Monitoring                v0.2.4--ci.5   → ⏚/v0.2.4--ci.6 (UpstreamBuild)            
+                - →·   CKt-Core                      v1.0.1--ci.4
+              1 - →·   CKt-ActivityMonitor           v0.1.1--ci.5   → ⏚/v0.1.1--ci.6 (CodeChange)
+              2 ╓  ⊙   CKt-PerfectEvent              (v0.3.3--ci.6) → ⏚/v0.3.3--ci.7 (UpstreamBuild)
+              3 ║      CKt-Monitoring                v0.2.4--ci.5   → ⏚/v0.2.4--ci.6 (UpstreamBuild)
               4 ╙      Samples/CKt-App-Sample        v0.0.0--ci.3   → ⏚/v0.0.0--ci.5 (UpstreamBuild, CodeChange)
               5 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0--ci.3   → ⏚/v0.0.0--ci.7 (UpstreamBuild, CodeChange)
               Required build for 5 from the single pivot out of 6 repositories and 5 can be published.
               (No dependency updates other than the ones from the upstreams are needed.)
+               i  CKt-ActivityMonitor ⏚/v0.1.1--ci.6 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_ci_build_error_Async/CKt/CKt-ActivityMonitor/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+               i  CKt-PerfectEvent ⏚/v0.3.3--ci.7 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_ci_build_error_Async/CKt/CKt-PerfectEvent/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+               i  CKt-Monitoring ⏚/v0.2.4--ci.6 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_ci_build_error_Async/CKt/CKt-Monitoring/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+               i  Samples/CKt-App-Sample ⏚/v0.0.0--ci.5 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_ci_build_error_Async/CKt/Samples/CKt-App-Sample/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+               i  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.7 built: 1 package.
+                   W  The 'nuget.config' file must be updated (<Cloned>/intermediate_ci_build_error_Async/CKt/Samples/CKt-Sample-Monitoring/nuget.config):
+                      Source 'NuGet' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
+                      Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
               ❰✓❱
-          
+
               """ );
 
         // The "local/v0.3.3--ci.6" release must have been destroyed.
@@ -727,7 +805,7 @@ public class S2ᅳWithSampleᅳTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe(
-              """
+              $"""
               1 - →·   CKt-Core                      v1.0.0      → ⏚/v1.0.1 (CodeChange)                            
               2 - →·   CKt-ActivityMonitor           v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)             
               3 ╓  ⊙   CKt-PerfectEvent              v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)             
@@ -736,8 +814,14 @@ public class S2ᅳWithSampleᅳTests
               6 -  ·→  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0 (UpstreamBuild, FakeVersion, CodeChange)
               Required build for 6 from the single pivot out of 6 repositories and 6 can be published.
               (No dependency updates other than the ones from the upstreams are needed.)
+               i  CKt-Core ⏚/v1.0.1 built: 1 package.
+               i  CKt-ActivityMonitor ⏚/v0.1.1 built: 1 package.
+               i  CKt-PerfectEvent ⏚/v0.3.3 built: 1 package.
+               i  CKt-Monitoring ⏚/v0.2.4 built: 1 package.
+               i  Samples/CKt-App-Sample ⏚/v0.0.0 built: 1 package.
+               i  Samples/CKt-Sample-Monitoring ⏚/v0.0.0 built: {(nonPackableSample ? "no package" : "1 package")}.
               ❰✓❱
-          
+
               """ );
 
         var (nugetOrgFeed, sosFeed) = Helper.GetFakeFeedPaths( clonedFolder.Path );

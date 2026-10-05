@@ -65,6 +65,9 @@ public class FixWorkflowTests
             3 -  X-Monitoring      v0.2.0 → ⏚/v0.3.0 (UpstreamBuild)
             Required build for 3 repositories across the 3 repositories and 3 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Core ⏚/v1.1.0 built: 1 package.
+             i  X-ActivityMonitor ⏚/v0.2.0 built: 1 package.
+             i  X-Monitoring ⏚/v0.3.0 built: 1 package.
             ❰✓❱
 
             """ );

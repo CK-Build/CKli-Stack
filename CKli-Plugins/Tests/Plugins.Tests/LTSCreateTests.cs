@@ -52,6 +52,8 @@ public class LTSCreateTests
             2 -  X-App  v0.4.0 → ⏚/v0.4.1 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Core ⏚/v1.2.4 built: 1 package.
+             i  X-App ⏚/v0.4.1 built: 1 package.
             ❰✓❱
 
             """ );
@@ -301,6 +303,8 @@ public class LTSCreateTests
             2 -  X-App  v0.4.1 → ⏚/v0.4.2 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Core ⏚/v1.2.5 built: 1 package.
+             i  X-App ⏚/v0.4.2 built: 1 package.
             ❰✓❱
 
             """ );

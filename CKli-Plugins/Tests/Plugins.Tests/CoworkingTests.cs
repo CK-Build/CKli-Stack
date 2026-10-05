@@ -52,6 +52,8 @@ public class CoworkingTests
             2 -  X-PerfectEvent v0.3.3 → ⏚/v0.3.4 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Core ⏚/v1.0.2 built: 1 package.
+             i  X-PerfectEvent ⏚/v0.3.4 built: 1 package.
             ❰✓❱
 
             """ );
@@ -95,6 +97,7 @@ public class CoworkingTests
             1 -  ⊙   X-PerfectEvent v0.3.4 → ⏚/v0.3.5 (CodeChange)
             Required build for 1 from the single pivot out of 2 repositories and 1 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-PerfectEvent ⏚/v0.3.5 built: 1 package.
             ❰✓❱
 
             """ );
@@ -127,6 +130,7 @@ public class CoworkingTests
             1 -  ⊙   X-PerfectEvent v0.3.5 → ⏚/v0.3.6--ci.1 (CodeChange)
             Required build for 1 from the single pivot out of 2 repositories and 1 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-PerfectEvent ⏚/v0.3.6--ci.1 built: 1 package.
             ❰✓❱
 
             """ );
@@ -150,6 +154,7 @@ public class CoworkingTests
             1 -  ⊙   X-PerfectEvent v0.3.5 → ⏚/v0.4.0 (CodeChange)
             Required build for 1 from the single pivot out of 2 repositories and 1 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-PerfectEvent ⏚/v0.4.0 built: 1 package.
             ❰✓❱
 
             """ );

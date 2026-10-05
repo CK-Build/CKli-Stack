@@ -1,9 +1,11 @@
 using CK.Core;
+using CKli;
 using CKli.Core;
 using CKli.Core.GitHosting.Providers;
 using NUnit.Framework;
 using Shouldly;
 using System;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using static CK.Testing.MonitorTestHelper;
 
@@ -38,6 +40,19 @@ internal static class Helper
                          "The user-secrets store must be configured." );
         }
         return _gitHubProvider;
+    }
+
+    /// <summary>
+    /// Gets the content of a screen that displays paths under the test's "Cloned" folder (the warnings of the real
+    /// RepoBuilder, for instance) independently of the machine: that folder is replaced by "&lt;Cloned&gt;" and the
+    /// trailing spaces of every line are removed, since a padding depends on the length of the longest line.
+    /// </summary>
+    /// <param name="screen">This screen.</param>
+    /// <returns>The portable content.</returns>
+    public static string ToPortableString( this IScreen screen )
+    {
+        var s = screen.ToString().Replace( TestHelper.CKliClonedPath.Path, "<Cloned>" );
+        return Regex.Replace( s, " +(?=\r?\n|$)", "" );
     }
 
     public static (NormalizedPath NuGetOrgPath, NormalizedPath SignatureOSPath) GetFakeFeedPaths( NormalizedPath clonedFolder )

@@ -55,6 +55,8 @@ public class RollingLocalCIBuildTests
             2 -  X-Consumer (v0.1.2) → ⏚/v0.1.2--ci.2 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Core ⏚/v1.0.2--ci.1 built: 1 package.
+             i  X-Consumer ⏚/v0.1.2--ci.2 built: 1 package.
             ❰✓❱
 
             """ );
@@ -114,6 +116,8 @@ public class RollingLocalCIBuildTests
             2 -  X-Consumer v0.1.2 → ⏚/v0.1.3--ci.1 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Core ⏚/v1.0.3--ci.0 built: 1 package.
+             i  X-Consumer ⏚/v0.1.3--ci.1 built: 1 package.
             ❰✓❱
 
             """ );

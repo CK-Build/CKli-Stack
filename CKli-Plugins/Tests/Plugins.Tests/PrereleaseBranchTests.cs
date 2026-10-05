@@ -98,6 +98,9 @@ public class PrereleaseBranchTests
             2 -  ·→  X-Sample          v0.0.0 → ⏚/v0.1.0-romeo (UpstreamBuild)
             Required build for 2 from the single pivot out of 4 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-PerfectEvent ⏚/v0.4.0-romeo built: 1 package.
+             i  X-Sample ⏚/v0.1.0-romeo built: 1 package.
+                 W  Repository 'X-Sample': Both local 'romeo' and remote 'origin/romeo' not found.
             ❰✓❱
 
             """ );
@@ -187,6 +190,10 @@ public class PrereleaseBranchTests
             3 -  ·→  X-Sample          (v0.1.0-romeo) → ⏚/v0.1.0-romeo.0.ci.2 (UpstreamBuild)
             Required build for 3 from the single pivot out of 4 repositories and 3 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-ActivityMonitor ⏚/v0.1.2-romeo.0.ci.1 built: 1 package.
+                 W  Repository 'X-ActivityMonitor': Both local 'romeo' and remote 'origin/romeo' not found.
+             i  X-PerfectEvent ⏚/v0.4.0-romeo.0.ci.5 built: 1 package.
+             i  X-Sample ⏚/v0.1.0-romeo.0.ci.2 built: 1 package.
             ❰✓❱
 
             """ );
@@ -201,6 +208,9 @@ public class PrereleaseBranchTests
             3 -  ·→  X-Sample          v0.0.0 → ⏚/v0.1.0-romeo (UpstreamBuild, CodeChange)
             Required build for 3 from the single pivot out of 4 repositories and 3 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-ActivityMonitor ⏚/v0.1.2-romeo built: 1 package.
+             i  X-PerfectEvent ⏚/v0.4.0-romeo built: 1 package.
+             i  X-Sample ⏚/v0.1.0-romeo built: 1 package.
             ❰✓❱
 
             """ );
@@ -234,6 +244,7 @@ public class PrereleaseBranchTests
             1 -  ⊙   X-Pivot v2.0.0 → ⏚/v2.0.1-romeo.0.ci.1 (CI0+branch)
             Required build for 1 from the single pivot out of 2 repositories and 1 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Pivot ⏚/v2.0.1-romeo.0.ci.1 built: 1 package.
             ❰✓❱
 
             """ );

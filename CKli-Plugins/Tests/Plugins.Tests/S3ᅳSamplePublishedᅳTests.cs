@@ -70,8 +70,9 @@ public partial class S3ᅳSamplePublishedᅳTests
               -      Samples/CKt-Sample-Monitoring v0.0.0
             Required build for 1 from the single pivot out of 6 repositories and 1 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+             i  Samples/CKt-App-Sample ⏚/v0.0.1 built: 1 package.
             ❰✓❱
-            
+
             """ );
 
     }
