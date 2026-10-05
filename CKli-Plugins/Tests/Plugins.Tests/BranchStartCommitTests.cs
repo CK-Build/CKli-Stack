@@ -42,7 +42,7 @@ public class BranchStartCommitTests
     }
 
     /// <summary>
-    /// A "Release" link behaves the same here: the last release of the parent is the commit to start from.
+    /// A "Regular" link behaves the same here: the last release of the parent is the commit to start from.
     /// (What separates it from "CI" is that a CI build of the parent doesn't move it - that needs a CI build
     /// to observe, which the harness covers elsewhere.)
     /// </summary>
@@ -56,7 +56,7 @@ public class BranchStartCommitTests
         var r = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
         var built = await BuildOnStableThenLeaveAnUnbuiltCommitAsync( r ).ConfigureAwait( false );
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "quebec", "--link", "Release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "quebec", "--link", "Regular" )).ShouldBeTrue();
 
         BranchTip( r, "quebec" ).ShouldBe( built, "The unbuilt commit of 'stable' is not in 'quebec'." );
     }
@@ -88,7 +88,7 @@ public class BranchStartCommitTests
     }
 
     /// <summary>
-    /// The other half of the rule: when the last built commit cannot be found, a "Release" or "CI" branch is not
+    /// The other half of the rule: when the last built commit cannot be found, a "Regular" or "CI" branch is not
     /// created at some fallback commit - the command fails. A freshly created repository has nothing built on
     /// "stable" (its version tag is on "dev/stable"), so it cannot open a branch that starts from a release.
     /// </summary>
@@ -101,7 +101,7 @@ public class BranchStartCommitTests
 
         var r = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "quebec", "--link", "Release" )).ShouldBeFalse();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "quebec", "--link", "Regular" )).ShouldBeFalse();
 
         using var e = r.CreateEditor();
         e.GitRepository.Repository.Branches["quebec"].ShouldBeNull( "The branch has not been created." );

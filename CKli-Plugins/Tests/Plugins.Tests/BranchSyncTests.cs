@@ -15,7 +15,7 @@ namespace Plugins.Tests;
 /// <summary>
 /// "ckli branch sync" integrates into a branch what its link propagates from its closest existing parent (see
 /// <see cref="CKli.BranchModel.Plugin.HotBranch.GetLinkCommit"/>): a "Full" link the parent's "dev/" tip, a "CI"
-/// link the parent's last built commit (CI builds included) and a "Release" link its last released one. The merge
+/// link the parent's last built commit (CI builds included) and a "Regular" link its last released one. The merge
 /// always targets the "dev/" branch and the optional mode overrides the configured link type.
 /// <para>
 /// These tests use the fake build harness only. As in <see cref="BranchStartCommitTests"/>, each link type has its
@@ -87,11 +87,11 @@ public class BranchSyncTests
     }
 
     /// <summary>
-    /// A "Release" link ignores the CI builds of its parent. The mode overrides the configured link type: a "Full"
+    /// A "Regular" link ignores the CI builds of its parent. The mode overrides the configured link type: a "Full"
     /// synchronization of the same branch integrates the parent's tip, built or not.
     /// </summary>
     [Test]
-    public async Task a_Release_link_ignores_CI_builds_unless_the_mode_overrides_it_Async()
+    public async Task a_Regular_link_ignores_CI_builds_unless_the_mode_overrides_it_Async()
     {
         using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
         var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
@@ -99,7 +99,7 @@ public class BranchSyncTests
 
         var r = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
         var unbuilt = await BuildOnStableThenLeaveAnUnbuiltCommitAsync( r ).ConfigureAwait( false );
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "quebec", "--link", "Release" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "quebec", "--link", "Regular" )).ShouldBeTrue();
 
         await CIBuildStableAsync( r ).ConfigureAwait( false );
 
@@ -233,7 +233,7 @@ public class BranchSyncTests
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
             (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra", "--mode", "Manual" )).ShouldBeFalse();
-            logs.ShouldContain( "Invalid link type 'Manual'. Must be Release, CI or Full." );
+            logs.ShouldContain( "Invalid link type 'Manual'. Must be Regular, CI or Full." );
         }
     }
 

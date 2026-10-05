@@ -79,7 +79,7 @@ public class BranchNamespaceTests
     {
         var e = XElement.Parse( """
             <BranchModel AutoFixDevBranch="false">
-              <Prerelease Name="zulu" Link="Release" />
+              <Prerelease Name="zulu" Link="Regular" />
             </BranchModel>
             """ );
         var ns = new BranchNamespace( null, e );
@@ -88,8 +88,33 @@ public class BranchNamespaceTests
 
         e.ToString().ShouldBe( """
             <BranchModel AutoFixDevBranch="false" Root="stable">
-              <Prerelease Name="zulu" Link="Release" />
+              <Prerelease Name="zulu" Link="Regular" />
               <Prerelease Name="romeo" Link="Full" />
+            </BranchModel>
+            """ );
+    }
+
+    /// <summary>
+    /// "Release" is read as the <see cref="BranchLinkType.Regular"/> link type, and is written back as "Regular".
+    /// </summary>
+    [Test]
+    public void Release_is_read_as_the_Regular_link_type()
+    {
+        var e = XElement.Parse( """
+            <BranchModel>
+              <Prerelease Name="zulu" Link="Release" />
+              <Explo Name="explo/v-next" Link="release" Parent="zulu" />
+            </BranchModel>
+            """ );
+        var ns = new BranchNamespace( null, e );
+        ns.FindRequired( "zulu" ).LinkType.ShouldBe( BranchLinkType.Regular );
+        ns.FindRequired( "explo/v-next" ).LinkType.ShouldBe( BranchLinkType.Regular );
+        ns.WriteConfiguration( e );
+
+        e.ToString().ShouldBe( """
+            <BranchModel Root="stable">
+              <Prerelease Name="zulu" Link="Regular" />
+              <Explo Name="explo/v-next" Link="Regular" Parent="zulu" />
             </BranchModel>
             """ );
     }
@@ -181,8 +206,8 @@ public class BranchNamespaceTests
         b.Name.ShouldBe( "alpha" );
         b.Parent.ShouldNotBeNull().Name.ShouldBe( "romeo" );
 
-        (ns, b) = ns.AddOrUpdate( BranchLinkType.Release, CSVersionKind.Delta );
-        b.LinkType.ShouldBe( BranchLinkType.Release );
+        (ns, b) = ns.AddOrUpdate( BranchLinkType.Regular, CSVersionKind.Delta );
+        b.LinkType.ShouldBe( BranchLinkType.Regular );
         b.Name.ShouldBe( "delta" );
         b.Parent.ShouldNotBeNull().Name.ShouldBe( "romeo" );
         ns.GetDisplayTree().ShouldBe( """
@@ -196,7 +221,7 @@ public class BranchNamespaceTests
             <BranchModel Root="stable">
               <Prerelease Name="zulu" Link="CI" />
               <Prerelease Name="romeo" Link="Full" />
-              <Prerelease Name="delta" Link="Release" />
+              <Prerelease Name="delta" Link="Regular" />
               <Prerelease Name="alpha" Link="Manual" />
             </BranchModel>
             """ );
@@ -262,7 +287,7 @@ public class BranchNamespaceTests
             """ );
         // 2 exploratory branches with 2 different parents: GetExplo() emits them as 2 top level elements,
         // each with its own Parent attribute.
-        var (withExplo, _) = def.AddOrUpdateExplo( "explo/v-next", BranchLinkType.Release, def.FindRequired( "romeo" ) );
+        var (withExplo, _) = def.AddOrUpdateExplo( "explo/v-next", BranchLinkType.Regular, def.FindRequired( "romeo" ) );
         (withExplo, _) = withExplo.AddOrUpdateExplo( "explo/spike", BranchLinkType.CI, withExplo.FindRequired( "zulu" ) );
 
         var lts = new BranchNamespace( "@net8", withExplo.ToConfiguration() );
@@ -284,7 +309,7 @@ public class BranchNamespaceTests
         lts.GetPrereleases().Select( e => e.ToString() ).Concatenate( "" )
            .ShouldBe( """<Prerelease Name="zulu" Link="CI" /><Prerelease Name="romeo" Link="Full" />""" );
         lts.GetExplo().Select( e => e.ToString() ).Concatenate( "" )
-           .ShouldBe( """<Explo Name="explo/v-next" Link="Release" Parent="romeo" /><Explo Name="explo/spike" Link="CI" Parent="zulu" />""" );
+           .ShouldBe( """<Explo Name="explo/v-next" Link="Regular" Parent="romeo" /><Explo Name="explo/spike" Link="CI" Parent="zulu" />""" );
         new BranchNamespace( "@net8", lts.ToConfiguration() ).ShouldBe( lts );
 
         // CreateForLTS keeps only the root branch: this is the configuration "ckli lts create" writes.
@@ -327,7 +352,7 @@ public class BranchNamespaceTests
             <BranchModel Root="stable">
               <Prerelease Name="zulu" Link="CI" />
               <Prerelease Name="romeo" Link="Full" />
-              <Prerelease Name="delta" Link="Release" />
+              <Prerelease Name="delta" Link="Regular" />
               <Prerelease Name="alpha" Link="Manual" />
             </BranchModel>
             """ );
@@ -341,8 +366,8 @@ public class BranchNamespaceTests
         ns = ns.Remove( b );
         ns.GetExplo().ShouldBeEmpty();
 
-        (ns, b) = ns.AddOrUpdateExplo( "explo/v-next", BranchLinkType.Release, ns.FindRequired( "romeo" ) );
-        b.LinkType.ShouldBe( BranchLinkType.Release );
+        (ns, b) = ns.AddOrUpdateExplo( "explo/v-next", BranchLinkType.Regular, ns.FindRequired( "romeo" ) );
+        b.LinkType.ShouldBe( BranchLinkType.Regular );
         b.Parent.ShouldNotBeNull().Name.ShouldBe( "romeo" );
 
         (ns, b) = ns.AddOrUpdateExplo( "explo/again", BranchLinkType.Manual, b );
@@ -352,9 +377,9 @@ public class BranchNamespaceTests
             <BranchModel Root="stable">
               <Prerelease Name="zulu" Link="CI" />
               <Prerelease Name="romeo" Link="Full" />
-              <Prerelease Name="delta" Link="Release" />
+              <Prerelease Name="delta" Link="Regular" />
               <Prerelease Name="alpha" Link="Manual" />
-              <Explo Name="explo/v-next" Link="Release" Parent="romeo">
+              <Explo Name="explo/v-next" Link="Regular" Parent="romeo">
                 <Explo Name="explo/again" Link="Manual" />
               </Explo>
             </BranchModel>
@@ -363,7 +388,7 @@ public class BranchNamespaceTests
         ns = ns.Remove( ns.FindRequired( "romeo" ) );
         ns.GetExplo().Select( e => e.ToString() ).Concatenate( "" )
           .ShouldBe( """
-            <Explo Name="explo/v-next" Link="Release" Parent="zulu">
+            <Explo Name="explo/v-next" Link="Regular" Parent="zulu">
               <Explo Name="explo/again" Link="Manual" />
             </Explo>
             """ );

@@ -48,7 +48,7 @@ public class BranchListTests
 
             Links:
               |✋ Manual: nothing is propagated from the parent.
-              |> Release: a version built on the parent is merged.
+              |> Regular: a version built on the parent is merged.
               -> CI (the default): any commit built on the parent is merged.
               => Full: every commit of the parent's "dev/" branch is merged.
             ❰✓❱
@@ -90,7 +90,7 @@ public class BranchListTests
 
             Links:
               |✋ Manual: nothing is propagated from the parent.
-              |> Release: a version built on the parent is merged.
+              |> Regular: a version built on the parent is merged.
               -> CI (the default): any commit built on the parent is merged.
               => Full: every commit of the parent's "dev/" branch is merged.
             ❰✓❱
@@ -133,7 +133,7 @@ public class BranchListTests
 
             Links:
               |✋ Manual: nothing is propagated from the parent.
-              |> Release: a version built on the parent is merged.
+              |> Regular: a version built on the parent is merged.
               -> CI (the default): any commit built on the parent is merged.
               => Full: every commit of the parent's "dev/" branch is merged.
             ❰✓❱
@@ -152,7 +152,7 @@ public class BranchListTests
 
             Links:
               |✋ Manual: nothing is propagated from the parent.
-              |> Release: a version built on the parent is merged.
+              |> Regular: a version built on the parent is merged.
               -> CI (the default): any commit built on the parent is merged.
               => Full: every commit of the parent's "dev/" branch is merged.
             ❰✓❱
