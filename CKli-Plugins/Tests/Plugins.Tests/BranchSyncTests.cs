@@ -192,8 +192,8 @@ public class BranchSyncTests
     }
 
     /// <summary>
-    /// A repository with issues is skipped, and a skipped repository is a failure: the branch has not been
-    /// synchronized there. Here "sierra" and "dev/sierra" both have a commit of their own (they are desynchronized).
+    /// A repository where the branch has an issue is skipped, and a skipped repository is a failure: the branch has not
+    /// been synchronized there. Here "sierra" and "dev/sierra" both have a commit of their own (they are desynchronized).
     /// </summary>
     [Test]
     public async Task a_repository_with_issues_fails_the_command_Async()
@@ -212,9 +212,32 @@ public class BranchSyncTests
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
         {
             (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra" )).ShouldBeFalse();
-            logs.ShouldContain( l => l.Contains( "Repository 'X-Core' has issues: branch 'sierra' has not been synchronized." ) );
+            logs.ShouldContain( l => l.Contains( "Please fix the 'sierra' or 'stable' branch issue in 'X-Core' before synchronizing 'sierra'." ) );
         }
         WorkTip( r, "sierra" ).ShouldBe( before );
+    }
+
+    /// <summary>
+    /// Only the branch and its closest existing parent matter: "juliet", a child of "sierra", is desynchronized (it and
+    /// its "dev/" branch both have a commit of their own), which doesn't prevent "sierra" from being synchronized.
+    /// </summary>
+    [Test]
+    public async Task an_issue_on_another_branch_does_not_prevent_the_synchronization_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var r = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "sierra", "--link", "Full" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "juliet", "--link", "Full" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: "dev/juliet" );
+        TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: "juliet", fileName: "OnBase.txt" );
+        TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: "dev/stable" );
+        var stableTip = BranchTip( r, "dev/stable" );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra" )).ShouldBeTrue();
+        WorkTip( r, "sierra" ).ShouldBe( stableTip );
     }
 
     /// <summary>

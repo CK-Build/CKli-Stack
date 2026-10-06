@@ -105,7 +105,7 @@ public class BranchOpenCloseTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "status" )).ShouldBeTrue( "The World still opens." );
     }
 
-    static string? BranchModel( FakeBuildStack stack )
+    internal static string? BranchModel( FakeBuildStack stack )
     {
         var root = XDocument.Load( stack.StackRoot.AppendPart( StackRepository.PublicStackName ).AppendPart( "Test.xml" ) ).Root!;
         return root.Element( "Plugins" )?.Element( "BranchModel" )?.ToString();
