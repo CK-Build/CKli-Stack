@@ -138,6 +138,49 @@ public class FocusBuildTests
     }
 
     /// <summary>
+    /// The development loop: X-Up is modified twice, each time followed by a "build --focus" that stops after the
+    /// focused builds. Each run leaves the "building/" tags of the new CI versions of X-Up and X-Pivot: the roadmap
+    /// did not finish its job, X-Sibling has not been built.
+    /// <para>
+    /// A CI build produces a new version each time: the "building/" tags don't pile up for all that, the second
+    /// run replaces the ones of the first run. Once a build completes the roadmap, no "building/" tag remains.
+    /// </para>
+    /// </summary>
+    [Test]
+    public async Task successive_stopped_focus_builds_leave_no_building_tag_once_completed_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rUp = await world.CreateRepoAsync( "X-Up", "v1.0.0" ).ConfigureAwait( false );
+        var rPivot = await world.CreateRepoAsync( "X-Pivot", "v1.0.0", references: [rUp] ).ConfigureAwait( false );
+        var rSibling = await world.CreateRepoAsync( "X-Sibling", "v1.0.0", references: [rUp] ).ConfigureAwait( false );
+
+        TestHelper.TouchAndCommit( rUp.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus" )).ShouldBeTrue();
+        BuildingTags( rUp ).Length.ShouldBe( 1 );
+        BuildingTags( rPivot ).Length.ShouldBe( 1 );
+        var firstUp = BuildingTags( rUp )[0];
+
+        TestHelper.TouchAndCommit( rUp.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus" )).ShouldBeTrue();
+        // The second run built a new CI version of X-Up and its "building/" tag replaced the one of the first run.
+        firstUp.ShouldBe( "building/v1.0.1--ci.1" );
+        VersionTags( rUp ).ShouldBe( ["building/v1.0.1--ci.2", "v1.0.0"], ignoreOrder: true );
+        BuildingTags( rPivot ).Length.ShouldBe( 1 );
+
+        // Completes the roadmap: X-Sibling is built.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus", "--continue" )).ShouldBeTrue();
+        VersionTags( rSibling ).ShouldContain( t => t.StartsWith( "local/" ) );
+
+        foreach( var r in new[] { rUp, rPivot, rSibling } )
+        {
+            BuildingTags( r ).ShouldBeEmpty( $"No 'building/' tag must remain in '{r.DisplayPath}'. Its tags: '{string.Join( "', '", VersionTags( r ) )}'." );
+        }
+    }
+
+    /// <summary>
     /// "--continue" only applies to "--focus".
     /// </summary>
     [Test]
@@ -233,6 +276,17 @@ public class FocusBuildTests
         }
         stack.Screen.ToString().ShouldContain( "Required build for 2 repositories across the 2 repositories" );
     }
+
+    static string[] VersionTags( FakeBuildRepo repo )
+    {
+        using var e = repo.CreateEditor();
+        return e.GitRepository.Repository.Tags
+                .Select( t => t.FriendlyName )
+                .Where( n => n.StartsWith( 'v' ) || n.Contains( "/v" ) )
+                .ToArray();
+    }
+
+    static string[] BuildingTags( FakeBuildRepo repo ) => VersionTags( repo ).Where( t => t.StartsWith( "building/" ) ).ToArray();
 
     static int TagCount( FakeBuildRepo repo )
     {
