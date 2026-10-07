@@ -140,6 +140,58 @@ public class PartialBuildFailureTests
     }
 
     /// <summary>
+    /// A breaking change builds the next Major. Only a published version is a LastStable, so the hot zone of
+    /// X-Core is still based on "v1.0.1" while its "building/v2.0.0" waits: that is the version a breaking change
+    /// produces, not a hot zone issue. The next build completes the interrupted one, as for a Patch.
+    /// </summary>
+    [Test]
+    public async Task an_interrupted_major_build_is_promoted_by_the_next_build_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        var rConsumer = await world.CreateRepoAsync( "X-Consumer", "v0.1.1", references: [rCore] ).ConfigureAwait( false );
+
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null, commitMessage: "fix!: A breaking change." );
+        rConsumer.FailBuild = true;
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--regular" )).ShouldBeFalse();
+        VersionTags( rCore ).ShouldBe( ["building/v2.0.0", "v1.0.1"], ignoreOrder: true );
+        var failedBuildCommit = CommitOf( rCore, "building/v2.0.0" );
+
+        rConsumer.FailBuild = false;
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--regular" )).ShouldBeTrue();
+        VersionTags( rCore ).ShouldBe( ["local/v2.0.0", "v1.0.1"], ignoreOrder: true );
+        CommitOf( rCore, "local/v2.0.0" ).ShouldBe( failedBuildCommit, "Completed in place: the commit is unchanged." );
+        VersionTags( rConsumer ).ShouldContain( t => t.StartsWith( "local/v" ) );
+    }
+
+    /// <summary>
+    /// The successful counterpart: a pending "local/v2.0.0" release on top of a published "v1.0.1" does not block
+    /// the next build either. New code on "stable" rolls the unpublished release forward, on the new commit.
+    /// </summary>
+    [Test]
+    public async Task a_pending_major_release_does_not_block_the_next_build_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null, commitMessage: "fix!: A breaking change." );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--regular" )).ShouldBeTrue();
+        VersionTags( rCore ).ShouldBe( ["local/v2.0.0", "v1.0.1"], ignoreOrder: true );
+        var firstBuildCommit = CommitOf( rCore, "local/v2.0.0" );
+
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: "stable" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--regular" )).ShouldBeTrue();
+        VersionTags( rCore ).ShouldBe( ["local/v2.0.0", "v1.0.1"], ignoreOrder: true );
+        CommitOf( rCore, "local/v2.0.0" ).ShouldNotBe( firstBuildCommit );
+    }
+
+    /// <summary>
     /// The harness seam itself: FakeBuildRepo.FailBuild fails only the repository that declares it, and is
     /// settable back to false.
     /// </summary>
