@@ -23,8 +23,8 @@ public class FocusBuildTests
     /// X-Up is modified. X-Pivot and X-Sibling consume it, X-Other is unrelated and modified too.
     /// <list type="bullet">
     ///   <item>"build" from X-Pivot: X-Up is skipped, so nothing is built.</item>
-    ///   <item>"build --focus": X-Up, X-Pivot and X-Sibling. X-Sibling is neither upstream nor downstream of the
-    ///   pivot but a consumer of a rebuilt package is always rebuilt. X-Other is skipped.</item>
+    ///   <item>"build --focus --continue": X-Up, X-Pivot and X-Sibling. X-Sibling is neither upstream nor downstream
+    ///   of the pivot but a consumer of a rebuilt package is always rebuilt. X-Other is skipped.</item>
     ///   <item>"*build": the 4 of them.</item>
     /// </list>
     /// </summary>
@@ -51,15 +51,16 @@ public class FocusBuildTests
         stack.Screen.ToString().ShouldContain( "Required build for 4 from the single pivot out of 4 repositories" );
 
         stack.Screen.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus", "--dry-run" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus", "--continue", "--dry-run" )).ShouldBeTrue();
         var screen = stack.Screen.ToString();
         screen.ShouldContain( "Required build for 3 from the single pivot out of 4 repositories" );
         screen.ShouldNotContain( "may detect required builds in upstreams repositories", customMessage: "'--focus' already considers the upstreams." );
+        screen.ShouldNotContain( "'--focus' stops before" );
 
         var before = (Up: TagCount( rUp ), Pivot: TagCount( rPivot ), Sibling: TagCount( rSibling ), Other: TagCount( rOther ));
         using( var logs = GrandOutput.Default!.CreateMemoryCollector( 1000 ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus", "--continue" )).ShouldBeTrue();
             // Only X-Other has its own reason to build and is left out: X-Sibling is built, X-Pivot is the pivot.
             logs.ExtractCurrentTexts().ShouldContain( "'X-Other' is out of focus and was not built. Run '*build' to complete the World." );
         }
@@ -71,7 +72,7 @@ public class FocusBuildTests
 
     /// <summary>
     /// Once X-Up is built, X-Pivot and X-Sibling are both ready and there are 2 monitors: without "--focus" they
-    /// start together. With it, X-Sibling (neither upstream nor downstream of the pivot) waits for the pivot to
+    /// start together. With "--focus --continue", X-Sibling (neither upstream nor downstream of the pivot) waits for the pivot to
     /// complete: the pivots' results are really first.
     /// </summary>
     [Test]
@@ -88,12 +89,69 @@ public class FocusBuildTests
 
         using( var logs = GrandOutput.Default!.CreateMemoryCollector( 1000 ) )
         {
-            (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus", "--max-dop", "2" )).ShouldBeTrue();
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus", "--continue", "--max-dop", "2" )).ShouldBeTrue();
             var texts = logs.ExtractCurrentTexts().ToList();
             int pivotDone = texts.IndexOf( "Build 'X-Pivot' succeed." );
             int siblingStart = texts.IndexOf( "Building roadmap n°3/3: 'X-Sibling'." );
             pivotDone.ShouldBeGreaterThanOrEqualTo( 0 );
             siblingStart.ShouldBeGreaterThan( pivotDone );
+        }
+    }
+
+    /// <summary>
+    /// By default, "--focus" stops once the pivots and their upstreams are built: X-Up and X-Pivot are built,
+    /// X-Sibling (a consumer of X-Up that is not related to the pivot) is not started and the command succeeds.
+    /// A following "build --focus --continue" builds X-Sibling.
+    /// </summary>
+    [Test]
+    public async Task focus_stops_after_the_focused_builds_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rUp = await world.CreateRepoAsync( "X-Up", "v1.0.0" ).ConfigureAwait( false );
+        var rPivot = await world.CreateRepoAsync( "X-Pivot", "v1.0.0", references: [rUp] ).ConfigureAwait( false );
+        var rSibling = await world.CreateRepoAsync( "X-Sibling", "v1.0.0", references: [rUp] ).ConfigureAwait( false );
+        TestHelper.TouchAndCommit( rUp.WorkingFolderPath, branchName: null );
+
+        stack.Screen.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus", "--dry-run" )).ShouldBeTrue();
+        var screen = stack.Screen.ToString();
+        screen.ShouldContain( "Required build for 3 from the single pivot out of 3 repositories" );
+        screen.ShouldContain( "('--focus' stops before the other build: use '--continue' to build it.)" );
+
+        var before = (Up: TagCount( rUp ), Pivot: TagCount( rPivot ), Sibling: TagCount( rSibling ));
+        using( var logs = GrandOutput.Default!.CreateMemoryCollector( 1000 ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus", "--max-dop", "2" )).ShouldBeTrue();
+            var texts = logs.ExtractCurrentTexts();
+            texts.ShouldContain( "Stopped after the focused builds ('--focus'): 1 of 3 builds were not started. Use '--continue' to build them." );
+            texts.ShouldNotContain( "Building roadmap n°3/3: 'X-Sibling'." );
+        }
+        TagCount( rUp ).ShouldBe( before.Up + 1 );
+        TagCount( rPivot ).ShouldBe( before.Pivot + 1 );
+        TagCount( rSibling ).ShouldBe( before.Sibling, "X-Sibling is not started." );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--focus", "--continue" )).ShouldBeTrue();
+        TagCount( rSibling ).ShouldBe( before.Sibling + 1 );
+    }
+
+    /// <summary>
+    /// "--continue" only applies to "--focus".
+    /// </summary>
+    [Test]
+    public async Task continue_requires_focus_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var rPivot = await world.CreateRepoAsync( "X-Pivot", "v1.0.0" ).ConfigureAwait( false );
+
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--continue", "--dry-run" )).ShouldBeFalse();
+            logs.ShouldContain( "'--continue' applies to '--focus' that must be specified." );
         }
     }
 
