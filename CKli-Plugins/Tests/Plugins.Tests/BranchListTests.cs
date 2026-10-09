@@ -49,8 +49,8 @@ public class BranchListTests
             Links:
               |✋ Manual: nothing is synchronized from the parent.
               |> Regular: the parent's last regular version is merged.
-              -> CI (the default): the parent's last version, regular or CI, is merged.
-              => Full: the parent's "dev/" branch is merged.
+              -> CI: the parent's last version, regular or CI, is merged.
+              => Full (the default): the parent's "dev/" branch is merged.
             ❰✓❱
 
             """ );
@@ -92,8 +92,8 @@ public class BranchListTests
             Links:
               |✋ Manual: nothing is synchronized from the parent.
               |> Regular: the parent's last regular version is merged.
-              -> CI (the default): the parent's last version, regular or CI, is merged.
-              => Full: the parent's "dev/" branch is merged.
+              -> CI: the parent's last version, regular or CI, is merged.
+              => Full (the default): the parent's "dev/" branch is merged.
 
             Merges:
               ↖ "ckli branch close": what closing the branch would merge into its parent.
@@ -141,8 +141,8 @@ public class BranchListTests
             Links:
               |✋ Manual: nothing is synchronized from the parent.
               |> Regular: the parent's last regular version is merged.
-              -> CI (the default): the parent's last version, regular or CI, is merged.
-              => Full: the parent's "dev/" branch is merged.
+              -> CI: the parent's last version, regular or CI, is merged.
+              => Full (the default): the parent's "dev/" branch is merged.
 
             Merges:
               ↖ "ckli branch close": what closing the branch would merge into its parent.
@@ -166,8 +166,8 @@ public class BranchListTests
             Links:
               |✋ Manual: nothing is synchronized from the parent.
               |> Regular: the parent's last regular version is merged.
-              -> CI (the default): the parent's last version, regular or CI, is merged.
-              => Full: the parent's "dev/" branch is merged.
+              -> CI: the parent's last version, regular or CI, is merged.
+              => Full (the default): the parent's "dev/" branch is merged.
 
             Merges:
               ↖ "ckli branch close": what closing the branch would merge into its parent.

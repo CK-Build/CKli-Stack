@@ -43,8 +43,8 @@ public class BranchNamespaceTests
 
     /// <summary>
     /// The configuration spells a link type by the very name the "--link" option of "ckli branch open" takes,
-    /// and it always writes it - including the CI default: a World definition file states what is true instead
-    /// of relying on a default its reader has to know. Reading stays tolerant: an absent Link is CI.
+    /// and it always writes it - including the Full default: a World definition file states what is true instead
+    /// of relying on a default its reader has to know. Reading stays tolerant: an absent Link is Full.
     /// </summary>
     [Test]
     public void the_configuration_always_writes_the_Link_and_round_trips()
@@ -52,20 +52,20 @@ public class BranchNamespaceTests
         var ns = Namespace( """
             <BranchModel Root="stable">
               <Prerelease Name="zulu" />
-              <Prerelease Name="romeo" Link="Full" />
+              <Prerelease Name="romeo" Link="CI" />
               <Explo Name="explo/v-next" Parent="romeo" />
             </BranchModel>
             """ );
-        ns.FindRequired( "zulu" ).LinkType.ShouldBe( BranchLinkType.CI, "An absent Link is CI." );
-        ns.FindRequired( "explo/v-next" ).LinkType.ShouldBe( BranchLinkType.CI );
+        ns.FindRequired( "zulu" ).LinkType.ShouldBe( BranchLinkType.Full, "An absent Link is Full." );
+        ns.FindRequired( "explo/v-next" ).LinkType.ShouldBe( BranchLinkType.Full );
 
         ns.ToString().ShouldBe( """
             <BranchModel Root="stable">
-              <Prerelease Name="zulu" Link="CI" />
-              <Prerelease Name="romeo" Link="Full" />
-              <Explo Name="explo/v-next" Link="CI" Parent="romeo" />
+              <Prerelease Name="zulu" Link="Full" />
+              <Prerelease Name="romeo" Link="CI" />
+              <Explo Name="explo/v-next" Link="Full" Parent="romeo" />
             </BranchModel>
-            """, "The CI default is written back explicitly." );
+            """, "The Full default is written back explicitly." );
 
         new BranchNamespace( null, ns.ToConfiguration() ).ShouldBe( ns );
     }
@@ -248,7 +248,7 @@ public class BranchNamespaceTests
     /// <summary>
     /// BranchLinkType.None is "not specified" (this is what "ckli branch open" without --link submits): only the
     /// root branch can have it, since a &lt;Prerelease&gt; element always writes its Link. A new branch defaults
-    /// to CI, an already opened one keeps its link type.
+    /// to Full, an already opened one keeps its link type.
     /// </summary>
     [Test]
     public void a_mainline_branch_never_has_the_None_link_type()
@@ -256,14 +256,14 @@ public class BranchNamespaceTests
         var def = new BranchNamespace( null, null );
 
         var (ns, b) = def.AddOrUpdate( BranchLinkType.None, CSVersionKind.Romeo );
-        b.LinkType.ShouldBe( BranchLinkType.CI, "A new branch defaults to CI." );
+        b.LinkType.ShouldBe( BranchLinkType.Full, "A new branch defaults to Full." );
 
-        (ns, b) = ns.AddOrUpdate( BranchLinkType.Full, CSVersionKind.Romeo );
+        (ns, b) = ns.AddOrUpdate( BranchLinkType.Regular, CSVersionKind.Romeo );
         (ns, b) = ns.AddOrUpdate( BranchLinkType.None, CSVersionKind.Romeo );
-        b.LinkType.ShouldBe( BranchLinkType.Full, "An opened branch keeps its link type." );
+        b.LinkType.ShouldBe( BranchLinkType.Regular, "An opened branch keeps its link type." );
         ns.ToString().ShouldBe( """
             <BranchModel Root="stable">
-              <Prerelease Name="romeo" Link="Full" />
+              <Prerelease Name="romeo" Link="Regular" />
             </BranchModel>
             """ );
 
@@ -361,7 +361,7 @@ public class BranchNamespaceTests
         var (ns, b) = def.AddOrUpdateExplo( "explo/v-next" );
         b.Parent.ShouldNotBeNull().Name.ShouldBe( "alpha" );
         ns.GetExplo().Select( e => e.ToString() ).Concatenate( "" )
-          .ShouldBe( """<Explo Name="explo/v-next" Link="CI" Parent="alpha" />""" );
+          .ShouldBe( """<Explo Name="explo/v-next" Link="Full" Parent="alpha" />""" );
 
         ns = ns.Remove( b );
         ns.GetExplo().ShouldBeEmpty();

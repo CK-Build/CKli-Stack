@@ -17,12 +17,12 @@ namespace Plugins.Tests;
 public class BranchOpenCloseTests
 {
     /// <summary>
-    /// The link type is optional and defaults to CI. BranchLinkType.None is "not specified": back when the
+    /// The link type is optional and defaults to Full. BranchLinkType.None is "not specified": back when the
     /// main line was a single string, it had no code string there, so writing it produced "stable  romeo" -
     /// an unparsable configuration that made every subsequent command fail while instantiating the plugin.
     /// </summary>
     [Test]
-    public async Task branch_open_without_link_defaults_to_CI_Async()
+    public async Task branch_open_without_link_defaults_to_Full_Async()
     {
         using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
         var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
@@ -34,7 +34,7 @@ public class BranchOpenCloseTests
 
         BranchModel( stack ).ShouldBe( """
             <BranchModel Root="stable">
-              <Prerelease Name="romeo" Link="CI" />
+              <Prerelease Name="romeo" Link="Full" />
             </BranchModel>
             """ );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "status" )).ShouldBeTrue( "The configuration round trips: the World still opens." );
@@ -42,7 +42,7 @@ public class BranchOpenCloseTests
 
     /// <summary>
     /// The other half of the default: opening an already opened branch without specifying the link type keeps
-    /// the link type it has - it doesn't reset it to CI.
+    /// the link type it has - it doesn't reset it to Full.
     /// </summary>
     [Test]
     public async Task branch_open_without_link_keeps_the_link_of_an_opened_branch_Async()
@@ -53,10 +53,10 @@ public class BranchOpenCloseTests
 
         var r = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
 
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "romeo", "--link", "Full" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "romeo", "--link", "Manual" )).ShouldBeTrue();
         var opened = """
             <BranchModel Root="stable">
-              <Prerelease Name="romeo" Link="Full" />
+              <Prerelease Name="romeo" Link="Manual" />
             </BranchModel>
             """;
         BranchModel( stack ).ShouldBe( opened );
