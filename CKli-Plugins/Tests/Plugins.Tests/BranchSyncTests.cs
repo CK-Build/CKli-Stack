@@ -322,6 +322,47 @@ public class BranchSyncTests
     }
 
     /// <summary>
+    /// The parent has released since the last synchronization: the branch doesn't contain the new last stable version
+    /// of its repositories (the merge is what brings it), so its builds cannot be mapped. This is not an error: the
+    /// package versions that conflict resolve to the greatest one, the parent's release.
+    /// </summary>
+    [Test]
+    public async Task conflicting_package_versions_resolve_after_a_release_of_the_parent_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var core = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
+        var app = await world.CreateRepoAsync( "X-App", "v1.0.0", default, core ).ConfigureAwait( false );
+        TestHelper.TouchAndCommit( core.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "juliet", "--link", "CI" )).ShouldBeTrue();
+
+        TestHelper.TouchAndCommit( core.WorkingFolderPath, branchName: null, fileName: "Juliet.txt" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+
+        // The parent releases: its new last stable version is not in "juliet".
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "stable" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( core.WorkingFolderPath, branchName: null, fileName: "Stable.txt" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
+        var released = Reference( app, "stable", core.DefaultProjectName );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "juliet" )).ShouldBeTrue();
+        Reference( app, "dev/juliet", core.DefaultProjectName ).ShouldContain( "-juliet." );
+
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "sync", "juliet", "--all" )).ShouldBeTrue();
+            // X-Core is synchronized first, without conflict: X-App is the one that lacks its last stable version.
+            logs.ShouldContain( l => l.StartsWith( "'X-App' doesn't contain its last stable version 'v1.0.2'" ) );
+            logs.ShouldNotContain( l => l.StartsWith( "Unable to get tag commit tree" ) );
+            logs.ShouldContain( l => l.Contains( "into 'dev/juliet' in 'X-App' aligned 1 package version(s):" ) );
+        }
+        Reference( app, "dev/juliet", core.DefaultProjectName ).ShouldBe( released );
+        ParentsOf( app, WorkTip( app, "juliet" ) ).Length.ShouldBe( 2, "A merge commit." );
+    }
+
+    /// <summary>
     /// Aligning the package versions removes their conflicts only: a project file that also conflicts elsewhere is
     /// a real conflict and the merge fails.
     /// </summary>
