@@ -363,6 +363,42 @@ public class BranchSyncTests
     }
 
     /// <summary>
+    /// The parent has released a content that the branch already has (the same change has been made on both sides):
+    /// the merge brings no content but it brings the release's version tag, so the (empty) merge commit is created.
+    /// Without it, the branch's history wouldn't contain its last stable version and it couldn't be built.
+    /// </summary>
+    [Test]
+    public async Task a_release_of_the_parent_with_the_same_content_is_merged_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var r = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
+        TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "publish", "--regular" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "open", "sierra", "--link", "Full" )).ShouldBeTrue();
+
+        // The same change on both sides, then the parent releases it. The commit messages differ: two identical
+        // commits (same parent, tree, message and second) would be the very same commit.
+        TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: "sierra", commitMessage: "Same change on 'sierra'.", fileContent: _ => "Same.", fileName: "Same.txt" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "switch", "stable" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: null, commitMessage: "Same change on 'stable'.", fileContent: _ => "Same.", fileName: "Same.txt" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "publish", "--regular" )).ShouldBeTrue();
+        var released = BranchTip( r, "stable" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "switch", "sierra" )).ShouldBeTrue();
+        var before = WorkTip( r, "sierra" );
+        Contains( r, "sierra", released ).ShouldBeFalse();
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "sync", "sierra" )).ShouldBeTrue();
+        var merged = WorkTip( r, "sierra" );
+        ParentsOf( r, merged ).ShouldBe( [before, released], ignoreOrder: true );
+        Contains( r, "sierra", released ).ShouldBeTrue( "The release's version tag is in the branch's history." );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "build" )).ShouldBeTrue();
+    }
+
+    /// <summary>
     /// Aligning the package versions removes their conflicts only: a project file that also conflicts elsewhere is
     /// a real conflict and the merge fails.
     /// </summary>
