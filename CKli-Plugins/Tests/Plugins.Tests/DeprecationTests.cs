@@ -72,6 +72,14 @@ public class DeprecationTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rDown.Root, "tag", "list", "--local" )).ShouldBeTrue();
         display.ToString().ShouldContain( "v0.0.0+deprecated" );
 
+        // The deprecation is public: the tags have been pushed.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "tag", "list", "--remote" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "v0.3.3+deprecated" );
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rDown.Root, "tag", "list", "--remote" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "v0.0.0+deprecated" );
+
         // The alive versions are untouched: there is nothing to build.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular", "--dry-run" )).ShouldBeTrue();

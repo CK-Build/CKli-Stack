@@ -2,6 +2,8 @@ using CKli;
 using CKli.Core;
 using NUnit.Framework;
 using Shouldly;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using static CK.Testing.MonitorTestHelper;
 
@@ -115,8 +117,14 @@ public class S0ᅳInitᅳTests
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "issue", "--fix" )).ShouldBeTrue();
 
+        // The rebuilt tags are persistent deferred push ref specs: they are pushed by the next push, even
+        // if it is run by another process.
+        var perfectEventDeferredPush = context.CurrentDirectory.AppendPart( "CKt-PerfectEvent" ).Combine( ".git/CKLI_DEFERRED_PUSH" );
+        File.ReadAllLines( perfectEventDeferredPush ).Order().ShouldBe( ["+refs/tags/v0.2.0", "+refs/tags/v0.2.1", "+refs/tags/v0.3.0", "+refs/tags/v0.3.2"] );
+
         // ckli branch push stable
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "branch", "push", "stable" )).ShouldBeTrue();
+        File.Exists( perfectEventDeferredPush ).ShouldBeFalse();
 
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--dry-run" )).ShouldBeTrue();
