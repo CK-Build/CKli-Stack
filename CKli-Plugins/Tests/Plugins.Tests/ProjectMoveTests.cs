@@ -98,6 +98,33 @@ public class ProjectMoveTests
     }
 
     /// <summary>
+    /// "--with-tests" moves the "X.Tests" project of each moved project "X" (here "Lib.A.Tests" for "Lib.A"; "Lib.C"
+    /// has none): it lands in "Tests/" as if it had been named.
+    /// </summary>
+    [Test]
+    public async Task with_tests_moves_the_test_projects_of_the_moved_projects_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync().ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var source = await world.CreateRepoAsync( "X-Source", "v1.0.0" ).ConfigureAwait( false );
+        await AddLibrariesAsync( source ).ConfigureAwait( false );
+        var target = await world.CreateRepoAsync( "X-Target", null ).ConfigureAwait( false );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, target.Root, "project", "move", "Lib.C,Lib.A", "--with-tests" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "Test projects added by --with-tests: Lib.A.Tests." );
+
+        var t = target.WorkingFolderPath;
+        File.Exists( t.Combine( "Tests/Lib.A.Tests/Lib.A.Tests.csproj" ) ).ShouldBeTrue();
+        ReadProjectReferences( t.Combine( "Tests/Lib.A.Tests/Lib.A.Tests.csproj" ) ).ShouldBe( @"..\..\Lib.A\Lib.A.csproj" );
+        Directory.Exists( source.WorkingFolderPath.Combine( "Tests" ) ).ShouldBeFalse();
+        File.ReadAllText( t.AppendPart( target.SolutionFileName ) ).ShouldContain( """<Project Path="Tests/Lib.A.Tests/Lib.A.Tests.csproj" />""" );
+    }
+
+    /// <summary>
     /// A dry run displays the plan (the moved folders, the starting version, the reference changes) and changes
     /// nothing: no folder moves, no "+fake" tag.
     /// </summary>
