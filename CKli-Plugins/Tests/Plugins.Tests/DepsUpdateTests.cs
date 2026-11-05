@@ -906,7 +906,7 @@ public class DepsUpdateTests
             e.AddOrUpdateReference( rCore.DefaultProjectName, "CK.CanaryPackage", SVersion.Parse( "0.9.0" ) );
         }
         // Someone else pushed to the remote: the local tracking branch is now behind it.
-        CommitInRemote( rCore, "main" );
+        CommitInRemote( rCore, "stable" );
 
         // --no-fetch: the remote tracking reference is stale, so nothing looks wrong and the analysis runs.
         display.Clear();
@@ -918,7 +918,7 @@ public class DepsUpdateTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget" )).ShouldBeFalse();
         // Nothing has been written, and the local branch has NOT been merged.
         Reference( rCore, "dev/stable", "CK.CanaryPackage" ).ShouldBe( "0.9.0" );
-        BehindBy( rCore, "main" ).ShouldBe( 1, "The command refuses, it never merges." );
+        BehindBy( rCore, "stable" ).ShouldBe( 1, "The command refuses, it never merges." );
 
         // --max-dop bounds the fetch and nothing else: with --no-fetch there is nothing for it to bound.
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
@@ -934,7 +934,7 @@ public class DepsUpdateTests
         }
         // Bounded, the fetch happens just the same: the divergence is found again.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "deps", "update", "--dry-run", "--with-nuget", "--max-dop", "1" )).ShouldBeFalse();
-        BehindBy( rCore, "main" ).ShouldBe( 1, "The bounded fetch updated the remote tracking reference just the same." );
+        BehindBy( rCore, "stable" ).ShouldBe( 1, "The bounded fetch updated the remote tracking reference just the same." );
     }
 
     // Adds a version of a package to the fake "nuget.org" feed: an empty folder is all the V3 expanded

@@ -27,7 +27,9 @@ public class MissingRootBranchTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "sierra", "--link", "Full" )).ShouldBeTrue();
         using( var e = rNoRoot.CreateEditor() )
         {
+            // "ckli repo create" pushed it: the remote tracking branch goes too (nothing fetches here).
             e.GitRepository.Repository.Branches.Remove( "stable" );
+            e.GitRepository.Repository.Branches.Remove( "origin/stable", isRemote: true );
         }
 
         await ShouldBeBlockedAsync( world.WorldRoot, "branch", "list" ).ConfigureAwait( false );
