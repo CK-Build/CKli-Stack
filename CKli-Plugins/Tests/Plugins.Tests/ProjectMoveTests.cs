@@ -98,6 +98,38 @@ public class ProjectMoveTests
     }
 
     /// <summary>
+    /// A dry run displays the plan (the moved folders, the starting version, the reference changes) and changes
+    /// nothing: no folder moves, no "+fake" tag.
+    /// </summary>
+    [Test]
+    public async Task a_dry_run_displays_the_plan_and_changes_nothing_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync().ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var source = await world.CreateRepoAsync( "X-Source", "v1.0.0" ).ConfigureAwait( false );
+        await AddLibrariesAsync( source ).ConfigureAwait( false );
+        var target = await world.CreateRepoAsync( "X-Target", null ).ConfigureAwait( false );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, target.Root, "project", "move", "Lib.C,Lib.A,Lib.A.Tests", "--dry-run" )).ShouldBeTrue();
+        var text = display.ToString();
+        text.ShouldContain( "Dry run: nothing is changed." );
+        text.ShouldContain( "X-Source/Tests/Lib.A.Tests -> X-Target/Tests/Lib.A.Tests (solution folder '/Tests/')." );
+        text.ShouldContain( "Starting version of 'X-Target': 'v1.0.1+fake'." );
+        text.ShouldContain( @"Lib.B: project reference '..\Lib.A\Lib.A.csproj' -> package reference 'Lib.A' 1.0.1." );
+
+        File.Exists( source.WorkingFolderPath.Combine( "Lib.A/Lib.A.csproj" ) ).ShouldBeTrue();
+        Directory.Exists( target.WorkingFolderPath.Combine( "Lib.A" ) ).ShouldBeFalse();
+        using( var e = target.CreateEditor() )
+        {
+            e.GitRepository.Repository.Tags.Select( t => t.FriendlyName ).ShouldNotContain( "v1.0.1+fake" );
+        }
+    }
+
+    /// <summary>
     /// A name that matches projects of several repositories is refused with their paths, a folder prefix chooses one.
     /// </summary>
     [Test]
