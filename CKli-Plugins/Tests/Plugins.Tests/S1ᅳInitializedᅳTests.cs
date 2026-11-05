@@ -42,14 +42,17 @@ public class S1ᅳInitializedᅳTests
             (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "repo", "create", "https://github.com/CK-Build/Test-Repo-Create" ).ConfigureAwait( false )).ShouldBeTrue();
             display.ToString().ShouldBe( """
             > Test-Repo-Create (2)
-            │ > Content issues.
+            │ > ⚙ Content issues.
             │ │ Branch: dev/stable (1 content issue)
             │ │ > File 'nuget.config' must be created.
-            │ > Missing initial version.
+            │ > ⚙ Missing initial version.
             │ │ This can be fixed by creating a 'v0.0.0+fake' on 'stable' branch.
             ❰✓❱
 
             """ );
+            // The root branch of the branch model is pushed and is the default branch of the new repository.
+            var created = await gitHubProvider.GetRepositoryInfoAsync( TestHelper.Monitor, "CK-Build/Test-Repo-Create", mustExist: true ).ConfigureAwait( false );
+            created.ShouldNotBeNull().DefaultBranch.ShouldBe( "stable" );
             var testRepo = context.ChangeDirectory( "Test-Repo-Create" );
             Directory.Exists( testRepo.CurrentDirectory ).ShouldBeTrue();
             (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "branch", "switch", "dev/stable" ).ConfigureAwait( false )).ShouldBeTrue();
@@ -67,6 +70,8 @@ public class S1ᅳInitializedᅳTests
             """ );
             (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "exec", "dotnet", "new", "sln" ).ConfigureAwait( false )).ShouldBeTrue();
             (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "exec", "dotnet", "sln", "add", "SomeApp/SomeApp.csproj" ).ConfigureAwait( false )).ShouldBeTrue();
+            // A build must not leave untracked files ("--build-impacts"): the build outputs are ignored.
+            File.WriteAllText( testRepo.CurrentDirectory.AppendPart( ".gitignore" ), "bin/\nobj/\n" );
             (await CKliCommands.ExecAsync( TestHelper.Monitor, testRepo, "commit", "Added project." ).ConfigureAwait( false )).ShouldBeTrue();
             display.Clear();
             if( firstModeCI )
@@ -81,6 +86,7 @@ public class S1ᅳInitializedᅳTests
                       ╙      CKt-Monitoring      v0.2.3     
                     Required build for 1 from the single pivot out of 5 repositories and 1 can be published.
                     (No dependency updates other than the ones from the upstreams are needed.)
+                     i  Test-Repo-Create ⏚/v0.0.0--ci.2 built: 1 package.
                     ❰✓❱
 
                     """ );
@@ -97,6 +103,7 @@ public class S1ᅳInitializedᅳTests
                       ╙      CKt-Monitoring      v0.2.3     
                     Required build for 1 from the single pivot out of 5 repositories and 1 can be published.
                     (No dependency updates other than the ones from the upstreams are needed.)
+                     i  Test-Repo-Create ⏚/v0.0.0 built: 1 package.
                     ❰✓❱
 
                     """ );
@@ -125,6 +132,7 @@ public class S1ᅳInitializedᅳTests
                           ╙      CKt-Monitoring      v0.2.3      
                         Required build for 1 from the single pivot out of 5 repositories and 1 can be published.
                         (No dependency updates other than the ones from the upstreams are needed.)
+                         i  Test-Repo-Create ⏚/v0.0.0--ci.3 built: 1 package.
                         ❰✓❱
 
                         """ );
@@ -139,6 +147,7 @@ public class S1ᅳInitializedᅳTests
                           ╙      CKt-Monitoring      v0.2.3
                         Required build for 1 from the single pivot out of 5 repositories and 1 can be published.
                         (No dependency updates other than the ones from the upstreams are needed.)
+                         i  Test-Repo-Create ⏚/v0.0.1--ci.1 built: 1 package.
                         ❰✓❱
 
                         """ );
@@ -158,6 +167,7 @@ public class S1ᅳInitializedᅳTests
                           ╙      CKt-Monitoring      v0.2.3     
                         Required build for 1 from the single pivot out of 5 repositories and 1 can be published.
                         (No dependency updates other than the ones from the upstreams are needed.)
+                         i  Test-Repo-Create ⏚/v0.0.0 built: 1 package.
                         ❰✓❱
 
                         """ );
@@ -172,6 +182,7 @@ public class S1ᅳInitializedᅳTests
                           ╙      CKt-Monitoring      v0.2.3
                         Required build for 1 from the single pivot out of 5 repositories and 1 can be published.
                         (No dependency updates other than the ones from the upstreams are needed.)
+                         i  Test-Repo-Create ⏚/v0.0.1 built: 1 package.
                         ❰✓❱
 
                         """ );
@@ -461,6 +472,19 @@ public class S1ᅳInitializedᅳTests
 
             """ );
 
+        // The root branch of the branch model is the default branch of the new repository: no "main" (the default
+        // branch of the hosts) nor "master" (the "init.defaultBranch" of git) branch is created.
+        using( var created = new LibGit2Sharp.Repository( inSampleFolder.CurrentDirectory.AppendPart( "CKt-Sample-Monitoring" ) ) )
+        {
+            created.Branches.Select( b => b.FriendlyName ).Order()
+                   .ShouldBe( ["dev/stable", "origin/HEAD", "origin/stable", "stable"] );
+        }
+        using( var remote = new LibGit2Sharp.Repository( newRepo1.AppendPart( ".git" ) ) )
+        {
+            remote.Head.FriendlyName.ShouldBe( "stable" );
+            remote.Branches.Select( b => b.FriendlyName ).ShouldBe( ["stable"] );
+        }
+
         var newRepo2 = TestHelper.CKliRemotesPath.AppendPart( "bare" ).Combine( "CKt(initialized)/CKt-App-Sample" );
         var newRepoUrl2 = $"file://{newRepo2}";
         display.Clear();
@@ -551,6 +575,8 @@ public class S1ᅳInitializedᅳTests
                 """ );
             File.WriteAllText( deployFolder.AppendPart( ".gitignore" ), "Assets/" );
 
+            // A build must not leave untracked files ("--build-impacts"): the build outputs are ignored.
+            File.WriteAllText( inSampleMonitoring.CurrentDirectory.AppendPart( ".gitignore" ), "bin/\nobj/\n" );
             (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleMonitoring, "commit", "Setup the CKt.Sample.Monitoring repo." )).ShouldBeTrue();
 
         }
@@ -606,6 +632,8 @@ public class S1ᅳInitializedᅳTests
                 """ );
             File.WriteAllText( deployFolder.AppendPart( ".gitignore" ), "Assets/" );
 
+            // A build must not leave untracked files ("--build-impacts"): the build outputs are ignored.
+            File.WriteAllText( inSampleApp.CurrentDirectory.AppendPart( ".gitignore" ), "bin/\nobj/\n" );
             (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleApp, "commit", "Setup the CKt-App-Sample repo." )).ShouldBeTrue();
         }
         #endregion
