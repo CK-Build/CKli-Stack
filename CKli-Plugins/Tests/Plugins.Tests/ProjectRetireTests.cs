@@ -168,6 +168,47 @@ public class ProjectRetireTests
         e.GitRepository.GetSimpleStatusInfo().IsDirty.ShouldBeFalse();
     }
 
+    /// <summary>
+    /// A tombstone is published once: once its stable version is published, a build of the root branch is blocked
+    /// until "ckli issue --fix" removes the project (its folder and its solution entry, committed on "dev/stable").
+    /// </summary>
+    [Test]
+    public async Task a_published_tombstone_must_be_removed_from_the_root_branch_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var repo = await stack.DefaultWorld.CreateRepoAsync( "X-Libs", "v1.0.0" ).ConfigureAwait( false );
+        await AddLibrariesAsync( repo ).ConfigureAwait( false );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "project", "retire", "Lib.B", "--reason", "Obsolete." )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "commit", "Lib.B is retired." )).ShouldBeTrue();
+        // Not published yet: nothing blocks.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "publish", "--regular" )).ShouldBeTrue();
+
+        // The tombstone v2.0.0 is published: the next build of the root branch is blocked.
+        TestHelper.TouchAndCommit( repo.WorkingFolderPath, branchName: null );
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "build" )).ShouldBeFalse();
+            logs.ShouldContain( "Tombstone 'Lib.B' of 'X-Libs' is published (v2.0.0): it must be removed from 'stable' before building it. Run 'ckli issue --fix'." );
+        }
+        stack.Screen.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "issue" )).ShouldBeTrue();
+        stack.Screen.ToString().ShouldContain( "Folder 'Lib.B' must be deleted." );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "issue", "--fix" )).ShouldBeTrue();
+
+        // The fix is committed on "dev/stable" (the checked out branch is restored).
+        using( var e = repo.CreateEditor() )
+        {
+            e.GitRepository.GetSimpleStatusInfo().IsDirty.ShouldBeFalse();
+            var tip = e.GitRepository.Repository.Branches["dev/stable"].ShouldNotBeNull().Tip;
+            tip.Tree["Lib.B"].ShouldBeNull();
+            ((LibGit2Sharp.Blob)tip.Tree[repo.SolutionFileName].Target).GetContentText().ShouldNotContain( "Lib.B" );
+        }
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "build" )).ShouldBeTrue();
+    }
+
     static async Task AddLibrariesAsync( FakeBuildRepo repo )
     {
         var root = repo.WorkingFolderPath;
