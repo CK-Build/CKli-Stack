@@ -3,6 +3,7 @@ using CKli;
 using NUnit.Framework;
 using Shouldly;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using static CK.Testing.MonitorTestHelper;
 
@@ -46,6 +47,8 @@ public class ProjectRetireTests
         // Lands on the "dev/" branch, nothing committed.
         using var e = repo.CreateEditor();
         e.GitRepository.CurrentBranchName.ShouldBe( "dev/stable" );
+        // A tombstone breaks its consumers: the repository starts a new Major.
+        e.GitRepository.Repository.Tags.Select( t => t.FriendlyName ).ShouldContain( "v2.0.0+fake" );
         e.GitRepository.GetSimpleStatusInfo().IsDirty.ShouldBeTrue();
     }
 
@@ -114,6 +117,13 @@ public class ProjectRetireTests
         File.Exists( root.Combine( "Lib.A/MSBuild/Lib.A.targets" ) ).ShouldBeTrue();
         Directory.Exists( root.Combine( "Tests" ) ).ShouldBeFalse();
         File.ReadAllText( root.AppendPart( repo.SolutionFileName ) ).ShouldNotContain( "Lib.A.Tests" );
+        // The pending "v2.0.0+fake" of the first retirement is already a new Major: no other one.
+        using( var e = repo.CreateEditor() )
+        {
+            var tags = e.GitRepository.Repository.Tags.Select( t => t.FriendlyName ).ToList();
+            tags.ShouldContain( "v2.0.0+fake" );
+            tags.ShouldNotContain( "v3.0.0+fake" );
+        }
         // Retired again: it is already a tombstone.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "commit", "Lib.A is retired." )).ShouldBeTrue();
         using( TestHelper.Monitor.CollectTexts( out var logs ) )
@@ -153,6 +163,7 @@ public class ProjectRetireTests
         var screen = stack.Screen.ToString();
         screen.ShouldContain( "Dry run: nothing is changed." );
         screen.ShouldContain( "Package 'Lib.B' is deprecated and has no replacement: Obsolete." );
+        screen.ShouldContain( "Starting version of 'X-Libs': 'v2.0.0+fake' (a tombstone breaks its consumers: a new Major)." );
         using var e = repo.CreateEditor();
         e.GitRepository.GetSimpleStatusInfo().IsDirty.ShouldBeFalse();
     }
