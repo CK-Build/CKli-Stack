@@ -52,6 +52,39 @@ public class FakeVersionTests
                         .Concatenate();
         }
     }
+    /// <summary>
+    /// A repository just created by "ckli repo create" has never published anything: it carries only the
+    /// "v0.0.0+fake" of its "Missing initial version" fix. "version bump" sets its starting version (there is
+    /// no published version to be greater than) and the first build produces exactly that version: this is
+    /// how a repository that receives moved projects starts above the versions its source produced.
+    /// </summary>
+    [Test]
+    public async Task version_bump_on_a_new_repository_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync().ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rNew = await world.CreateRepoAsync( "X-New", null ).ConfigureAwait( false );
+        ReadTags( rNew ).ShouldBe( "v0.0.0+fake" );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rNew.Root, "version", "bump", "v3.0.0" )).ShouldBeTrue();
+        ReadTags( rNew ).ShouldBe( "v0.0.0+fake, v3.0.0+fake" );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--regular" )).ShouldBeTrue();
+        ReadTags( rNew ).ShouldBe( "local/v3.0.0, v0.0.0+fake, v3.0.0+fake" );
+
+        static string ReadTags( FakeBuildRepo repo )
+        {
+            using var e = repo.CreateEditor();
+            return e.GitRepository.Repository.Tags
+                        .Select( t => t.FriendlyName )
+                        .Where( n => n != "ckli-repo" )
+                        .Order( StringComparer.Ordinal )
+                        .Concatenate();
+        }
+    }
+
     [Test]
     public async Task version_bump_and_ci_0_on_fake_Async()
     {
