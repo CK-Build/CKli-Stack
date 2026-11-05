@@ -1,7 +1,11 @@
 using CK.Core;
 using CKli;
+using CKli.Core;
 using NUnit.Framework;
 using Shouldly;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using static CK.Testing.MonitorTestHelper;
 
@@ -101,6 +105,57 @@ public class BranchListTests
             ❰✓❱
 
             """ );
+    }
+
+    /// <summary>
+    /// On a narrow screen, a merge line that lists many repositories breaks into lines like a paragraph: no line is
+    /// wider than the screen and no repository name is cut. (A list built as a row of cells shared the screen width
+    /// between its names: past a dozen, every name was wrapped inside 10 columns.)
+    /// </summary>
+    [Test]
+    public async Task many_conflicts_flow_on_a_narrow_screen_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var names = Enumerable.Range( 1, 15 ).Select( i => $"X-Conflict{i:00}" ).ToList();
+        var repos = new List<FakeBuildRepo>();
+        foreach( var name in names )
+        {
+            repos.Add( await world.CreateRepoAsync( name, "v1.0.0" ).ConfigureAwait( false ) );
+        }
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "sierra", "--link", "Full" )).ShouldBeTrue();
+        foreach( var r in repos )
+        {
+            TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: "dev/sierra", fileContent: _ => "sierra", fileName: "Conflict.txt" );
+            TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: "dev/stable", fileContent: _ => "stable", fileName: "Conflict.txt" );
+        }
+
+        display.Clear();
+        display.Width = 80;
+        try
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "list" )).ShouldBeTrue();
+        }
+        finally
+        {
+            display.Width = IScreen.MaxScreenWidth;
+        }
+        var lines = display.ToString().Split( Environment.NewLine );
+        lines.ShouldAllBe( l => l.TrimEnd().Length <= 80 );
+        // The merge lines start at the "↖" line and end before the branch's row.
+        int start = Array.FindIndex( lines, l => l.TrimStart().StartsWith( '↖' ) );
+        int end = Array.FindIndex( lines, l => l.TrimStart().StartsWith( "=> sierra" ) );
+        start.ShouldBePositive();
+        end.ShouldBeGreaterThan( start );
+        var merges = string.Join( Environment.NewLine, lines[start..end] );
+        merges.ShouldContain( "15 conflicts (" );
+        foreach( var name in names )
+        {
+            merges.ShouldContain( name, Case.Sensitive, $"'{name}' must not be cut." );
+        }
     }
 
     /// <summary>
