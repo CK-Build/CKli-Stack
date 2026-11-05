@@ -98,6 +98,39 @@ public class ProjectMoveTests
     }
 
     /// <summary>
+    /// A move lands on the "dev/" branches. Here the target's "dev/sierra" has no commit of its own (just opened): it
+    /// is deleted as useless when the branch model is read, which checks out "sierra". The move recreates and checks
+    /// out "dev/sierra" before moving anything, so the moved projects are committed on it, not on "sierra".
+    /// </summary>
+    [Test]
+    public async Task a_move_lands_on_the_dev_branch_even_when_it_was_useless_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync().ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var source = await world.CreateRepoAsync( "X-Source", "v1.0.0" ).ConfigureAwait( false );
+        await AddLibrariesAsync( source ).ConfigureAwait( false );
+        var target = await world.CreateRepoAsync( "X-Target", null ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "sierra", "--link", "Full" )).ShouldBeTrue();
+        // The source's "dev/sierra" has a commit of its own, the target's has none.
+        TestHelper.TouchAndCommit( source.WorkingFolderPath, branchName: "dev/sierra" );
+        CurrentBranch( target ).ShouldBe( "dev/sierra" );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, target.Root, "project", "move", "Lib.C,Lib.A", "--with-tests" )).ShouldBeTrue();
+
+        CurrentBranch( target ).ShouldBe( "dev/sierra" );
+        CurrentBranch( source ).ShouldBe( "dev/sierra" );
+        File.Exists( target.WorkingFolderPath.Combine( "Lib.A/Lib.A.csproj" ) ).ShouldBeTrue();
+
+        static string CurrentBranch( FakeBuildRepo repo )
+        {
+            using var e = repo.CreateEditor();
+            return e.GitRepository.CurrentBranchName;
+        }
+    }
+
+    /// <summary>
     /// "--with-tests" moves the "X.Tests" project of each moved project "X" (here "Lib.A.Tests" for "Lib.A"; "Lib.C"
     /// has none): it lands in "Tests/" as if it had been named.
     /// </summary>
