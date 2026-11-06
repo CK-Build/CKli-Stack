@@ -209,6 +209,70 @@ public class ProjectRetireTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "build" )).ShouldBeTrue();
     }
 
+    /// <summary>
+    /// A package without assembly is not a tombstone: a "dotnet new" template package doesn't include its build output
+    /// either. A tombstone packs a "buildTransitive/&lt;PackageId&gt;.targets": a former manual one, whose package path
+    /// is a folder (the file name comes from the Include), is still one.
+    /// </summary>
+    [Test]
+    public async Task a_package_without_assembly_is_not_always_a_tombstone_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var repo = await stack.DefaultWorld.CreateRepoAsync( "X-Libs", "v1.0.0" ).ConfigureAwait( false );
+        await AddLibrariesAsync( repo ).ConfigureAwait( false );
+        var root = repo.WorkingFolderPath;
+        // Lib.T is a template package.
+        Directory.CreateDirectory( root.AppendPart( "Lib.T" ) );
+        File.WriteAllText( root.Combine( "Lib.T/Lib.T.csproj" ), """
+            <Project Sdk="Microsoft.NET.Sdk">
+                <PropertyGroup>
+                    <TargetFramework>net10.0</TargetFramework>
+                    <PackageType>Template</PackageType>
+                    <IncludeBuildOutput>false</IncludeBuildOutput>
+                </PropertyGroup>
+                <ItemGroup>
+                    <Content Include="templates/**/*" Exclude="templates/**/bin/**;templates/**/obj/**" />
+                </ItemGroup>
+            </Project>
+            """ );
+        var slnx = root.AppendPart( repo.SolutionFileName );
+        File.WriteAllText( slnx, File.ReadAllText( slnx ).Replace( "</Solution>", """
+                <Project Path="Lib.T/Lib.T.csproj" />
+            </Solution>
+            """ ) );
+        // Lib.B is a former manual tombstone.
+        File.Delete( root.Combine( "Lib.B/Code.cs" ) );
+        File.WriteAllText( root.Combine( "Lib.B/Lib.B.csproj" ), """
+            <Project Sdk="Microsoft.NET.Sdk">
+                <PropertyGroup>
+                    <TargetFramework>net10.0</TargetFramework>
+                    <IncludeBuildOutput>false</IncludeBuildOutput>
+                </PropertyGroup>
+                <ItemGroup>
+                    <None Include="buildTransitive/Lib.B.targets" Pack="true" PackagePath="buildTransitive/" />
+                </ItemGroup>
+            </Project>
+            """ );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "commit", "A template package and a manual tombstone." )).ShouldBeTrue();
+
+        // "project retire" takes the manual tombstone for one, not the template package.
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "project", "retire", "Lib.B", "--reason", "Obsolete." )).ShouldBeFalse();
+            logs.ShouldContain( "Project 'X-Libs/Lib.B/Lib.B.csproj' is already a tombstone." );
+        }
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "project", "retire", "Lib.T", "--reason", "Obsolete.", "--dry-run" )).ShouldBeTrue();
+
+        // Both are published: only the tombstone must be removed from the root branch.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "publish", "--regular" )).ShouldBeTrue();
+        stack.Screen.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "issue" )).ShouldBeTrue();
+        var screen = stack.Screen.ToString();
+        screen.ShouldContain( "Folder 'Lib.B' must be deleted." );
+        screen.ShouldNotContain( "Lib.T" );
+    }
+
     static async Task AddLibrariesAsync( FakeBuildRepo repo )
     {
         var root = repo.WorkingFolderPath;
