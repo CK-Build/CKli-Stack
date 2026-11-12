@@ -175,4 +175,55 @@ public class CIBuildTests
         bare.Tags["v2.0.0+fake"].ShouldNotBeNull();
     }
 
+    /// <summary>
+    /// The CI number is the commit depth, and another history from the same base can have the same depth: a "dev/"
+    /// branch replaced after its CI build (CK World, 2026-11-11: a "dev/" branch recreated from a stale remote, built,
+    /// then put back). The CI version of the replaced history is still tagged: the new history uses the next CI number
+    /// instead of failing on "This version has already been produced by commit ...".
+    /// </summary>
+    [Test]
+    public async Task a_CI_number_already_used_by_another_history_is_skipped_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var r = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        string start;
+        using( var e = r.CreateEditor() )
+        {
+            start = e.GitRepository.Repository.Branches["dev/stable"].Tip.Sha;
+        }
+        TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: "dev/stable", commitMessage: "Replaced work." );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "build" )).ShouldBeTrue();
+        var replaced = ReadTipVersion( r );
+
+        // The "dev/" branch is replaced by another history of the same depth.
+        using( var e = r.CreateEditor() )
+        {
+            var git = e.GitRepository.Repository;
+            git.Head.FriendlyName.ShouldBe( "dev/stable" );
+            git.Reset( LibGit2Sharp.ResetMode.Hard, (LibGit2Sharp.Commit)git.Lookup( start ) );
+        }
+        TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: "dev/stable", commitMessage: "Actual work." );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "build" )).ShouldBeTrue();
+        var actual = ReadTipVersion( r );
+        actual.CINumber.ShouldBe( replaced.CINumber + 1, $"'{replaced}' is used by the replaced history: '{actual}' is the next one." );
+
+        static SVersion ReadTipVersion( FakeBuildRepo repo )
+        {
+            using var e = repo.CreateEditor();
+            var git = e.GitRepository.Repository;
+            var tip = git.Head.Tip.Sha;
+            foreach( var t in git.Tags )
+            {
+                if( t.PeeledTarget.Sha != tip ) continue;
+                var v = SVersion.ParseNoThrow( t.FriendlyName, allowPrefix: true );
+                if( v.IsValid && v.CINumber > 0 ) return v;
+            }
+            throw new System.Exception( $"No CI version on the tip of '{repo}'." );
+        }
+    }
+
 }
