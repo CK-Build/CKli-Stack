@@ -98,6 +98,62 @@ public class DevBranchTests
     }
 
     /// <summary>
+    /// A non CI build integrates "dev/stable" into "stable" and deletes it, but "origin/dev/stable" stays where it was
+    /// until the publication pushes: when it fails before (CK World, 2026-11-11), "origin/dev/stable" is behind the local
+    /// "stable" that holds the unpushed work. The next command must not recreate "dev/stable" from it: a CI build would
+    /// then build (and a CI publication push) the code without that work.
+    /// </summary>
+    [Test]
+    public async Task an_integrated_remote_dev_branch_is_not_recreated_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var r = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: "dev/stable" );
+        string pushedTip;
+        using( var e = r.CreateEditor() )
+        {
+            var git = e.GitRepository.Repository;
+            git.Network.Push( git.Network.Remotes["origin"], "refs/heads/dev/stable:refs/heads/dev/stable" );
+            var dev = git.Branches["dev/stable"];
+            git.Branches.Update( dev, u => { u.Remote = "origin"; u.UpstreamBranch = dev.CanonicalName; } );
+            pushedTip = dev.Tip.Sha;
+            git.Branches["origin/dev/stable"].ShouldNotBeNull().Tip.Sha.ShouldBe( pushedTip );
+        }
+        // The work that is not pushed.
+        TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: "dev/stable", commitMessage: "Unpushed work." );
+        var unpushedWork = Tip( r, "dev/stable" ).ShouldNotBeNull();
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "build", "--regular" )).ShouldBeTrue();
+        Tip( r, "dev/stable" ).ShouldBeNull( "The regular build integrated 'dev/stable' into 'stable'." );
+        // The integration deleted the remote tracking branch with its local branch: the next fetch (the next publish
+        // fetches) brings it back.
+        using( var e = r.CreateEditor() )
+        {
+            Commands.Fetch( e.GitRepository.Repository, "origin", [], null, null );
+        }
+        Tip( r, "origin/dev/stable" ).ShouldBe( pushedTip, "Nothing has been pushed." );
+
+        // Any command loads the branches: "origin/dev/stable" is in "stable", "dev/stable" is not recreated from it.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "branch", "list" )).ShouldBeTrue();
+        Tip( r, "dev/stable" ).ShouldBeNull( "'origin/dev/stable' is already integrated in 'stable'." );
+
+        // A CI build works on a "dev/stable" that starts from "stable" and tracks "origin/dev/stable".
+        TestHelper.TouchAndCommit( r.WorkingFolderPath, branchName: null, commitMessage: "New work." );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, r.Root, "build" )).ShouldBeTrue();
+        using( var e = r.CreateEditor() )
+        {
+            var git = e.GitRepository.Repository;
+            var dev = git.Branches["dev/stable"].ShouldNotBeNull( "The CI build works on 'dev/stable'." );
+            git.ObjectDatabase.FindMergeBase( git.Lookup<Commit>( unpushedWork ), dev.Tip )?.Sha
+                .ShouldBe( unpushedWork, "The CI build is built on the unpushed work." );
+            dev.TrackedBranch?.CanonicalName.ShouldBe( "refs/remotes/origin/dev/stable" );
+        }
+    }
+
+    /// <summary>
     /// Opens "sierra" with a Full link (it starts at the "dev/stable" tip), commits on "dev/sierra" and deletes "sierra".
     /// </summary>
     /// <returns>The commits of the deleted "sierra" and of "dev/sierra".</returns>
