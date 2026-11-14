@@ -514,6 +514,68 @@ public class ProjectMoveTests
         ReadTags( target ).ShouldBe( "v2.0.0, v2.0.1+fake, v2.0.1-sierra.0.ci.1" );
     }
 
+    /// <summary>
+    /// A project reference that becomes a package reference to a project that stays in the source gets a version that
+    /// exists: the source's best build for the branch. Here "sierra" has been built: the source's greatest
+    /// Major.Minor.Patch is "1.0.1" but only "1.0.1-sierra.0.ci.N" exists.
+    /// </summary>
+    [Test]
+    public async Task a_package_reference_to_the_source_gets_a_version_that_exists_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync().ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var source = await world.CreateRepoAsync( "X-Source", "v1.0.0" ).ConfigureAwait( false );
+        await AddLibrariesAsync( source ).ConfigureAwait( false );
+        var target = await world.CreateRepoAsync( "X-Target", "v2.0.0" ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "sierra", "--link", "Full" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( source.WorkingFolderPath, branchName: "dev/sierra" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        string built;
+        using( var e = source.CreateEditor() )
+        {
+            built = e.GitRepository.Repository.Tags.Select( t => t.FriendlyName ).Single( n => n.StartsWith( "local/v1.0.1-sierra" ) )["local/v".Length..];
+        }
+
+        // Lib.B moves, Lib.A (that it references) stays.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, target.Root, "project", "move", "Lib.B" )).ShouldBeTrue();
+        File.ReadAllText( target.WorkingFolderPath.Combine( "Lib.B/Lib.B.csproj" ) ).ShouldContain( $"""<PackageReference Include="Lib.A" Version="{built}" />""" );
+    }
+
+    /// <summary>
+    /// The relative paths other than the project references are not rewritten: one that wouldn't reach the same file
+    /// after the move is a warning, whatever the depth. Here the moved test project links a file of a test project that
+    /// stays in the source (it would be broken), and a file of Lib.A that moves with it (it still reaches it).
+    /// </summary>
+    [Test]
+    public async Task a_relative_path_that_would_be_broken_is_a_warning_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync().ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var source = await world.CreateRepoAsync( "X-Source", "v1.0.0" ).ConfigureAwait( false );
+        await AddLibrariesAsync( source ).ConfigureAwait( false );
+        var target = await world.CreateRepoAsync( "X-Target", "v2.0.0" ).ConfigureAwait( false );
+        var testProject = source.WorkingFolderPath.Combine( "Tests/Lib.A.Tests/Lib.A.Tests.csproj" );
+        File.WriteAllText( testProject, File.ReadAllText( testProject ).Replace( "</Project>", """
+                <ItemGroup>
+                    <Compile Include="..\Shared\Helper.cs" Link="Helper.cs" />
+                    <None Include="..\..\Lib.A\Lib.A.csproj" Link="Lib.A.csproj" />
+                </ItemGroup>
+            </Project>
+            """ ) );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, source.Root, "commit", "Linked files." )).ShouldBeTrue();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, target.Root, "project", "move", "Lib.C,Lib.A", "--with-tests", "--dry-run" )).ShouldBeTrue();
+        var text = display.ToString();
+        text.ShouldContain( @"Warning: 'Lib.A.Tests': '..\Shared\Helper.cs' reaches 'X-Source/Tests/Shared/Helper.cs' and is not rewritten: it would be broken after the move." );
+        text.ShouldNotContain( @"'..\..\Lib.A\Lib.A.csproj'" );
+    }
+
     // X-Source (v1.0.0, with the libraries) and X-Target (v2.0.0). On "sierra", Lib.C and Lib.A move to X-Target (its
     // branch fake is 'v2.0.1+fake'), and the move is committed.
     static async Task<(FakeBuildRepo Source, FakeBuildRepo Target)> ArrangeMoveOnSierraAsync( FakeBuildWorld world )
