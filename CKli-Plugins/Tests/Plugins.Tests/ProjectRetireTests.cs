@@ -273,6 +273,47 @@ public class ProjectRetireTests
         screen.ShouldNotContain( "Lib.T" );
     }
 
+    /// <summary>
+    /// Out of the root branch, the tombstone's new Major is a branch fake: it is on "dev/sierra", the root branch
+    /// doesn't contain it, and the root's next version is unchanged. A pending branch fake of the branch is reused
+    /// by a second retirement on the same branch.
+    /// </summary>
+    [Test]
+    public async Task a_retirement_on_a_branch_sets_a_branch_fake_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync().ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var repo = await world.CreateRepoAsync( "X-Libs", "v1.0.0" ).ConfigureAwait( false );
+        await AddLibrariesAsync( repo ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "sierra", "--link", "Full" )).ShouldBeTrue();
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "project", "retire", "Lib.B", "--reason", "Obsolete." )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "commit", "Lib.B is retired." )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "project", "retire", "Lib.A", "--reason", "Obsolete.", "--with-tests" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, repo.Root, "commit", "Lib.A is retired." )).ShouldBeTrue();
+
+        using( var e = repo.CreateEditor() )
+        {
+            var git = e.GitRepository.Repository;
+            git.Tags.Select( t => t.FriendlyName ).Where( n => n.EndsWith( "+fake" ) ).ShouldBe( ["v2.0.0+fake"] );
+            var fakeCommit = (LibGit2Sharp.Commit)git.Tags["v2.0.0+fake"].PeeledTarget;
+            git.ObjectDatabase.FindMergeBase( fakeCommit, git.Branches["dev/sierra"].Tip ).ShouldNotBeNull().Sha.ShouldBe( fakeCommit.Sha );
+            git.ObjectDatabase.FindMergeBase( fakeCommit, git.Branches["dev/stable"].Tip )?.Sha.ShouldNotBe( fakeCommit.Sha );
+            e.GitRepository.PersistentDeferredPushRefSpecs.ShouldBe( ["+refs/tags/v2.0.0+fake"] );
+        }
+
+        // On "sierra", the tombstones build the new Major. On "stable", the next version is a patch.
+        var display = stack.Screen;
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "→ ⏚/v2.0.0-sierra.0.ci.2 (FakeVersion, CodeChange)" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "stable" )).ShouldBeTrue();
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "X-Libs v1.0.0 → ⏚/v1.0.1--ci.1 (CodeChange)" );
+    }
+
     static async Task AddLibrariesAsync( FakeBuildRepo repo )
     {
         var root = repo.WorkingFolderPath;

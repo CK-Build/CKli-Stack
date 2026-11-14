@@ -267,6 +267,309 @@ public class ProjectMoveTests
         Directory.Exists( target.WorkingFolderPath.Combine( "Lib.A" ) ).ShouldBeFalse();
     }
 
+    /// <summary>
+    /// Out of the root branch, the target's starting version is a branch fake: it is set on the target's "dev/sierra"
+    /// (on an empty commit of its own, the branch having no commit), the root branch doesn't contain it and it is
+    /// registered to be pushed by the next push. The "sierra" builds are based on it, the root branch's versions are
+    /// unchanged. Closing "sierra" integrates it into "dev/stable": it becomes the root's starting version.
+    /// </summary>
+    [Test]
+    public async Task a_move_on_a_branch_sets_a_branch_fake_that_reaches_the_root_with_the_integration_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync().ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var source = await world.CreateRepoAsync( "X-Source", "v1.0.0" ).ConfigureAwait( false );
+        await AddLibrariesAsync( source ).ConfigureAwait( false );
+        var target = await world.CreateRepoAsync( "X-Target", "v2.0.0" ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "sierra", "--link", "Full" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( source.WorkingFolderPath, branchName: "dev/sierra" );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, target.Root, "project", "move", "Lib.C,Lib.A", "--with-tests" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "Starting version of 'X-Target' on 'dev/sierra': 'v2.0.1+fake' (it reaches 'stable' with the integration of 'sierra')." );
+
+        using( var e = target.CreateEditor() )
+        {
+            var git = e.GitRepository.Repository;
+            var fakeCommit = (LibGit2Sharp.Commit)git.Tags["v2.0.1+fake"].ShouldNotBeNull().PeeledTarget;
+            fakeCommit.MessageShort.ShouldBe( "Empty commit carrying the 'v2.0.1+fake' version tag." );
+            git.Branches["dev/sierra"].Tip.Sha.ShouldBe( fakeCommit.Sha );
+            foreach( var root in new[] { "stable", "dev/stable" } )
+            {
+                var tip = git.Branches[root]?.Tip;
+                if( tip != null ) git.ObjectDatabase.FindMergeBase( fakeCommit, tip )?.Sha.ShouldNotBe( fakeCommit.Sha );
+            }
+            e.GitRepository.PersistentDeferredPushRefSpecs.ShouldBe( ["+refs/tags/v2.0.1+fake"] );
+        }
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, source.Root, "commit", "Moved Lib.A and Lib.C to X-Target." )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, target.Root, "commit", "Received Lib.A and Lib.C from X-Source." )).ShouldBeTrue();
+
+        // On "sierra": X-Target is based on its branch fake.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 -  X-Target v2.0.1+fake → ⏚/v2.0.1-sierra.0.ci.1 (FakeVersion, CodeChange)  
+            2 -  X-Source v1.0.0      → ⏚/v1.0.1-sierra.0.ci.4 (UpstreamBuild, CodeChange)
+            Required build for 2 repositories across the 2 repositories and 2 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+
+        // On "stable": the branch fake doesn't exist, X-Target is still based on v2.0.0.
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "stable" )).ShouldBeTrue();
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 ╓  X-Source v1.0.0 → ⏚/v1.0.1--ci.1 (CodeChange)
+              ╙  X-Target v2.0.0
+            Required build for 1 repositories across the 2 repositories and 1 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+
+        // Closing "sierra" integrates the fake into "dev/stable": it is X-Target's starting version on "stable".
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "close", "sierra" )).ShouldBeTrue();
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 -  X-Target v2.0.1+fake → ⏚/v2.0.1--ci.1 (FakeVersion, CodeChange)  
+            2 -  X-Source v1.0.0      → ⏚/v1.0.1--ci.4 (UpstreamBuild, CodeChange)
+            Required build for 2 repositories across the 2 repositories and 2 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+    }
+
+    /// <summary>
+    /// Two branches that don't contain each other have their own branch fakes, and two branches can't start the same
+    /// version: the move on "sierra" starts above the "romeo" one. ("romeo" is opened first: "sierra" is its parent in
+    /// the prerelease chain, opened later it starts from "stable" and doesn't contain "romeo".) Each branch is based
+    /// on its own fake.
+    /// </summary>
+    [Test]
+    public async Task two_branches_have_their_own_branch_fakes_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync().ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var source = await world.CreateRepoAsync( "X-Source", "v1.0.0" ).ConfigureAwait( false );
+        await AddLibrariesAsync( source ).ConfigureAwait( false );
+        var target = await world.CreateRepoAsync( "X-Target", "v2.0.0" ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "romeo", "--link", "Full" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, target.Root, "project", "move", "Lib.C" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, source.Root, "commit", "Moved Lib.C." )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, target.Root, "commit", "Received Lib.C." )).ShouldBeTrue();
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "sierra", "--link", "Full" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, target.Root, "project", "move", "Lib.B" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, source.Root, "commit", "Moved Lib.B." )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, target.Root, "commit", "Received Lib.B." )).ShouldBeTrue();
+
+        using( var e = target.CreateEditor() )
+        {
+            var git = e.GitRepository.Repository;
+            var romeoFake = (LibGit2Sharp.Commit)git.Tags["v2.0.1+fake"].ShouldNotBeNull().PeeledTarget;
+            var sierraFake = (LibGit2Sharp.Commit)git.Tags["v2.0.2+fake"].ShouldNotBeNull().PeeledTarget;
+            git.ObjectDatabase.FindMergeBase( romeoFake, git.Branches["dev/sierra"].Tip )?.Sha.ShouldNotBe( romeoFake.Sha );
+            git.ObjectDatabase.FindMergeBase( sierraFake, git.Branches["dev/romeo"].Tip )?.Sha.ShouldNotBe( sierraFake.Sha );
+            e.GitRepository.PersistentDeferredPushRefSpecs.Order().ShouldBe( ["+refs/tags/v2.0.1+fake", "+refs/tags/v2.0.2+fake"] );
+        }
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 -  X-Source v1.0.0      → ⏚/v1.0.1-sierra.0.ci.2 (CodeChange)                            
+            2 -  X-Target v2.0.2+fake → ⏚/v2.0.2-sierra.0.ci.2 (UpstreamBuild, FakeVersion, CodeChange)
+            Required build for 2 repositories across the 2 repositories and 2 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "romeo" )).ShouldBeTrue();
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 -  X-Target v2.0.1+fake → ⏚/v2.0.1-romeo.0.ci.1 (FakeVersion, CodeChange)  
+            2 -  X-Source v1.0.0      → ⏚/v1.0.1-romeo.0.ci.3 (UpstreamBuild, CodeChange)
+            Required build for 2 repositories across the 2 repositories and 2 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+            ❰✓❱
+
+            """ );
+    }
+
+    /// <summary>
+    /// A branch fake is abandoned when its branch is gone: removed from the branch model ("branch close --discard") AND
+    /// its git branches deleted. While the git branches exist, it is pending (another clone may still work on it):
+    /// nothing is reported. Once abandoned, "ckli issue --fix" removes it with its local versions, and forgets its
+    /// deferred push (it has never been pushed): the next push succeeds.
+    /// </summary>
+    [Test]
+    public async Task an_abandoned_branch_fake_is_removed_with_its_local_versions_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync().ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+        var (source, target) = await ArrangeMoveOnSierraAsync( world ).ConfigureAwait( false );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        ReadTags( target ).ShouldBe( "local/v2.0.1-sierra.0.ci.1, v2.0.0, v2.0.1+fake" );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "close", "sierra", "--discard" )).ShouldBeTrue();
+        // The git branches still exist: the fake is pending.
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue" )).ShouldBeTrue();
+        display.ToString().ShouldNotContain( "abandoned" );
+
+        DeleteBranches( source, "sierra", "dev/sierra" );
+        DeleteBranches( target, "sierra", "dev/sierra" );
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue" )).ShouldBeTrue();
+        display.ToString().ShouldContain( "Found 1 abandoned branch fake versions." );
+        display.ToString().ShouldContain( "- 'v2.0.1+fake' of branch 'sierra' (local versions: local/v2.0.1-sierra.0.ci.1)." );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue", "--fix" )).ShouldBeTrue();
+        ReadTags( target ).ShouldBe( "v2.0.0" );
+        using( var e = target.CreateEditor() )
+        {
+            e.GitRepository.PersistentDeferredPushRefSpecs.ShouldBeEmpty();
+        }
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "push" )).ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// The next push sends the branch fake to the remote, with its branches. Abandoning it means deleting its branches
+    /// from the remote too: while "origin/sierra" exists, it is pending. Once abandoned, it is deleted from the remote
+    /// (a "+invalid" can't cancel a "+fake").
+    /// </summary>
+    [Test]
+    public async Task a_pushed_abandoned_branch_fake_is_deleted_from_the_remote_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync().ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var (source, target) = await ArrangeMoveOnSierraAsync( world ).ConfigureAwait( false );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "push" )).ShouldBeTrue();
+        RemoteTags( stack, "X-Target" ).ShouldContain( "v2.0.1+fake" );
+        using( var e = target.CreateEditor() )
+        {
+            e.GitRepository.PersistentDeferredPushRefSpecs.ShouldBeEmpty();
+        }
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "close", "sierra", "--discard" )).ShouldBeTrue();
+        DeleteBranches( source, "sierra", "dev/sierra" );
+        DeleteBranches( target, "sierra", "dev/sierra" );
+        // The remote branches still exist: pending.
+        var display = stack.Screen;
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue" )).ShouldBeTrue();
+        display.ToString().ShouldNotContain( "abandoned" );
+
+        DeleteRemoteBranches( stack, source, "sierra", "dev/sierra" );
+        DeleteRemoteBranches( stack, target, "sierra", "dev/sierra" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue", "--fix" )).ShouldBeTrue();
+
+        ReadTags( target ).ShouldBe( "v2.0.0" );
+        RemoteTags( stack, "X-Target" ).ShouldNotContain( "v2.0.1+fake" );
+        RemoteTags( stack, "X-Target" ).ShouldNotContain( t => t.Contains( "invalid" ) );
+    }
+
+    /// <summary>
+    /// An abandoned branch fake on which a published version is based is kept: it is what makes this version
+    /// understandable. It is ignored (no branch contains it) and not reported as an issue.
+    /// </summary>
+    [Test]
+    public async Task an_abandoned_branch_fake_with_a_published_version_is_kept_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+        var (source, target) = await ArrangeMoveOnSierraAsync( world ).ConfigureAwait( false );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
+        ReadTags( target ).ShouldBe( "v2.0.0, v2.0.1+fake, v2.0.1-sierra.0.ci.1" );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "switch", "stable" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "close", "sierra", "--discard" )).ShouldBeTrue();
+        DeleteBranches( source, "sierra", "dev/sierra" );
+        DeleteBranches( target, "sierra", "dev/sierra" );
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue" )).ShouldBeTrue();
+        display.ToString().ShouldNotContain( "abandoned" );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "issue", "--fix" )).ShouldBeTrue();
+        ReadTags( target ).ShouldBe( "v2.0.0, v2.0.1+fake, v2.0.1-sierra.0.ci.1" );
+    }
+
+    // X-Source (v1.0.0, with the libraries) and X-Target (v2.0.0). On "sierra", Lib.C and Lib.A move to X-Target (its
+    // branch fake is 'v2.0.1+fake'), and the move is committed.
+    static async Task<(FakeBuildRepo Source, FakeBuildRepo Target)> ArrangeMoveOnSierraAsync( FakeBuildWorld world )
+    {
+        var source = await world.CreateRepoAsync( "X-Source", "v1.0.0" ).ConfigureAwait( false );
+        await AddLibrariesAsync( source ).ConfigureAwait( false );
+        var target = await world.CreateRepoAsync( "X-Target", "v2.0.0" ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "branch", "open", "sierra", "--link", "Full" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, target.Root, "project", "move", "Lib.C,Lib.A", "--with-tests" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, source.Root, "commit", "Moved Lib.A and Lib.C to X-Target." )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, target.Root, "commit", "Received Lib.A and Lib.C from X-Source." )).ShouldBeTrue();
+        return (source, target);
+    }
+
+    static void DeleteBranches( FakeBuildRepo repo, params string[] names )
+    {
+        using var e = repo.CreateEditor();
+        foreach( var n in names )
+        {
+            if( e.GitRepository.Repository.Branches[n] != null ) e.GitRepository.Repository.Branches.Remove( n );
+        }
+    }
+
+    // Deletes the branches from the remote and their remote-tracking branches (what "git push origin --delete" does).
+    static void DeleteRemoteBranches( FakeBuildStack stack, FakeBuildRepo repo, params string[] names )
+    {
+        using( var remote = new LibGit2Sharp.Repository( stack.Remotes.GetUriFor( repo.RepositoryName ).LocalPath ) )
+        {
+            foreach( var n in names )
+            {
+                if( remote.Branches[n] != null ) remote.Branches.Remove( n );
+            }
+        }
+        using var e = repo.CreateEditor();
+        foreach( var n in names )
+        {
+            if( e.GitRepository.Repository.Branches[$"origin/{n}"] != null ) e.GitRepository.Repository.Branches.Remove( $"origin/{n}", isRemote: true );
+        }
+    }
+
+    static string ReadTags( FakeBuildRepo repo )
+    {
+        using var e = repo.CreateEditor();
+        return e.GitRepository.Repository.Tags
+                    .Select( t => t.FriendlyName )
+                    .Where( n => n != "ckli-repo" )
+                    .Order( StringComparer.Ordinal )
+                    .Concatenate();
+    }
+
+    static string[] RemoteTags( FakeBuildStack stack, string repoName )
+    {
+        using var remote = new LibGit2Sharp.Repository( stack.Remotes.GetUriFor( repoName ).LocalPath );
+        return remote.Tags.Select( t => t.FriendlyName ).ToArray();
+    }
+
     // Adds to a repository: Lib.C, Lib.A that references Lib.C, Lib.B that references Lib.A, and
     // Tests/Lib.A.Tests that references Lib.A. Then commits.
     static async Task AddLibrariesAsync( FakeBuildRepo repo )

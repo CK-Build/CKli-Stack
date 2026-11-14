@@ -53,6 +53,43 @@ public class FakeVersionTests
         }
     }
     /// <summary>
+    /// A "version bump" below a pending "+fake" replaces it. A pushed one is deleted from the remote: a "+invalid"
+    /// can't cancel a "+fake" ("v5.4.3+invalid" would cancel the future "v5.4.3" too, and "v5.4.3+fake+invalid" is not
+    /// a conformant version).
+    /// </summary>
+    [Test]
+    public async Task version_bump_deletes_a_pushed_greater_fake_from_the_remote_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync().ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.1" ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "bump", "v5.4.3" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "tag", "push", "v5.4.3+fake" )).ShouldBeTrue();
+        RemoteTags( stack, "X-Core" ).ShouldContain( "v5.4.3+fake" );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "version", "bump", "v4.0.0" )).ShouldBeTrue();
+
+        using( var e = rCore.CreateEditor() )
+        {
+            var tags = e.GitRepository.Repository.Tags.Select( t => t.FriendlyName ).ToList();
+            tags.ShouldContain( "v4.0.0+fake" );
+            tags.ShouldNotContain( "v5.4.3+fake" );
+            tags.ShouldNotContain( t => t.Contains( "invalid" ) );
+            e.GitRepository.PersistentDeferredPushRefSpecs.ShouldBeEmpty();
+        }
+        RemoteTags( stack, "X-Core" ).ShouldNotContain( "v5.4.3+fake" );
+        RemoteTags( stack, "X-Core" ).ShouldNotContain( t => t.Contains( "invalid" ) );
+
+        static string[] RemoteTags( FakeBuildStack stack, string repoName )
+        {
+            using var remote = new LibGit2Sharp.Repository( stack.Remotes.GetUriFor( repoName ).LocalPath );
+            return remote.Tags.Select( t => t.FriendlyName ).ToArray();
+        }
+    }
+
+    /// <summary>
     /// A repository just created by "ckli repo create" has never published anything: it carries only the
     /// "v0.0.0+fake" of its "Missing initial version" fix. "version bump" sets its starting version (there is
     /// no published version to be greater than) and the first build produces exactly that version: this is
