@@ -309,8 +309,8 @@ public class LTSCreateTests
 
             """ );
 
-        // The default World's "Common/" folder and its "TestRun.Sha" cache (this one is written by a real build,
-        // the fake one runs no tests).
+        // The default World's "Common/" folder and its "TestRun.Sha" cache. Overwriting the cache forgets the test
+        // runs of the build above: the publication below runs the tests of the 2 releases again and records them.
         var commonFile = StackFolder( stack ).Combine( "Common/.editorconfig" );
         Directory.CreateDirectory( commonFile.RemoveLastPart() );
         File.WriteAllText( commonFile, "root = true" );
@@ -336,6 +336,9 @@ public class LTSCreateTests
 
         // Publishing them resolves it: the local versions become the published ones.
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
+        var testRunContent = File.ReadAllText( testRunSha );
+        testRunContent.ShouldStartWith( "0123456789abcdef" );
+        testRunContent.Split( '\n', System.StringSplitOptions.RemoveEmptyEntries | System.StringSplitOptions.TrimEntries ).Length.ShouldBe( 3, "The publication has tested the 2 releases." );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "lts", "create", "@net8" )).ShouldBeTrue();
         VersionBounds( LoadWorldDefinition( stack, "@net8/Test@net8.xml" ) )
             .ShouldBe( [("X-Core", null, "2.0.0-0"), ("X-App", null, "1.0.0-0")] );
@@ -346,7 +349,7 @@ public class LTSCreateTests
         File.Exists( commonFile ).ShouldBeTrue( "The default World keeps its own." );
         // The Build plugin has moved the TestRun.Sha cache to the new World's local folder: the LTS World is the
         // one that keeps the code whose tests have run.
-        File.ReadAllText( StackFolder( stack ).Combine( "$Local/@net8/TestRun.Sha.txt" ) ).ShouldBe( "0123456789abcdef" );
+        File.ReadAllText( StackFolder( stack ).Combine( "$Local/@net8/TestRun.Sha.txt" ) ).ShouldBe( testRunContent );
         File.Exists( testRunSha ).ShouldBeFalse();
     }
 
