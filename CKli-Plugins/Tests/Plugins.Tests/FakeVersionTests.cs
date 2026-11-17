@@ -215,7 +215,7 @@ public class FakeVersionTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 - T  X-Core            v3.0.0+fake → ⏚/v3.0.0 (FakeVersion)              
+            1 - ✓  X-Core            v3.0.0+fake → ⏚/v3.0.0 (FakeVersion)              
             2 - T  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)
             3 ╓ T  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)
             4 ╙ T  X-Monitoring      v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)
@@ -235,7 +235,7 @@ public class FakeVersionTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci.0" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 - T  X-Core            (v3.0.0) → ⏚/v3.0.0--ci.0 (RollingLocal) 
+            1 - ✓  X-Core            (v3.0.0) → ⏚/v3.0.0--ci.0 (RollingLocal) 
             2 - T  X-ActivityMonitor (v0.1.1) → ⏚/v0.1.1--ci.4 (UpstreamBuild)
             3 ╓ T  X-PerfectEvent    (v0.3.3) → ⏚/v0.3.3--ci.4 (UpstreamBuild)
             4 ╙ T  X-Monitoring      (v0.2.4) → ⏚/v0.2.4--ci.4 (UpstreamBuild)
@@ -256,7 +256,7 @@ public class FakeVersionTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci.0" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 - T  X-Core            v2.0.0+fake    → ⏚/v2.0.0--ci.0 (FakeVersion)  
+            1 - ✓  X-Core            v2.0.0+fake    → ⏚/v2.0.0--ci.0 (FakeVersion)  
             2 - T  X-ActivityMonitor (v0.1.1--ci.4) → ⏚/v0.1.1--ci.5 (UpstreamBuild)
             3 ╓ T  X-PerfectEvent    (v0.3.3--ci.4) → ⏚/v0.3.3--ci.5 (UpstreamBuild)
             4 ╙ T  X-Monitoring      (v0.2.4--ci.4) → ⏚/v0.2.4--ci.5 (UpstreamBuild)
@@ -273,7 +273,7 @@ public class FakeVersionTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 - T  X-Core            v2.0.0+fake → ⏚/v2.0.0 (FakeVersion)              
+            1 - ✓  X-Core            v2.0.0+fake → ⏚/v2.0.0 (FakeVersion)              
             2 - T  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)
             3 ╓ T  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)
             4 ╙ T  X-Monitoring      v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)

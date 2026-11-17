@@ -97,6 +97,45 @@ public class BuildWithTestsTests
     }
 
     /// <summary>
+    /// A CI build ran the tests of a code change: the regular build of the same content (CodeChange only) shows it
+    /// tested ('✓') and doesn't run them again, while its consumer, whose dependency is updated, is a new content
+    /// that is tested ('T').
+    /// </summary>
+    [Test]
+    public async Task a_code_change_already_tested_is_not_tested_again_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v0.3.3" ).ConfigureAwait( false );
+        var rConsumer = await world.CreateRepoAsync( "X-Consumer", "v0.0.0", references: [rCore] ).ConfigureAwait( false );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "branch", "switch", "dev/stable", "--create" )).ShouldBeTrue();
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, "dev/stable" );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "build" )).ShouldBeTrue();
+        rCore.TestRunCount.ShouldBe( 1 );
+        rConsumer.TestRunCount.ShouldBe( 1 );
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "build", "--regular" )).ShouldBeTrue();
+        display.ToString().ShouldBe( """
+            1 -  ⊙  ✓  X-Core     v0.3.3 → ⏚/v0.3.4 (CodeChange)               
+            2 -  ·→ T  X-Consumer v0.0.0 → ⏚/v0.0.1 (UpstreamBuild, CodeChange)
+            Required build for 2 from the single pivot out of 2 repositories and 2 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+             i  X-Core ⏚/v0.3.4 built: 1 package.
+             i  X-Consumer ⏚/v0.0.1 built: 1 package.
+            ❰✓❱
+
+            """ );
+        rCore.TestRunCount.ShouldBe( 1 );
+        rConsumer.TestRunCount.ShouldBe( 2 );
+    }
+
+    /// <summary>
     /// A build that builds a repository and tests another one: the built one runs its tests as usual, the other
     /// one with "--with-tests". A failing test fails the command.
     /// </summary>

@@ -51,7 +51,7 @@ public class RollingLocalCIBuildTests
                 """ );
         }
         display.ToString().ShouldBe( """
-            1 - T  X-Core     (v1.0.2) → ⏚/v1.0.2--ci.1 (RollingLocal) 
+            1 - ✓  X-Core     (v1.0.2) → ⏚/v1.0.2--ci.1 (RollingLocal) 
             2 - T  X-Consumer (v0.1.2) → ⏚/v0.1.2--ci.2 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
@@ -112,7 +112,7 @@ public class RollingLocalCIBuildTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--ci.0" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 - T  X-Core     v1.0.2 → ⏚/v1.0.3--ci.0 (CI0)          
+            1 - ✓  X-Core     v1.0.2 → ⏚/v1.0.3--ci.0 (CI0)          
             2 - T  X-Consumer v0.1.2 → ⏚/v0.1.3--ci.1 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)

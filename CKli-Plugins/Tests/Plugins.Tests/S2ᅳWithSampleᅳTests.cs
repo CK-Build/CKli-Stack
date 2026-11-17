@@ -41,7 +41,7 @@ public class S2ᅳWithSampleᅳTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--regular", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-        1 - T  CKt-Core                      v1.0.0      → ⏚/v1.0.1 (CodeChange)                            
+        1 - ✓  CKt-Core                      v1.0.0      → ⏚/v1.0.1 (CodeChange)                            
         2 - T  CKt-ActivityMonitor           v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)             
         3 ╓ T  CKt-PerfectEvent              v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)             
         4 ║ T  CKt-Monitoring                v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)             
@@ -431,7 +431,7 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inPerfectEvent, "*publish", "--regular" )).ShouldBeTrue();
         display.ToPortableString().ShouldBe(
               """
-              1 - →·  T  CKt-Core                      v1.0.0 → ⏚/v1.0.1 (CodeChange)
+              1 - →·  ✓  CKt-Core                      v1.0.0 → ⏚/v1.0.1 (CodeChange)
               2 - →·  T  CKt-ActivityMonitor           v0.1.0 → ⏚/v0.2.0 (UpstreamBuild, CodeChange)
               3 ╓  ⊙  T  CKt-PerfectEvent              v0.3.3 → ⏚/v0.4.0 (UpstreamBuild)
               4 ║     T  CKt-Monitoring                v0.2.3 → ⏚/v0.3.0 (UpstreamBuild, CodeChange)
@@ -565,7 +565,7 @@ public class S2ᅳWithSampleᅳTests
               """
                 - →·  ✓  CKt-Core                      v1.0.1
                 - →·  ✓  CKt-ActivityMonitor           v0.2.0
-              1 ╓  ⊙  T  CKt-PerfectEvent              v0.5.0 → ⏚/v0.5.1--ci.0 (CI0)          
+              1 ╓  ⊙  ✓  CKt-PerfectEvent              v0.5.0 → ⏚/v0.5.1--ci.0 (CI0)          
                 ║     ✓  CKt-Monitoring                v0.3.0
                 ╙     ✓  Samples/CKt-App-Sample        v0.1.0
               2 -  ·→ T  Samples/CKt-Sample-Monitoring v0.2.0 → ⏚/v0.2.1--ci.1 (UpstreamBuild)

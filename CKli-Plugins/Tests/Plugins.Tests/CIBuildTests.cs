@@ -103,7 +103,7 @@ public class CIBuildTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 - T  X-Core     v0.3.3 → ⏚/v0.3.4 (CodeChange)               
+            1 - ✓  X-Core     v0.3.3 → ⏚/v0.3.4 (CodeChange)               
             2 - T  X-Consumer v0.0.0 → ⏚/v0.0.1 (UpstreamBuild, CodeChange)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
