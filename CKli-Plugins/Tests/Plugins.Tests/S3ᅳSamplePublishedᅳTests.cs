@@ -62,14 +62,15 @@ public partial class S3ᅳSamplePublishedᅳTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inAppSample, "build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              - →·   CKt-Core                      v1.0.1
-              - →·   CKt-ActivityMonitor           v0.1.1
-              ╓      CKt-PerfectEvent              v0.3.3
-              ║      CKt-Monitoring                v0.2.4
-            1 ╙  ⊙   Samples/CKt-App-Sample        v0.0.0 → ⏚/v0.0.1 (CodeChange)
-              -      Samples/CKt-Sample-Monitoring v0.0.0
+              - →·  ✓  CKt-Core                      v1.0.1
+              - →·  ✓  CKt-ActivityMonitor           v0.1.1
+              ╓     ✓  CKt-PerfectEvent              v0.3.3
+              ║     ✓  CKt-Monitoring                v0.2.4
+            1 ╙  ⊙  T  Samples/CKt-App-Sample        v0.0.0 → ⏚/v0.0.1 (CodeChange)
+              -     ?  Samples/CKt-Sample-Monitoring v0.0.0
             Required build for 1 from the single pivot out of 6 repositories and 1 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+            (1 repository that is not built has never been tested: use '--with-tests' to test it.)
              i  Samples/CKt-App-Sample ⏚/v0.0.1 built: 1 package.
             ❰✓❱
 

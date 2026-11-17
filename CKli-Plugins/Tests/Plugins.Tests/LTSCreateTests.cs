@@ -48,8 +48,8 @@ public class LTSCreateTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core v1.2.3 → ⏚/v1.2.4 (CodeChange)   
-            2 -  X-App  v0.4.0 → ⏚/v0.4.1 (UpstreamBuild)
+            1 - T  X-Core v1.2.3 → ⏚/v1.2.4 (CodeChange)   
+            2 - T  X-App  v0.4.0 → ⏚/v0.4.1 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v1.2.4 built: 1 package.
@@ -98,8 +98,8 @@ public class LTSCreateTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core v2.0.0+fake → ⏚/v2.0.0 (FakeVersion)               
-            2 -  X-App  v1.0.0+fake → ⏚/v1.0.0 (UpstreamBuild, FakeVersion)
+            1 - T  X-Core v2.0.0+fake → ⏚/v2.0.0 (FakeVersion)               
+            2 - T  X-App  v1.0.0+fake → ⏚/v1.0.0 (UpstreamBuild, FakeVersion)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -299,8 +299,8 @@ public class LTSCreateTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core v1.2.4 → ⏚/v1.2.5 (CodeChange)   
-            2 -  X-App  v0.4.1 → ⏚/v0.4.2 (UpstreamBuild)
+            1 - T  X-Core v1.2.4 → ⏚/v1.2.5 (CodeChange)   
+            2 - T  X-App  v0.4.1 → ⏚/v0.4.2 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v1.2.5 built: 1 package.

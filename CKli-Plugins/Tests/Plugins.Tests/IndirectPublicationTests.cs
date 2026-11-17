@@ -46,7 +46,8 @@ public class IndirectPublicationTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--branch", "juliet", "--regular", "--dry-run" )).ShouldBeTrue();
         var gate = stack.Screen.ToString();
         gate.ShouldContain( "Also publishing 2 releases from parent branches:" );
-        gate.ShouldContain( "  stable  X-Core/local/v1.0.1, X-Consumer/local/v0.1.1" );
+        // The parent releases have been built with their tests: the publication doesn't run them again.
+        gate.ShouldContain( "  stable  ✓ X-Core/local/v1.0.1, ✓ X-Consumer/local/v0.1.1" );
         gate.ShouldNotContain( "juliet  X-Consumer" );
 
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--branch", "juliet", "--regular" )).ShouldBeTrue();

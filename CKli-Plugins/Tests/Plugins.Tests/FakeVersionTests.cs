@@ -152,10 +152,10 @@ public class FakeVersionTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci.0", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core            v4.3.2+fake → ⏚/v4.3.2--ci.0 (FakeVersion)              
-            2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.2 (UpstreamBuild, CodeChange)
-            3 ╓  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3--ci.2 (UpstreamBuild, CodeChange)
-            4 ╙  X-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.2 (UpstreamBuild, CodeChange)
+            1 - T  X-Core            v4.3.2+fake → ⏚/v4.3.2--ci.0 (FakeVersion)              
+            2 - T  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.2 (UpstreamBuild, CodeChange)
+            3 ╓ T  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3--ci.2 (UpstreamBuild, CodeChange)
+            4 ╙ T  X-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.2 (UpstreamBuild, CodeChange)
             Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -165,10 +165,10 @@ public class FakeVersionTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core            v4.3.2+fake → ⏚/v4.3.2--ci.0 (FakeVersion)              
-            2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.2 (UpstreamBuild, CodeChange)
-            3 ╓  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3--ci.2 (UpstreamBuild, CodeChange)
-            4 ╙  X-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.2 (UpstreamBuild, CodeChange)
+            1 - T  X-Core            v4.3.2+fake → ⏚/v4.3.2--ci.0 (FakeVersion)              
+            2 - T  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.2 (UpstreamBuild, CodeChange)
+            3 ╓ T  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3--ci.2 (UpstreamBuild, CodeChange)
+            4 ╙ T  X-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.2 (UpstreamBuild, CodeChange)
             Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -179,10 +179,10 @@ public class FakeVersionTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core            v4.3.2+fake → ⏚/v4.3.2--ci.0 (FakeVersion)              
-            2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.2 (UpstreamBuild, CodeChange)
-            3 ╓  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3--ci.2 (UpstreamBuild, CodeChange)
-            4 ╙  X-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.2 (UpstreamBuild, CodeChange)
+            1 - T  X-Core            v4.3.2+fake → ⏚/v4.3.2--ci.0 (FakeVersion)              
+            2 - T  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1--ci.2 (UpstreamBuild, CodeChange)
+            3 ╓ T  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3--ci.2 (UpstreamBuild, CodeChange)
+            4 ╙ T  X-Monitoring      v0.2.3      → ⏚/v0.2.4--ci.2 (UpstreamBuild, CodeChange)
             Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v4.3.2--ci.0 built: 1 package.
@@ -197,10 +197,10 @@ public class FakeVersionTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            -  X-Core            ⏚/v4.3.2--ci.0
-            -  X-ActivityMonitor ⏚/v0.1.1--ci.2
-            ╓  X-PerfectEvent    ⏚/v0.3.3--ci.2
-            ╙  X-Monitoring      ⏚/v0.2.4--ci.2
+            - ✓  X-Core            ⏚/v4.3.2--ci.0
+            - ✓  X-ActivityMonitor ⏚/v0.1.1--ci.2
+            ╓ ✓  X-PerfectEvent    ⏚/v0.3.3--ci.2
+            ╙ ✓  X-Monitoring      ⏚/v0.2.4--ci.2
             There is nothing to build across the 4 repositories but 4 can be published.
             ❰✓❱
 
@@ -215,10 +215,10 @@ public class FakeVersionTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core            v3.0.0+fake → ⏚/v3.0.0 (FakeVersion)              
-            2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)
-            3 ╓  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)
-            4 ╙  X-Monitoring      v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)
+            1 - T  X-Core            v3.0.0+fake → ⏚/v3.0.0 (FakeVersion)              
+            2 - T  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)
+            3 ╓ T  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)
+            4 ╙ T  X-Monitoring      v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)
             Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v3.0.0 built: 1 package.
@@ -235,10 +235,10 @@ public class FakeVersionTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci.0" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core            (v3.0.0) → ⏚/v3.0.0--ci.0 (RollingLocal) 
-            2 -  X-ActivityMonitor (v0.1.1) → ⏚/v0.1.1--ci.4 (UpstreamBuild)
-            3 ╓  X-PerfectEvent    (v0.3.3) → ⏚/v0.3.3--ci.4 (UpstreamBuild)
-            4 ╙  X-Monitoring      (v0.2.4) → ⏚/v0.2.4--ci.4 (UpstreamBuild)
+            1 - T  X-Core            (v3.0.0) → ⏚/v3.0.0--ci.0 (RollingLocal) 
+            2 - T  X-ActivityMonitor (v0.1.1) → ⏚/v0.1.1--ci.4 (UpstreamBuild)
+            3 ╓ T  X-PerfectEvent    (v0.3.3) → ⏚/v0.3.3--ci.4 (UpstreamBuild)
+            4 ╙ T  X-Monitoring      (v0.2.4) → ⏚/v0.2.4--ci.4 (UpstreamBuild)
             Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v3.0.0--ci.0 built: 1 package.
@@ -256,10 +256,10 @@ public class FakeVersionTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--ci.0" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core            v2.0.0+fake    → ⏚/v2.0.0--ci.0 (FakeVersion)  
-            2 -  X-ActivityMonitor (v0.1.1--ci.4) → ⏚/v0.1.1--ci.5 (UpstreamBuild)
-            3 ╓  X-PerfectEvent    (v0.3.3--ci.4) → ⏚/v0.3.3--ci.5 (UpstreamBuild)
-            4 ╙  X-Monitoring      (v0.2.4--ci.4) → ⏚/v0.2.4--ci.5 (UpstreamBuild)
+            1 - T  X-Core            v2.0.0+fake    → ⏚/v2.0.0--ci.0 (FakeVersion)  
+            2 - T  X-ActivityMonitor (v0.1.1--ci.4) → ⏚/v0.1.1--ci.5 (UpstreamBuild)
+            3 ╓ T  X-PerfectEvent    (v0.3.3--ci.4) → ⏚/v0.3.3--ci.5 (UpstreamBuild)
+            4 ╙ T  X-Monitoring      (v0.2.4--ci.4) → ⏚/v0.2.4--ci.5 (UpstreamBuild)
             Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v2.0.0--ci.0 built: 1 package.
@@ -273,10 +273,10 @@ public class FakeVersionTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core            v2.0.0+fake → ⏚/v2.0.0 (FakeVersion)              
-            2 -  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)
-            3 ╓  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)
-            4 ╙  X-Monitoring      v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)
+            1 - T  X-Core            v2.0.0+fake → ⏚/v2.0.0 (FakeVersion)              
+            2 - T  X-ActivityMonitor v0.1.0      → ⏚/v0.1.1 (UpstreamBuild, CodeChange)
+            3 ╓ T  X-PerfectEvent    v0.3.2      → ⏚/v0.3.3 (UpstreamBuild, CodeChange)
+            4 ╙ T  X-Monitoring      v0.2.3      → ⏚/v0.2.4 (UpstreamBuild, CodeChange)
             Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -328,7 +328,7 @@ public class FakeVersionTests
         stack.Screen.ToString().ShouldContain( "(publishing requires publications from parent branches)" );
         // The releases of the parent branches that this publication also publishes, grouped by branch.
         stack.Screen.ToString().ShouldContain( "Also publishing 2 releases from parent branches:" );
-        stack.Screen.ToString().ShouldContain( "  stable  X-Core/local/v2.0.1, X-Consumer/local/v0.1.2" );
+        stack.Screen.ToString().ShouldContain( "  stable  ✓ X-Core/local/v2.0.1, ✓ X-Consumer/local/v0.1.2" );
     }
 
 }

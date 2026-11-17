@@ -53,10 +53,10 @@ public class SkippedRepositoryTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--branch", "stable" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-ActivityMonitor v0.1.0 → ⏚/v0.1.1--ci.1 (CodeChange)   
-            2 ╓  X-PerfectEvent    v0.3.3 → ⏚/v0.3.4--ci.1 (UpstreamBuild)
-            3 ╙  X-Monitoring      v0.2.4 → ⏚/v0.2.5--ci.1 (UpstreamBuild)
-            4 -  X-Sample          v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
+            1 - T  X-ActivityMonitor v0.1.0 → ⏚/v0.1.1--ci.1 (CodeChange)   
+            2 ╓ T  X-PerfectEvent    v0.3.3 → ⏚/v0.3.4--ci.1 (UpstreamBuild)
+            3 ╙ T  X-Monitoring      v0.2.4 → ⏚/v0.2.5--ci.1 (UpstreamBuild)
+            4 - T  X-Sample          v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
             Required build for 4 repositories across the 4 repositories and 4 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-ActivityMonitor ⏚/v0.1.1--ci.1 built: 1 package.
@@ -83,10 +83,10 @@ public class SkippedRepositoryTests
             logs.ShouldContain( l => l.Contains( "is skipped but its sources require dependency updates." ) );
         }
         display.ToString().ShouldBe( """
-              - →·   X-ActivityMonitor v0.1.1--ci.1
-            1 ╓  ⊙   X-PerfectEvent    v0.3.4--ci.1 → ⏚/v0.3.4--ci.2                        (CodeChange)   
-              ╙      X-Monitoring      v0.2.5--ci.1 U X.ActivityMonitor: 0.1.0 → 0.1.1--ci.1
-            2 -  ·→  X-Sample          v0.0.1--ci.1 → ⏚/v0.0.1--ci.2                        (UpstreamBuild)
+              - →·  ✓  X-ActivityMonitor v0.1.1--ci.1
+            1 ╓  ⊙  T  X-PerfectEvent    v0.3.4--ci.1 → ⏚/v0.3.4--ci.2                        (CodeChange)   
+              ╙     ✓  X-Monitoring      v0.2.5--ci.1 U X.ActivityMonitor: 0.1.0 → 0.1.1--ci.1
+            2 -  ·→ T  X-Sample          v0.0.1--ci.1 → ⏚/v0.0.1--ci.2                        (UpstreamBuild)
             Required build for 2 from the single pivot out of 4 repositories and 2 can be published.
             U 1 update from upstreams.
              i  X-PerfectEvent ⏚/v0.3.4--ci.2 built: 1 package.
@@ -100,11 +100,11 @@ public class SkippedRepositoryTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              -  X-ActivityMonitor v0.1.1--ci.1
-              ╓  X-PerfectEvent    v0.3.4--ci.2
-            1 ╙  X-Monitoring      v0.2.5--ci.1 → ⏚/v0.2.5--ci.3 (DependencyUpdate, CodeChange)          
-                                                                 U X.ActivityMonitor: 0.1.0 → 0.1.1--ci.1
-              -  X-Sample          v0.0.1--ci.2
+              - ✓  X-ActivityMonitor v0.1.1--ci.1
+              ╓ ✓  X-PerfectEvent    v0.3.4--ci.2
+            1 ╙ T  X-Monitoring      v0.2.5--ci.1 → ⏚/v0.2.5--ci.3 (DependencyUpdate, CodeChange)          
+                                                                   U X.ActivityMonitor: 0.1.0 → 0.1.1--ci.1
+              - ✓  X-Sample          v0.0.1--ci.2
             Required build for 1 repositories across the 4 repositories and 1 can be published.
             U 1 update from upstreams.
             ❰✓❱
@@ -115,11 +115,11 @@ public class SkippedRepositoryTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "*build", "--branch", "stable", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              - →·   X-ActivityMonitor v0.1.1--ci.1
-              ╓  ⊙   X-PerfectEvent    v0.3.4--ci.2
-            1 ╙      X-Monitoring      v0.2.5--ci.1 → ⏚/v0.2.5--ci.3 (DependencyUpdate, CodeChange)          
-                                                                     U X.ActivityMonitor: 0.1.0 → 0.1.1--ci.1
-              -  ·→  X-Sample          v0.0.1--ci.2
+              - →·  ✓  X-ActivityMonitor v0.1.1--ci.1
+              ╓  ⊙  ✓  X-PerfectEvent    v0.3.4--ci.2
+            1 ╙     T  X-Monitoring      v0.2.5--ci.1 → ⏚/v0.2.5--ci.3 (DependencyUpdate, CodeChange)          
+                                                                       U X.ActivityMonitor: 0.1.0 → 0.1.1--ci.1
+              -  ·→ ✓  X-Sample          v0.0.1--ci.2
             Required build for 1 from the single pivot out of 4 repositories and 1 can be published.
             U 1 update from upstreams.
             ❰✓❱

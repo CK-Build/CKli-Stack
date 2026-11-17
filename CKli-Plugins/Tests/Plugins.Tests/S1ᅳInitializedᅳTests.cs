@@ -681,12 +681,12 @@ public class S1ᅳInitializedᅳTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  CKt-Core                      v1.0.0      → ⏚/v1.0.1--ci.4 (CodeChange)                            
-            2 -  CKt-ActivityMonitor           v0.1.0      → ⏚/v0.1.1--ci.5 (UpstreamBuild, CodeChange)             
-            3 ╓  CKt-PerfectEvent              v0.3.2      → ⏚/v0.3.3--ci.5 (UpstreamBuild, CodeChange)             
-            4 ║  CKt-Monitoring                v0.2.3      → ⏚/v0.2.4--ci.5 (UpstreamBuild, CodeChange)             
-            5 ╙  Samples/CKt-App-Sample        v0.0.0+fake → ⏚/v0.0.0--ci.3 (UpstreamBuild, FakeVersion, CodeChange)
-            6 -  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0--ci.3 (UpstreamBuild, FakeVersion, CodeChange)
+            1 - T  CKt-Core                      v1.0.0      → ⏚/v1.0.1--ci.4 (CodeChange)                            
+            2 - T  CKt-ActivityMonitor           v0.1.0      → ⏚/v0.1.1--ci.5 (UpstreamBuild, CodeChange)             
+            3 ╓ T  CKt-PerfectEvent              v0.3.2      → ⏚/v0.3.3--ci.5 (UpstreamBuild, CodeChange)             
+            4 ║ T  CKt-Monitoring                v0.2.3      → ⏚/v0.2.4--ci.5 (UpstreamBuild, CodeChange)             
+            5 ╙ T  Samples/CKt-App-Sample        v0.0.0+fake → ⏚/v0.0.0--ci.3 (UpstreamBuild, FakeVersion, CodeChange)
+            6 - T  Samples/CKt-Sample-Monitoring v0.0.0+fake → ⏚/v0.0.0--ci.3 (UpstreamBuild, FakeVersion, CodeChange)
             Required build for 6 repositories across the 6 repositories and 6 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  CKt-Core ⏚/v1.0.1--ci.4 built: 1 package.
@@ -703,15 +703,15 @@ public class S1ᅳInitializedᅳTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            -  CKt-Core                      ⏚/v1.0.1--ci.4
-            -  CKt-ActivityMonitor           ⏚/v0.1.1--ci.5
-            ╓  CKt-PerfectEvent              ⏚/v0.3.3--ci.5
-            ║  CKt-Monitoring                ⏚/v0.2.4--ci.5
-            ╙  Samples/CKt-App-Sample        ⏚/v0.0.0--ci.3
-            -  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.3
+            - ✓  CKt-Core                      ⏚/v1.0.1--ci.4
+            - ✓  CKt-ActivityMonitor           ⏚/v0.1.1--ci.5
+            ╓ ✓  CKt-PerfectEvent              ⏚/v0.3.3--ci.5
+            ║ ✓  CKt-Monitoring                ⏚/v0.2.4--ci.5
+            ╙ ✓  Samples/CKt-App-Sample        ⏚/v0.0.0--ci.3
+            - ✓  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.3
             There is nothing to build across the 6 repositories but 6 can be published.
             ❰✓❱
-            
+
             """ );
 
 
@@ -719,15 +719,15 @@ public class S1ᅳInitializedᅳTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            -  CKt-Core                      ⏚/v1.0.1--ci.4
-            -  CKt-ActivityMonitor           ⏚/v0.1.1--ci.5
-            ╓  CKt-PerfectEvent              ⏚/v0.3.3--ci.5
-            ║  CKt-Monitoring                ⏚/v0.2.4--ci.5
-            ╙  Samples/CKt-App-Sample        ⏚/v0.0.0--ci.3
-            -  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.3
+            - ✓  CKt-Core                      ⏚/v1.0.1--ci.4
+            - ✓  CKt-ActivityMonitor           ⏚/v0.1.1--ci.5
+            ╓ ✓  CKt-PerfectEvent              ⏚/v0.3.3--ci.5
+            ║ ✓  CKt-Monitoring                ⏚/v0.2.4--ci.5
+            ╙ ✓  Samples/CKt-App-Sample        ⏚/v0.0.0--ci.3
+            - ✓  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.3
             There is nothing to build across the 6 repositories but 6 can be published.
             ❰✓❱
-            
+
             """ );
 
         var (nugetOrgFeed, sosFeed) = Helper.GetFakeFeedPaths( clonedFolder.Path );

@@ -43,12 +43,13 @@ public class PrereleaseBranchTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            - →·   X-Core            v1.0.1
-            - →·   X-ActivityMonitor v0.1.1
-            -  ⊙   X-PerfectEvent    v0.3.3
-            -  ·→  X-Sample          v0.0.0
+            - →·  ?  X-Core            v1.0.1
+            - →·  ?  X-ActivityMonitor v0.1.1
+            -  ⊙  ?  X-PerfectEvent    v0.3.3
+            -  ·→ ?  X-Sample          v0.0.0
             There is nothing to build from the single pivot out of 4 repositories and nothing to publish.
             (Using '*build' may detect required builds in upstreams repositories.)
+            (4 repositories that are not built have never been tested: use '--with-tests' to test them.)
             ❰✓❱
 
             """ );
@@ -57,12 +58,13 @@ public class PrereleaseBranchTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--ci.0", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              - →·   X-Core            v1.0.1
-              - →·   X-ActivityMonitor v0.1.1
-            1 -  ⊙   X-PerfectEvent    v0.3.3 → ⏚/v0.3.4-romeo.0.ci.1 (CI0+branch)   
-            2 -  ·→  X-Sample          v0.0.0 → ⏚/v0.0.1-romeo.0.ci.1 (UpstreamBuild)
+              - →·  ?  X-Core            v1.0.1
+              - →·  ?  X-ActivityMonitor v0.1.1
+            1 -  ⊙  T  X-PerfectEvent    v0.3.3 → ⏚/v0.3.4-romeo.0.ci.1 (CI0+branch)   
+            2 -  ·→ T  X-Sample          v0.0.0 → ⏚/v0.0.1-romeo.0.ci.1 (UpstreamBuild)
             Required build for 2 from the single pivot out of 4 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+            (2 repositories that are not built have never been tested: use '--with-tests' to test them.)
             ❰✓❱
 
             """ );
@@ -73,12 +75,13 @@ public class PrereleaseBranchTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              - →·   X-Core            v1.0.1
-              - →·   X-ActivityMonitor v0.1.1
-            1 -  ⊙   X-PerfectEvent    v0.3.3 → ⏚/v0.3.4-romeo (CodeChange)   
-            2 -  ·→  X-Sample          v0.0.0 → ⏚/v0.0.1-romeo (UpstreamBuild)
+              - →·  ?  X-Core            v1.0.1
+              - →·  ?  X-ActivityMonitor v0.1.1
+            1 -  ⊙  T  X-PerfectEvent    v0.3.3 → ⏚/v0.3.4-romeo (CodeChange)   
+            2 -  ·→ T  X-Sample          v0.0.0 → ⏚/v0.0.1-romeo (UpstreamBuild)
             Required build for 2 from the single pivot out of 4 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+            (2 repositories that are not built have never been tested: use '--with-tests' to test them.)
             ❰✓❱
 
             """ );
@@ -92,12 +95,13 @@ public class PrereleaseBranchTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              - →·   X-Core            v1.0.1
-              - →·   X-ActivityMonitor v0.1.1
-            1 -  ⊙   X-PerfectEvent    v0.3.3 → ⏚/v0.4.0-romeo (CodeChange)   
-            2 -  ·→  X-Sample          v0.0.0 → ⏚/v0.1.0-romeo (UpstreamBuild)
+              - →·  ?  X-Core            v1.0.1
+              - →·  ?  X-ActivityMonitor v0.1.1
+            1 -  ⊙  T  X-PerfectEvent    v0.3.3 → ⏚/v0.4.0-romeo (CodeChange)   
+            2 -  ·→ T  X-Sample          v0.0.0 → ⏚/v0.1.0-romeo (UpstreamBuild)
             Required build for 2 from the single pivot out of 4 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+            (2 repositories that are not built have never been tested: use '--with-tests' to test them.)
              i  X-PerfectEvent ⏚/v0.4.0-romeo built: 1 package.
              i  X-Sample ⏚/v0.1.0-romeo built: 1 package.
                  W  Repository 'X-Sample': Both local 'romeo' and remote 'origin/romeo' not found.
@@ -116,12 +120,13 @@ public class PrereleaseBranchTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            - →·   X-Core            v1.0.1        
-            - →·   X-ActivityMonitor v0.1.1        
-            -  ⊙   X-PerfectEvent    ⏚/v0.4.0-romeo
-            -  ·→  X-Sample          ⏚/v0.1.0-romeo
+            - →·  ?  X-Core            v1.0.1        
+            - →·  ?  X-ActivityMonitor v0.1.1        
+            -  ⊙  ✓  X-PerfectEvent    ⏚/v0.4.0-romeo
+            -  ·→ ✓  X-Sample          ⏚/v0.1.0-romeo
             There is nothing to build from the single pivot out of 4 repositories but 2 can be published.
             (Using '*build' may detect required builds in upstreams repositories.)
+            (2 repositories that are not built have never been tested: use '--with-tests' to test them.)
             ❰✓❱
 
             """ );
@@ -135,12 +140,13 @@ public class PrereleaseBranchTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--dry-run" )).ShouldBeTrue();
         var rolled = """
-              - →·   X-Core            v1.0.1        
-              - →·   X-ActivityMonitor v0.1.1        
-            1 -  ⊙   X-PerfectEvent    (v0.4.0-romeo) → ⏚/v0.4.0-romeo.0.ci.4 (RollingLocal) 
-            2 -  ·→  X-Sample          (v0.1.0-romeo) → ⏚/v0.1.0-romeo.0.ci.2 (UpstreamBuild)
+              - →·  ?  X-Core            v1.0.1        
+              - →·  ?  X-ActivityMonitor v0.1.1        
+            1 -  ⊙  T  X-PerfectEvent    (v0.4.0-romeo) → ⏚/v0.4.0-romeo.0.ci.4 (RollingLocal) 
+            2 -  ·→ T  X-Sample          (v0.1.0-romeo) → ⏚/v0.1.0-romeo.0.ci.2 (UpstreamBuild)
             Required build for 2 from the single pivot out of 4 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+            (2 repositories that are not built have never been tested: use '--with-tests' to test them.)
             ❰✓❱
 
             """;
@@ -156,12 +162,13 @@ public class PrereleaseBranchTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "*build", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              - →·   X-Core            v1.0.1        
-            1 - →·   X-ActivityMonitor v0.1.1         → ⏚/v0.1.2-romeo (CodeChange)   
-            2 -  ⊙   X-PerfectEvent    (v0.4.0-romeo) → ⏚/v0.4.0-romeo (UpstreamBuild)
-            3 -  ·→  X-Sample          (v0.1.0-romeo) → ⏚/v0.1.0-romeo (UpstreamBuild)
+              - →·  ?  X-Core            v1.0.1        
+            1 - →·  T  X-ActivityMonitor v0.1.1         → ⏚/v0.1.2-romeo (CodeChange)   
+            2 -  ⊙  T  X-PerfectEvent    (v0.4.0-romeo) → ⏚/v0.4.0-romeo (UpstreamBuild)
+            3 -  ·→ T  X-Sample          (v0.1.0-romeo) → ⏚/v0.1.0-romeo (UpstreamBuild)
             Required build for 3 from the single pivot out of 4 repositories and 3 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+            (1 repository that is not built has never been tested: use '--with-tests' to test it.)
             ❰✓❱
 
             """ );
@@ -170,12 +177,13 @@ public class PrereleaseBranchTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "*build", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              - →·   X-Core            v1.0.1        
-            1 - →·   X-ActivityMonitor v0.1.1         → ⏚/v0.1.2-romeo.0.ci.1 (CodeChange)   
-            2 -  ⊙   X-PerfectEvent    (v0.4.0-romeo) → ⏚/v0.4.0-romeo.0.ci.5 (UpstreamBuild)
-            3 -  ·→  X-Sample          (v0.1.0-romeo) → ⏚/v0.1.0-romeo.0.ci.2 (UpstreamBuild)
+              - →·  ?  X-Core            v1.0.1        
+            1 - →·  T  X-ActivityMonitor v0.1.1         → ⏚/v0.1.2-romeo.0.ci.1 (CodeChange)   
+            2 -  ⊙  T  X-PerfectEvent    (v0.4.0-romeo) → ⏚/v0.4.0-romeo.0.ci.5 (UpstreamBuild)
+            3 -  ·→ T  X-Sample          (v0.1.0-romeo) → ⏚/v0.1.0-romeo.0.ci.2 (UpstreamBuild)
             Required build for 3 from the single pivot out of 4 repositories and 3 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+            (1 repository that is not built has never been tested: use '--with-tests' to test it.)
             ❰✓❱
 
             """ );
@@ -184,12 +192,13 @@ public class PrereleaseBranchTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "*build" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              - →·   X-Core            v1.0.1        
-            1 - →·   X-ActivityMonitor v0.1.1         → ⏚/v0.1.2-romeo.0.ci.1 (CodeChange)   
-            2 -  ⊙   X-PerfectEvent    (v0.4.0-romeo) → ⏚/v0.4.0-romeo.0.ci.5 (UpstreamBuild)
-            3 -  ·→  X-Sample          (v0.1.0-romeo) → ⏚/v0.1.0-romeo.0.ci.2 (UpstreamBuild)
+              - →·  ?  X-Core            v1.0.1        
+            1 - →·  T  X-ActivityMonitor v0.1.1         → ⏚/v0.1.2-romeo.0.ci.1 (CodeChange)   
+            2 -  ⊙  T  X-PerfectEvent    (v0.4.0-romeo) → ⏚/v0.4.0-romeo.0.ci.5 (UpstreamBuild)
+            3 -  ·→ T  X-Sample          (v0.1.0-romeo) → ⏚/v0.1.0-romeo.0.ci.2 (UpstreamBuild)
             Required build for 3 from the single pivot out of 4 repositories and 3 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+            (1 repository that is not built has never been tested: use '--with-tests' to test it.)
              i  X-ActivityMonitor ⏚/v0.1.2-romeo.0.ci.1 built: 1 package.
                  W  Repository 'X-ActivityMonitor': Both local 'romeo' and remote 'origin/romeo' not found.
              i  X-PerfectEvent ⏚/v0.4.0-romeo.0.ci.5 built: 1 package.
@@ -202,12 +211,13 @@ public class PrereleaseBranchTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "*build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              - →·   X-Core            v1.0.1
-            1 - →·   X-ActivityMonitor v0.1.1 → ⏚/v0.1.2-romeo (CodeChange)               
-            2 -  ⊙   X-PerfectEvent    v0.3.3 → ⏚/v0.4.0-romeo (UpstreamBuild, CodeChange)
-            3 -  ·→  X-Sample          v0.0.0 → ⏚/v0.1.0-romeo (UpstreamBuild, CodeChange)
+              - →·  ?  X-Core            v1.0.1
+            1 - →·  T  X-ActivityMonitor v0.1.1 → ⏚/v0.1.2-romeo (CodeChange)               
+            2 -  ⊙  T  X-PerfectEvent    v0.3.3 → ⏚/v0.4.0-romeo (UpstreamBuild, CodeChange)
+            3 -  ·→ T  X-Sample          v0.0.0 → ⏚/v0.1.0-romeo (UpstreamBuild, CodeChange)
             Required build for 3 from the single pivot out of 4 repositories and 3 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+            (1 repository that is not built has never been tested: use '--with-tests' to test it.)
              i  X-ActivityMonitor ⏚/v0.1.2-romeo built: 1 package.
              i  X-PerfectEvent ⏚/v0.4.0-romeo built: 1 package.
              i  X-Sample ⏚/v0.1.0-romeo built: 1 package.
@@ -240,10 +250,11 @@ public class PrereleaseBranchTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--ci.0" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              - →·   X-Core  v1.0.0
-            1 -  ⊙   X-Pivot v2.0.0 → ⏚/v2.0.1-romeo.0.ci.1 (CI0+branch)
+              - →·  ?  X-Core  v1.0.0
+            1 -  ⊙  T  X-Pivot v2.0.0 → ⏚/v2.0.1-romeo.0.ci.1 (CI0+branch)
             Required build for 1 from the single pivot out of 2 repositories and 1 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+            (1 repository that is not built has never been tested: use '--with-tests' to test it.)
              i  X-Pivot ⏚/v2.0.1-romeo.0.ci.1 built: 1 package.
             ❰✓❱
 
@@ -253,11 +264,12 @@ public class PrereleaseBranchTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "build", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            - →·   X-Core  v1.0.0               
-            -  ⊙   X-Pivot ⏚/v2.0.1-romeo.0.ci.1
+            - →·  ?  X-Core  v1.0.0               
+            -  ⊙  ✓  X-Pivot ⏚/v2.0.1-romeo.0.ci.1
             There is nothing to build from the single pivot out of 2 repositories but 1 can be published.
             (Use '--ci.0' to build a CI version from the repository that already carries a released version.)
             (Using '*build' may detect required builds in upstreams repositories.)
+            (1 repository that is not built has never been tested: use '--with-tests' to test it.)
             ❰✓❱
 
             """ );
@@ -297,8 +309,8 @@ public class PrereleaseBranchTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rPivot.Root, "*build", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            - →·   X-Core  v1.0.1
-            -  ⊙   X-Pivot v2.0.1
+            - →·  ✓  X-Core  v1.0.1
+            -  ⊙  ✓  X-Pivot v2.0.1
             There is nothing to build from the single pivot out of 2 repositories and nothing to publish.
             (Use '--ci.0' to build a CI version from the 2 repositories that already carry a released version.)
             ❰✓❱

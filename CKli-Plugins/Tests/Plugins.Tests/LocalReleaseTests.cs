@@ -33,9 +33,10 @@ public class LocalReleaseTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            -  X-Core     v0.3.3
-            -  X-Consumer v0.0.0
+            - ?  X-Core     v0.3.3
+            - ?  X-Consumer v0.0.0
             There is nothing to build across the 2 repositories and nothing to publish.
+            (2 repositories that are not built have never been tested: use '--with-tests' to test them.)
             ❰✓❱
 
             """ );
@@ -47,8 +48,8 @@ public class LocalReleaseTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  ⊙   X-Core     v0.3.3 → ⏚/v0.3.4 (CodeChange)   
-            2 -  ·→  X-Consumer v0.0.0 → ⏚/v0.0.1 (UpstreamBuild)
+            1 -  ⊙  T  X-Core     v0.3.3 → ⏚/v0.3.4 (CodeChange)   
+            2 -  ·→ T  X-Consumer v0.0.0 → ⏚/v0.0.1 (UpstreamBuild)
             Required build for 2 from the single pivot out of 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v0.3.4 built: 1 package.
@@ -67,8 +68,8 @@ public class LocalReleaseTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rCore.Root, "build", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  ⊙   X-Core     (v0.3.4) → ⏚/v0.3.4 (CodeChange)   
-            2 -  ·→  X-Consumer (v0.0.1) → ⏚/v0.0.1 (UpstreamBuild)
+            1 -  ⊙  T  X-Core     (v0.3.4) → ⏚/v0.3.4 (CodeChange)   
+            2 -  ·→ T  X-Consumer (v0.0.1) → ⏚/v0.0.1 (UpstreamBuild)
             Required build for 2 from the single pivot out of 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v0.3.4 built: 1 package.

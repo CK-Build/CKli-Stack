@@ -33,8 +33,8 @@ public class CIBuildTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--ci.0", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core     v1.0.1 → ⏚/v1.0.2--ci.0 (CI0)          
-            2 -  X-Consumer v0.1.1 → ⏚/v0.1.2--ci.1 (UpstreamBuild)
+            1 - T  X-Core     v1.0.1 → ⏚/v1.0.2--ci.0 (CI0)          
+            2 - T  X-Consumer v0.1.1 → ⏚/v0.1.2--ci.1 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -45,10 +45,11 @@ public class CIBuildTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rConsumer.Root, "build", "--ci.0", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-              - →·   X-Core     v1.0.1
-            1 -  ⊙   X-Consumer v0.1.1 → ⏚/v0.1.2--ci.0 (CI0)
+              - →·  ?  X-Core     v1.0.1
+            1 -  ⊙  T  X-Consumer v0.1.1 → ⏚/v0.1.2--ci.0 (CI0)
             Required build for 1 from the single pivot out of 2 repositories and 1 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+            (1 repository that is not built has never been tested: use '--with-tests' to test it.)
             ❰✓❱
 
             """ );
@@ -58,8 +59,8 @@ public class CIBuildTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, rConsumer.Root, "*build", "--ci.0", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 - →·   X-Core     v1.0.1 → ⏚/v1.0.2--ci.0 (CI0)          
-            2 -  ⊙   X-Consumer v0.1.1 → ⏚/v0.1.2--ci.1 (UpstreamBuild)
+            1 - →·  T  X-Core     v1.0.1 → ⏚/v1.0.2--ci.0 (CI0)          
+            2 -  ⊙  T  X-Consumer v0.1.1 → ⏚/v0.1.2--ci.1 (UpstreamBuild)
             Required build for 2 from the single pivot out of 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -88,8 +89,8 @@ public class CIBuildTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core     v0.3.3 → ⏚/v0.3.4--ci.1 (CodeChange)   
-            2 -  X-Consumer v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
+            1 - T  X-Core     v0.3.3 → ⏚/v0.3.4--ci.1 (CodeChange)   
+            2 - T  X-Consumer v0.0.0 → ⏚/v0.0.1--ci.1 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v0.3.4--ci.1 built: 1 package.
@@ -102,8 +103,8 @@ public class CIBuildTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core     v0.3.3 → ⏚/v0.3.4 (CodeChange)               
-            2 -  X-Consumer v0.0.0 → ⏚/v0.0.1 (UpstreamBuild, CodeChange)
+            1 - T  X-Core     v0.3.3 → ⏚/v0.3.4 (CodeChange)               
+            2 - T  X-Consumer v0.0.0 → ⏚/v0.0.1 (UpstreamBuild, CodeChange)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v0.3.4 built: 1 package.

@@ -60,9 +60,9 @@ public class FixWorkflowTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core            v1.0.0 → ⏚/v1.1.0 (CodeChange)   
-            2 -  X-ActivityMonitor v0.1.0 → ⏚/v0.2.0 (UpstreamBuild)
-            3 -  X-Monitoring      v0.2.0 → ⏚/v0.3.0 (UpstreamBuild)
+            1 - T  X-Core            v1.0.0 → ⏚/v1.1.0 (CodeChange)   
+            2 - T  X-ActivityMonitor v0.1.0 → ⏚/v0.2.0 (UpstreamBuild)
+            3 - T  X-Monitoring      v0.2.0 → ⏚/v0.3.0 (UpstreamBuild)
             Required build for 3 repositories across the 3 repositories and 3 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v1.1.0 built: 1 package.

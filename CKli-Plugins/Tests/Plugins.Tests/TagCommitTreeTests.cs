@@ -48,9 +48,10 @@ public class TagCommitTreeTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            -  X-Core v1.0.0
+            - ?  X-Core v1.0.0
             There is nothing to build across the 1 repositories and nothing to publish.
             (Use '--ci.0' to build a CI version from the repository that already carries a released version.)
+            (1 repository that is not built has never been tested: use '--with-tests' to test it.)
             ❰✓❱
 
             """ );

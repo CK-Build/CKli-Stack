@@ -84,9 +84,9 @@ public class DeprecationTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            -  X-Core                      v1.0.1
-            -  X-PerfectEvent              v0.3.4
-            -  Samples/X-Sample-Monitoring v0.0.1
+            - ?  X-Core                      v1.0.1
+            - ✓  X-PerfectEvent              v0.3.4
+            - ✓  Samples/X-Sample-Monitoring v0.0.1
             There is nothing to build across the 3 repositories and nothing to publish.
             ❰✓❱
 

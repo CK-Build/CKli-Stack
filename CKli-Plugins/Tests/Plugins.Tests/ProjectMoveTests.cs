@@ -311,8 +311,8 @@ public class ProjectMoveTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Target v2.0.1+fake → ⏚/v2.0.1-sierra.0.ci.1 (FakeVersion, CodeChange)  
-            2 -  X-Source v1.0.0      → ⏚/v1.0.1-sierra.0.ci.4 (UpstreamBuild, CodeChange)
+            1 - T  X-Target v2.0.1+fake → ⏚/v2.0.1-sierra.0.ci.1 (FakeVersion, CodeChange)  
+            2 - T  X-Source v1.0.0      → ⏚/v1.0.1-sierra.0.ci.4 (UpstreamBuild, CodeChange)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -324,10 +324,11 @@ public class ProjectMoveTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 ╓  X-Source v1.0.0 → ⏚/v1.0.1--ci.1 (CodeChange)
-              ╙  X-Target v2.0.0
+            1 ╓ T  X-Source v1.0.0 → ⏚/v1.0.1--ci.1 (CodeChange)
+              ╙ ?  X-Target v2.0.0
             Required build for 1 repositories across the 2 repositories and 1 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
+            (1 repository that is not built has never been tested: use '--with-tests' to test it.)
             ❰✓❱
 
             """ );
@@ -337,8 +338,8 @@ public class ProjectMoveTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Target v2.0.1+fake → ⏚/v2.0.1--ci.1 (FakeVersion, CodeChange)  
-            2 -  X-Source v1.0.0      → ⏚/v1.0.1--ci.4 (UpstreamBuild, CodeChange)
+            1 - T  X-Target v2.0.1+fake → ⏚/v2.0.1--ci.1 (FakeVersion, CodeChange)  
+            2 - T  X-Source v1.0.0      → ⏚/v1.0.1--ci.4 (UpstreamBuild, CodeChange)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -387,8 +388,8 @@ public class ProjectMoveTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Source v1.0.0      → ⏚/v1.0.1-sierra.0.ci.2 (CodeChange)                            
-            2 -  X-Target v2.0.2+fake → ⏚/v2.0.2-sierra.0.ci.2 (UpstreamBuild, FakeVersion, CodeChange)
+            1 - T  X-Source v1.0.0      → ⏚/v1.0.1-sierra.0.ci.2 (CodeChange)                            
+            2 - T  X-Target v2.0.2+fake → ⏚/v2.0.2-sierra.0.ci.2 (UpstreamBuild, FakeVersion, CodeChange)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱
@@ -398,8 +399,8 @@ public class ProjectMoveTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Target v2.0.1+fake → ⏚/v2.0.1-romeo.0.ci.1 (FakeVersion, CodeChange)  
-            2 -  X-Source v1.0.0      → ⏚/v1.0.1-romeo.0.ci.3 (UpstreamBuild, CodeChange)
+            1 - T  X-Target v2.0.1+fake → ⏚/v2.0.1-romeo.0.ci.1 (FakeVersion, CodeChange)  
+            2 - T  X-Source v1.0.0      → ⏚/v1.0.1-romeo.0.ci.3 (UpstreamBuild, CodeChange)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
             ❰✓❱

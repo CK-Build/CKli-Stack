@@ -51,8 +51,8 @@ public class RollingLocalCIBuildTests
                 """ );
         }
         display.ToString().ShouldBe( """
-            1 -  X-Core     (v1.0.2) → ⏚/v1.0.2--ci.1 (RollingLocal) 
-            2 -  X-Consumer (v0.1.2) → ⏚/v0.1.2--ci.2 (UpstreamBuild)
+            1 - T  X-Core     (v1.0.2) → ⏚/v1.0.2--ci.1 (RollingLocal) 
+            2 - T  X-Consumer (v0.1.2) → ⏚/v0.1.2--ci.2 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v1.0.2--ci.1 built: 1 package.
@@ -69,8 +69,8 @@ public class RollingLocalCIBuildTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            -  X-Core     ⏚/v1.0.2--ci.1
-            -  X-Consumer ⏚/v0.1.2--ci.2
+            - ✓  X-Core     ⏚/v1.0.2--ci.1
+            - ✓  X-Consumer ⏚/v0.1.2--ci.2
             There is nothing to build across the 2 repositories but 2 can be published.
             ❰✓❱
 
@@ -100,8 +100,8 @@ public class RollingLocalCIBuildTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            -  X-Core     v1.0.2
-            -  X-Consumer v0.1.2
+            - ✓  X-Core     v1.0.2
+            - ✓  X-Consumer v0.1.2
             There is nothing to build across the 2 repositories and nothing to publish.
             (Use '--ci.0' to build a CI version from the 2 repositories that already carry a released version.)
             ❰✓❱
@@ -112,8 +112,8 @@ public class RollingLocalCIBuildTests
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--ci.0" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            1 -  X-Core     v1.0.2 → ⏚/v1.0.3--ci.0 (CI0)          
-            2 -  X-Consumer v0.1.2 → ⏚/v0.1.3--ci.1 (UpstreamBuild)
+            1 - T  X-Core     v1.0.2 → ⏚/v1.0.3--ci.0 (CI0)          
+            2 - T  X-Consumer v0.1.2 → ⏚/v0.1.3--ci.1 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v1.0.3--ci.0 built: 1 package.

@@ -48,8 +48,8 @@ public class CoworkingTests
         bobDisplay.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, bob, "publish", "--regular" )).ShouldBeTrue();
         bobDisplay.ToString().ShouldBe( """
-            1 -  X-Core         v1.0.1 → ⏚/v1.0.2 (CodeChange)   
-            2 -  X-PerfectEvent v0.3.3 → ⏚/v0.3.4 (UpstreamBuild)
+            1 - T  X-Core         v1.0.1 → ⏚/v1.0.2 (CodeChange)   
+            2 - T  X-PerfectEvent v0.3.3 → ⏚/v0.3.4 (UpstreamBuild)
             Required build for 2 repositories across the 2 repositories and 2 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-Core ⏚/v1.0.2 built: 1 package.
@@ -93,8 +93,8 @@ public class CoworkingTests
         timDisplay.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, timPivot, "publish", "--regular" )).ShouldBeTrue();
         timDisplay.ToString().ShouldBe( """
-              - →·   X-Core         v1.0.2
-            1 -  ⊙   X-PerfectEvent v0.3.4 → ⏚/v0.3.5 (CodeChange)
+              - →·  ?  X-Core         v1.0.2
+            1 -  ⊙  T  X-PerfectEvent v0.3.4 → ⏚/v0.3.5 (CodeChange)
             Required build for 1 from the single pivot out of 2 repositories and 1 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-PerfectEvent ⏚/v0.3.5 built: 1 package.
@@ -126,8 +126,8 @@ public class CoworkingTests
         timDisplay.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, timPivot, "publish" )).ShouldBeTrue();
         timDisplay.ToString().ShouldBe( """
-              - →·   X-Core         v1.0.2
-            1 -  ⊙   X-PerfectEvent v0.3.5 → ⏚/v0.3.6--ci.1 (CodeChange)
+              - →·  ?  X-Core         v1.0.2
+            1 -  ⊙  T  X-PerfectEvent v0.3.5 → ⏚/v0.3.6--ci.1 (CodeChange)
             Required build for 1 from the single pivot out of 2 repositories and 1 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-PerfectEvent ⏚/v0.3.6--ci.1 built: 1 package.
@@ -150,8 +150,8 @@ public class CoworkingTests
         bobDisplay.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, bobPivot, "publish", "--regular" )).ShouldBeTrue();
         bobDisplay.ToString().ShouldBe( """
-              - →·   X-Core         v1.0.2
-            1 -  ⊙   X-PerfectEvent v0.3.5 → ⏚/v0.4.0 (CodeChange)
+              - →·  ✓  X-Core         v1.0.2
+            1 -  ⊙  T  X-PerfectEvent v0.3.5 → ⏚/v0.4.0 (CodeChange)
             Required build for 1 from the single pivot out of 2 repositories and 1 can be published.
             (No dependency updates other than the ones from the upstreams are needed.)
              i  X-PerfectEvent ⏚/v0.4.0 built: 1 package.
