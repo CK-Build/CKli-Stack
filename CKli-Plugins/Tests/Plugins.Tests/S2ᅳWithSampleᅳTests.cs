@@ -344,6 +344,11 @@ public class S2ᅳWithSampleᅳTests
                    W  The 'nuget.config' file must be updated (<Cloned>/intermediate_build_error_Async/CKt/Samples/CKt-Sample-Monitoring/nuget.config):
                       Source 'NuGet' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
                       Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+                   E  CKt.Sample.Monitoring\Bug.cs(1,2): error CS1001: Identifier expected
+                      CKt.Sample.Monitoring\Bug.cs(1,2): error CS1010: Newline in constant
+                      CKt.Sample.Monitoring\Bug.cs(1,2): error CS1012: Too many characters in character literal
+                      CKt.Sample.Monitoring\Bug.cs(1,32): error CS1002: ; expected
+                      Log file: <LogFile>
               ❌ Failed
 
               """ );
@@ -625,6 +630,11 @@ public class S2ᅳWithSampleᅳTests
                    W  The 'nuget.config' file must be updated (<Cloned>/intermediate_ci_build_error_Async/CKt/Samples/CKt-Sample-Monitoring/nuget.config):
                       Source 'NuGet' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/nuget.org', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/nuget.org'.
                       Source 'Signature-OpenSource' must reference 'file://<Cloned>/intermediate_ci_build_error_Async/FakeFeed/Signature-OpenSource', not 'file://<Cloned>/CKt_add_sample_and_ci_Async/FakeFeed/Signature-OpenSource'.
+                   E  CKt.Sample.Monitoring\Bug.cs(1,2): error CS1001: Identifier expected
+                      CKt.Sample.Monitoring\Bug.cs(1,2): error CS1010: Newline in constant
+                      CKt.Sample.Monitoring\Bug.cs(1,2): error CS1012: Too many characters in character literal
+                      CKt.Sample.Monitoring\Bug.cs(1,32): error CS1002: ; expected
+                      Log file: <LogFile>
               ❌ Failed
 
               """ );

@@ -52,6 +52,8 @@ internal static class Helper
     public static string ToPortableString( this IScreen screen )
     {
         var s = screen.ToString().Replace( TestHelper.CKliClonedPath.Path, "<Cloned>" );
+        // The log file that a failed build step names (RepoBuilder.LogFilePrefix) is timed.
+        s = Regex.Replace( s, @"(?<=Log file: )\S.*?\.log\b", "<LogFile>" );
         return Regex.Replace( s, " +(?=\r?\n|$)", "" );
     }
 
