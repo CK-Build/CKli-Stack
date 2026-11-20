@@ -916,7 +916,7 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleApp, "commit", "GenerateAssets.cs uses a package of the local feed." )).ShouldBeTrue();
 
         // Only CKt-App-Sample is built: without the local feed, "dotnet run GenerateAssets.cs" fails (NU1101).
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--with-assets" )).ShouldBeTrue();
         Directory.EnumerateFiles( clonedFolder.Path.Combine( "CKt/.PublicStack/$Local/Assets/CKt-App-Sample" ), "ZipDemo.zip", SearchOption.AllDirectories )
                  .ShouldHaveSingleItem();
 
@@ -962,7 +962,7 @@ public class S2ᅳWithSampleᅳTests
         (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleApp, "commit", "GenerateAssets.cs throws." )).ShouldBeTrue();
 
         display.Clear();
-        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build" )).ShouldBeFalse();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--with-assets" )).ShouldBeFalse();
         var screen = display.ToPortableString();
         screen.ShouldContain( "GenerateAssets.cs failed." );
         screen.ShouldContain( "System.InvalidOperationException: Something went wrong in GenerateAssets." );
