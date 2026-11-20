@@ -939,6 +939,38 @@ public class S2ᅳWithSampleᅳTests
         }
     }
 
+    /// <summary>
+    /// A failed "GenerateAssets.cs" is a failed step of the build: its row says so and displays the end of its output
+    /// (an unhandled exception has no "error XX0000:" line) and the log file.
+    /// </summary>
+    [Test]
+    public async Task a_failed_GenerateAssets_displays_its_last_lines_and_its_log_file_Async()
+    {
+        var clonedFolder = TestHelper.InitializeClonedFolder();
+        var remotes = TestHelper.OpenRemotes( "CKt(with_sample)" );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var display = (StringScreen)context.Screen;
+
+        var inSampleApp = context.ChangeDirectory( "Samples/CKt-App-Sample" );
+        File.WriteAllText( inSampleApp.CurrentDirectory.Combine( "Deployment/GenerateAssets.cs" ), """
+            #:property PublishAot=false
+            using System;
+
+            throw new InvalidOperationException( "Something went wrong in GenerateAssets." );
+
+            """ );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleApp, "commit", "GenerateAssets.cs throws." )).ShouldBeTrue();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build" )).ShouldBeFalse();
+        var screen = display.ToPortableString();
+        screen.ShouldContain( "GenerateAssets.cs failed." );
+        screen.ShouldContain( "System.InvalidOperationException: Something went wrong in GenerateAssets." );
+        screen.ShouldContain( "Log file: " );
+        // The concluding error is not repeated: the row says the step.
+        screen.ShouldNotContain( "failed with code" );
+    }
+
         [Explicit]
     [Test]
     public async Task REMOTES_CKt_with_sample_to_sample_published_Async()
