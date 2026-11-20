@@ -11,8 +11,11 @@ alike. Where a commit lands is in [the branching guidelines](branching.md).
   [the branching guidelines](branching.md#branch-details)).
 - **The encoding of the files is set by `.editorconfig` and `.gitattributes`** (UTF-8 without a BOM, with CRLF line
   endings): never override them.
-- **A split commit is a real state:** build and run the suite on each intermediate tree before committing it, so that
-  `git bisect` lands on something that existed.
+- **A split commit is a real state:** each intermediate tree builds and passes the specific tests of its change before
+  it is committed, so that `git bisect` lands on something that existed. The whole `Plugins.Tests` suite runs once for
+  the change set, before anything is pushed (see
+  [a change set: the long runs once](building-and-testing.md#a-change-set-the-long-runs-once)): an intermediate commit
+  may then break a test that only that run finds, and its fix is a later commit of the same change set.
 
 ## The messages are parsed for the next version
 
