@@ -715,17 +715,21 @@ public class S1ᅳInitializedᅳTests
             """ );
 
 
-        // Now we publish.
+        // Now we publish. The CI build didn't run the GenerateAssets.cs of the samples (no "--with-assets"): a publication
+        // requires every asset, the samples are built again (MissingAssets), on their version since nothing published it.
         display.Clear();
         (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish" )).ShouldBeTrue();
         display.ToString().ShouldBe( """
-            - ✓  CKt-Core                      ⏚/v1.0.1--ci.4
-            - ✓  CKt-ActivityMonitor           ⏚/v0.1.1--ci.5
-            ╓ ✓  CKt-PerfectEvent              ⏚/v0.3.3--ci.5
-            ║ ✓  CKt-Monitoring                ⏚/v0.2.4--ci.5
-            ╙ ✓  Samples/CKt-App-Sample        ⏚/v0.0.0--ci.3
-            - ✓  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.3
-            There is nothing to build across the 6 repositories but 6 can be published.
+              - ✓  CKt-Core                      ⏚/v1.0.1--ci.4
+              - ✓  CKt-ActivityMonitor           ⏚/v0.1.1--ci.5
+              ╓ ✓  CKt-PerfectEvent              ⏚/v0.3.3--ci.5
+              ║ ✓  CKt-Monitoring                ⏚/v0.2.4--ci.5
+            1 ╙ ✓  Samples/CKt-App-Sample        (v0.0.0--ci.3) → ⏚/v0.0.0--ci.3 (MissingAssets)
+            2 - ✓  Samples/CKt-Sample-Monitoring (v0.0.0--ci.3) → ⏚/v0.0.0--ci.3 (MissingAssets)
+            Required build for 2 repositories across the 6 repositories and 6 can be published.
+            (No dependency updates other than the ones from the upstreams are needed.)
+             i  Samples/CKt-App-Sample ⏚/v0.0.0--ci.3 built: 1 package.
+             i  Samples/CKt-Sample-Monitoring ⏚/v0.0.0--ci.3 built: 1 package.
             ❰✓❱
 
             """ );
