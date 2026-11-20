@@ -10,7 +10,9 @@
         </Feed>
       </NuGet>
     </ArtifactHandler>
-    <BranchModel />
+    <BranchModel Root="stable">
+      <Prerelease Name="papa" Link="Full" />
+    </BranchModel>
     <Build />
     <CommonFiles />
     <HotZone />
