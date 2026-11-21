@@ -51,11 +51,11 @@ public class PublishedProfileTests
         profiles.Count.ShouldBe( 1 );
         var p = profiles[0];
 
-        // The profile's version is the publication's own: Major is the year, Minor the day in the year and
-        // the Patch starts at 0. The branch that has been published is the root one: a Stable, non CI version.
-        p.Version.Major.ShouldBe( today.Year );
-        p.Version.Minor.ShouldBe( today.DayOfYear );
-        p.Version.Patch.ShouldBe( 0 );
+        // The profile's version is the publication's own: Year.Month.Day of the publication and the ClashNumber
+        // is 0 (no fourth part). The branch that has been published is the root one: a Stable, non CI version.
+        p.Version.Date.ShouldBe( DateOnly.FromDateTime( today ) );
+        p.Version.ClashNumber.ShouldBe( 0 );
+        p.Version.ToString().ShouldBe( $"{today.Year}.{today.Month}.{today.Day}" );
         p.Version.VersionKind.ShouldBe( CSVersionKind.Stable );
         p.Version.IsCI.ShouldBeFalse();
         File.Exists( folder.GetProfileFilePath( p.Version ) ).ShouldBeTrue();
@@ -142,7 +142,7 @@ public class PublishedProfileTests
     }
 
     /// <summary>
-    /// Two publications of the same day on the same branch: the second one takes the next Patch. The CI
+    /// Two publications of the same day on the same branch: the second one takes the next ClashNumber. The CI
     /// publications share that counter - a number is never reused - and a non CI publication supersedes
     /// them: only the releases remain in the folder.
     /// </summary>
@@ -159,20 +159,20 @@ public class PublishedProfileTests
                                                          .AppendPart( "Published" ),
                                           createIfMissing: true );
         var today = DateTime.UtcNow;
-        var expected = $"{today.Year}.{today.DayOfYear}";
+        var expected = $"{today.Year}.{today.Month}.{today.Day}";
 
         await TouchDevStableAsync( rCore, "First.txt" ).ConfigureAwait( false );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
 
-        // A CI publication: the profile is a CI version at the NEXT Patch (the CI and the non CI forms of a
-        // branch share one counter). Its file is in the folder's root like any stable one (SVersion.BranchName
+        // A CI publication: the profile is a CI version at the NEXT ClashNumber (the CI and the non CI forms of a
+        // branch share one counter). Its file is in the folder's root like any stable one (TimeVersion.BranchName
         // is the empty string for a stable version AND its CI builds).
         await TouchDevStableAsync( rCore, "Second.txt" ).ConfigureAwait( false );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish" )).ShouldBeTrue();
 
         folder.Reload();
         folder.Profiles.Select( x => x.Version.ToString() )
-              .ShouldBe( [$"{expected}.1--ci.0", $"{expected}.0"] );
+              .ShouldBe( [$"{expected}.1--ci.0", expected] );
 
         await TouchDevStableAsync( rCore, "Third.txt" ).ConfigureAwait( false );
         (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
@@ -182,7 +182,7 @@ public class PublishedProfileTests
         // The release supersedes the CI publication it follows: that profile is gone, and its number is not
         // reused - the release took the next one.
         folder.Profiles.Select( x => x.Version.ToString() )
-              .ShouldBe( [$"{expected}.2", $"{expected}.0"] );
+              .ShouldBe( [$"{expected}.2", expected] );
     }
 
     /// <summary>
@@ -248,7 +248,7 @@ public class PublishedProfileTests
     /// <summary>
     /// A fix publishes versions that supersede the ones it fixes. The profiles that carry those are not
     /// rewritten - they record what was published - so the fix adds a superseding profile beside each one,
-    /// with the same Major.Minor and the next free Patch. A profile that carries only newer versions is left
+    /// with the same Date and the next free ClashNumber. A profile that carries only newer versions is left
     /// alone.
     /// </summary>
     [Test]
@@ -272,7 +272,7 @@ public class PublishedProfileTests
         var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
                                                          .AppendPart( "Published" ) );
         var today = DateTime.UtcNow;
-        var day = $"{today.Year}.{today.DayOfYear}";
+        var day = $"{today.Year}.{today.Month}.{today.Day}";
         folder.Profiles.Select( p => p.ProducedPackages["X.Core"].Version.ToString() ).ShouldBe( ["1.2.0", "1.1.0"] );
 
         // Fixing v1.1 publishes X.Core@1.1.1 and, since X-Consumer v0.2.0 consumed X.Core@1.1.0, X.Consumer@0.2.1.
@@ -283,20 +283,20 @@ public class PublishedProfileTests
         folder.Reload();
         folder.LoadErrors.ShouldBeEmpty();
         // A third profile: the one that carried the fixed versions has been superseded. Both were published
-        // today, so the successor takes the next free Patch.
+        // today, so the successor takes the next free ClashNumber.
         folder.Profiles.Select( p => p.Version.ToString() )
-              .ShouldBe( [$"{day}.2", $"{day}.1", $"{day}.0"] );
+              .ShouldBe( [$"{day}.2", $"{day}.1", day] );
 
-        var superseding = folder.Find( SVersion.Parse( $"{day}.2" ) )!;
+        var superseding = folder.Find( TimeVersion.Parse( $"{day}.2" ) )!;
         superseding.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.1.1" );
         superseding.ProducedPackages["X.Consumer"].Version.ToString().ShouldBe( "0.2.1" );
         superseding.IsDeprecated.ShouldBeFalse();
 
         // The profile it supersedes is untouched, and the one that carries only newer versions is not concerned.
-        var superseded = folder.Find( SVersion.Parse( $"{day}.0" ) )!;
+        var superseded = folder.Find( TimeVersion.Parse( day ) )!;
         superseded.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.1.0" );
         superseded.ProducedPackages["X.Consumer"].Version.ToString().ShouldBe( "0.2.0" );
-        var untouched = folder.Find( SVersion.Parse( $"{day}.1" ) )!;
+        var untouched = folder.Find( TimeVersion.Parse( $"{day}.1" ) )!;
         untouched.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.2.0" );
     }
 
@@ -504,9 +504,9 @@ public class PublishedProfileTests
         var folder = new PublishedFolder( stack.StackRoot.AppendPart( StackRepository.PublicStackName )
                                                          .AppendPart( "Published" ) );
         var today = DateTime.UtcNow;
-        var day = $"{today.Year}.{today.DayOfYear}";
+        var day = $"{today.Year}.{today.Month}.{today.Day}";
 
-        var origin = folder.Find( SVersion.Parse( $"{day}.0" ) )!;
+        var origin = folder.Find( TimeVersion.Parse( day ) )!;
         origin.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.1.0" );
         origin.TransitiveDependencies.Ambiguous.Single()
               .Resolutions.Select( r => r.Version.ToString() ).ShouldBe( ["9.9.9", "1.1.1"] );
@@ -517,7 +517,7 @@ public class PublishedProfileTests
 
         folder.Reload();
         folder.LoadErrors.ShouldBeEmpty();
-        var superseding = folder.Find( SVersion.Parse( $"{day}.2" ) )!;
+        var superseding = folder.Find( TimeVersion.Parse( $"{day}.2" ) )!;
         superseding.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.1.1" );
 
         // The direct dependencies are carried verbatim.
@@ -531,7 +531,7 @@ public class PublishedProfileTests
         a.Resolutions.Select( r => r.Version.ToString() ).ShouldBe( ["9.9.9"] );
 
         // A profile records what was published: the origin is untouched.
-        folder.Find( SVersion.Parse( $"{day}.0" ) )!.TransitiveDependencies.Ambiguous.Single()
+        folder.Find( TimeVersion.Parse( day ) )!.TransitiveDependencies.Ambiguous.Single()
               .Resolutions.Select( r => r.Version.ToString() ).ShouldBe( ["9.9.9", "1.1.1"] );
     }
 

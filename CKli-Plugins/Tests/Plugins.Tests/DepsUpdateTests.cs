@@ -9,6 +9,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using static CK.Testing.MonitorTestHelper;
+using PublishedIndex = CK.Packaging.Abstractions.PublishedIndex;
+using StackRepository = CKli.Core.StackRepository;
+using TimeVersion = CK.Packaging.Abstractions.TimeVersion;
 
 namespace Plugins.Tests;
 
@@ -672,6 +675,54 @@ public class DepsUpdateTests
         text.ShouldContain( "R.Lib → 1.0.2", customMessage: text );
         text.ShouldContain( "produced by", customMessage: "The origin is the reference's profile, not a feed." );
         text.ShouldNotContain( "9.9.9", customMessage: "The feed does not win over a reference." );
+    }
+
+    /// <summary>
+    /// A referenced Stack that has published nothing since the <see cref="TimeVersion"/> still has its
+    /// "Year.DayOfYear.Number" profile files and index: the index versions are converted when read, and the
+    /// profile is found in its legacy file.
+    /// </summary>
+    [Test]
+    public async Task a_World_Reference_published_before_the_TimeVersion_is_read_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+
+        var refStack = await testEnv.CreateStackAsync( "Ref", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var rLib = await refStack.DefaultWorld.CreateRepoAsync( "R-Lib", "v1.0.1" ).ConfigureAwait( false );
+        TestHelper.TouchAndCommit( rLib.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
+
+        // Turns the referenced Published folder into a legacy one, and pushes it.
+        var published = refStack.StackRoot.AppendPart( StackRepository.PublicStackName ).AppendPart( "Published" );
+        var indexPath = Path.Combine( published, PublishedIndex.IndexFileName );
+        var index = File.ReadAllText( indexPath );
+        foreach( var file in Directory.EnumerateFiles( published, "v*.json", SearchOption.AllDirectories ).ToList() )
+        {
+            var version = TimeVersion.Parse( Path.GetFileNameWithoutExtension( file ) );
+            var legacy = SVersion.Create( version.Year, version.Date.DayOfYear, version.ClashNumber, version.ToSVersion().Prerelease ).ToString();
+            var content = File.ReadAllText( file ).Replace( $"\"Version\": \"{version}\"", $"\"Version\": \"{legacy}\"" );
+            content.ShouldContain( legacy );
+            File.WriteAllText( Path.Combine( Path.GetDirectoryName( file )!, $"v{legacy}.json" ), content );
+            File.Delete( file );
+            index = index.Replace( $"\"{version}\"", $"\"{legacy}\"" );
+        }
+        File.WriteAllText( indexPath, index );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, refStack.DefaultWorld.WorldRoot, "push", "--stack-only" )).ShouldBeTrue();
+
+        var stack = await testEnv.CreateStackAsync( "Test", Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var display = stack.Screen;
+        var rApp = await world.CreateRepoAsync( "X-App", "v0.1.0" ).ConfigureAwait( false );
+        using( var e = rApp.CreateEditor() )
+        {
+            e.AddOrUpdateReference( rApp.DefaultProjectName, "R.Lib", SVersion.Parse( "1.0.1" ) );
+        }
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "world", "reference", "set", refStack.Remotes.StackUri.ToString() )).ShouldBeTrue();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rApp.Root, "deps", "update", "--dry-run" )).ShouldBeTrue();
+        var text = display.ToString();
+        text.ShouldContain( "R.Lib → 1.0.2", customMessage: text );
     }
 
     /// <summary>
