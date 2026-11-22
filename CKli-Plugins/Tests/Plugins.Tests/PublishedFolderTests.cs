@@ -301,6 +301,26 @@ public class PublishedFolderTests
     }
 
     [Test]
+    public void a_superseding_profile_carries_the_current_feeds_not_its_origin_ones()
+    {
+        var root = GetCleanFolder( nameof( a_superseding_profile_carries_the_current_feeds_not_its_origin_ones ) );
+        var f = new PublishedFolder( root );
+        var origin = TestModel.SampleProfile( "2026.11.20", "1.2.3" );
+        f.Add( new PublishedProfile( origin.StackUrl,
+                                     origin.World,
+                                     origin.Version,
+                                     origin.Repositories,
+                                     feeds: [new PublishedFeed( "Old", "https://old.example/v3/index.json" )] ) );
+        f.Save().ShouldBe( 1 );
+
+        // The fixed packages are pushed now, to the World's current feeds.
+        var created = new PublishedFolder( root ).OnFixedPackages( Fixed( "1.2.3", "1.2.9" ),
+                                                                   [new PublishedFeed( "New", "https://new.example/v3/index.json" )] );
+        created.Length.ShouldBe( 1 );
+        created[0].Feeds.Select( x => x.Name ).ShouldBe( ["New"] );
+    }
+
+    [Test]
     public void a_superseding_profile_stays_on_its_branch()
     {
         var root = GetCleanFolder( nameof( a_superseding_profile_stays_on_its_branch ) );

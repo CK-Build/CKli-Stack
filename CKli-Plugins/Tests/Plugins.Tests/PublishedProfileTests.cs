@@ -95,6 +95,20 @@ public class PublishedProfileTests
         p.ProducedPackages.Count.ShouldBe( 2 );
         p.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.0.2" );
         p.ProducedPackages["x.consumer"].Version.ToString().ShouldBe( "0.3.4" );
+
+        // The profile records where its packages are: the World's feeds (here the fake local ones), in their
+        // configuration order, with the name of their secret and never a secret.
+        CheckWorldFeeds( p );
+        // A stable version is pushed to both: "[papa,]" and "[,],AllowCI" accept it.
+        p.GetPushTargets( p.ProducedPackages["X.Core"].Version ).Select( f => f.Name ).ShouldBe( ["NuGet", "Signature-OpenSource"] );
+    }
+
+    // The feeds of the Stack's World file, as Helper.ConfigureFakeFeeds rewrites them.
+    static void CheckWorldFeeds( PublishedProfile p )
+    {
+        p.Feeds.Select( f => f.Name ).ShouldBe( ["NuGet", "Signature-OpenSource"] );
+        p.Feeds.Select( f => f.PushQualityFilter.ToString() ).ShouldBe( ["[papa,stable]", "[explo,stable],AllowCI"] );
+        p.Feeds.ShouldAllBe( f => f.Url.StartsWith( "file://" ) && f.SecretKey == "FILESYSTEM_GIT" && f.PublicReadUserName == null );
     }
 
     /// <summary>
@@ -291,6 +305,8 @@ public class PublishedProfileTests
         superseding.ProducedPackages["X.Core"].Version.ToString().ShouldBe( "1.1.1" );
         superseding.ProducedPackages["X.Consumer"].Version.ToString().ShouldBe( "0.2.1" );
         superseding.IsDeprecated.ShouldBeFalse();
+        // The successor carries the World's feeds (the current ones: see PublishedFolderTests).
+        CheckWorldFeeds( superseding );
 
         // The profile it supersedes is untouched, and the one that carries only newer versions is not concerned.
         var superseded = folder.Find( TimeVersion.Parse( day ) )!;
