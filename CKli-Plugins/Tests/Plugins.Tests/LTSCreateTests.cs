@@ -403,6 +403,22 @@ public class LTSCreateTests
         var emptied = new PublishedFolder( defaultPublished );
         emptied.Profiles.ShouldBeEmpty();
         File.Exists( emptied.IndexFilePath ).ShouldBeTrue();
+
+        // The default World's index is the entry point of the Stack: it names the LTS Worlds that publish, right
+        // from the creation (the new World would otherwise be invisible until the default World publishes again).
+        // An LTS World's index doesn't repeat the list.
+        ReadIndex( defaultPublished ).LTSWorlds.ShouldBe( ["@net8"] );
+        ReadIndex( StackFolder( stack ).Combine( "@net8/Published" ) ).LTSWorlds.ShouldBeEmpty();
+
+        // A publication of the default World keeps it.
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "publish", "--regular" )).ShouldBeTrue();
+        var index = ReadIndex( defaultPublished );
+        index.IsEmpty.ShouldBeFalse();
+        index.LTSWorlds.ShouldBe( ["@net8"] );
+
+        static CK.Packaging.Abstractions.PublishedIndex ReadIndex( NormalizedPath folder )
+            => CK.Packaging.Abstractions.PublishedIndex.Parse( File.ReadAllBytes( folder.AppendPart( PublishedFolder.IndexFileName ) ) );
     }
 
     static NormalizedPath StackFolder( FakeBuildStack stack ) => stack.StackRoot.AppendPart( ".PublicStack" );
