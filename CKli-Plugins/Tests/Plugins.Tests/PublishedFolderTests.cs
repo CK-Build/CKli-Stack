@@ -321,6 +321,26 @@ public class PublishedFolderTests
     }
 
     [Test]
+    public void a_superseding_profile_keeps_its_origin_upstreams()
+    {
+        var root = GetCleanFolder( nameof( a_superseding_profile_keeps_its_origin_upstreams ) );
+        var f = new PublishedFolder( root );
+        var origin = TestModel.SampleProfile( "2026.11.20", "1.2.3" );
+        var upstream = new UpstreamProfile( new Uri( "https://github.com/signature-opensource/CK-Stack" ), WorldName.Parse( "CK" ), TestModel.TV( "2026.11.19" ) );
+        f.Add( new PublishedProfile( origin.StackUrl,
+                                     origin.World,
+                                     origin.Version,
+                                     origin.Repositories,
+                                     upstreams: [upstream] ) );
+        f.Save().ShouldBe( 1 );
+
+        // A fix rebuilds produced packages: what the World is aligned on doesn't change.
+        var created = new PublishedFolder( root ).OnFixedPackages( Fixed( "1.2.3", "1.2.9" ) );
+        created.Length.ShouldBe( 1 );
+        created[0].Upstreams.Select( u => u.ToString() ).ShouldBe( ["CK/v2026.11.19"] );
+    }
+
+    [Test]
     public void a_superseding_profile_stays_on_its_branch()
     {
         var root = GetCleanFolder( nameof( a_superseding_profile_stays_on_its_branch ) );
