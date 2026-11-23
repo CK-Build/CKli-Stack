@@ -43,7 +43,7 @@ At the root of the `CKli` repository. It packs `CK-SVersion`, `CK-Packaging-Abst
 |---|---|---|
 | `CKli/Tests/CKli.Core.Tests` | The core, with two sample plugins: **no Standard Plugin** | Cheap: run it whole (`--filter "FullyQualifiedName!~CommonProviderTests"`, that fixture hits GitHub) |
 | `CK-SVersion/Tests/CK.SVersion.Tests` | `CK.SVersion` | Cheap |
-| `.PublicStack/CKli-Plugins/Tests/Plugins.Tests` | **The only suite that runs the Standard Plugins**: end-to-end `ckli` sequences on fake local remotes | Expensive: filter while iterating, run it whole before committing |
+| `.PublicStack/CKli-Plugins/Tests/Plugins.Tests` | **The only suite that runs the Standard Plugins**: end-to-end `ckli` sequences on fake local remotes | Expensive: run the specific tests of each change, run it whole once per change set (see [below](#a-change-set-the-long-runs-once)) |
 
 - **A green `CKli.Core.Tests` says nothing about a plugin change.**
 - **Prefer the fake-build harness** (`CKli.Build.Plugin.Testing`) to the heavy fixtures: only `dotnet` is faked, and a
@@ -65,7 +65,24 @@ At the root of the `CKli` repository. It packs `CK-SVersion`, `CK-Packaging-Abst
 - **After a killed run, orphan MSBuild nodes hold memory and locks:** `dotnet build-server shutdown`, then build with
   `dotnet build -m:1` before testing.
 
-## Secrets
+## A change set: the long runs once
+
+The whole `Plugins.Tests` suite takes about ten minutes, a `ckli build --regular` runs the tests of every built
+repository. A change set of several commits (a feature in parts, a fix and its follow-ups) pays for them once, at the
+end, not once per commit:
+
+1. **Each change comes with its specific tests**, and only these run before its commit. A bug fix starts with its
+   test: run it before the fix and see it fail for the right reason (the expected error, not a setup problem).
+2. **Once the change set is complete, the whole `Plugins.Tests` suite runs once.** A failure is either a bug (fixed by a
+   new commit) or an intended change of behavior: its golden is captured again, read against what the change predicts,
+   and committed with a comment that says why.
+3. **Then `ckli build --regular`:** it runs the tests of the built repositories (`CKli.Core.Tests` for `CKli`) and
+   records them (`TestRun.Sha.txt`).
+4. **Then `ckli publish --regular`:** it publishes the local releases without running their tests again.
+
+Nothing is pushed before step 2 is green: the intermediate commits that only ran their specific tests (see
+[the commits guidelines](commits.md#what-a-commit-contains)) are never published on their own.
+
 
 - **Never run `dotnet user-secrets list`:** it prints the secret values (the PATs), and a leaked PAT must be rotated.
   Read only the keys of `secrets.json`.

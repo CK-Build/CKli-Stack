@@ -3,6 +3,10 @@ using CKli;
 using CKli.Core;
 using NUnit.Framework;
 using Shouldly;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using static CK.Testing.MonitorTestHelper;
 
@@ -59,6 +63,55 @@ public class IndirectPublicationTests
         {
             e.GitRepository.Repository.Tags["v0.1.1"].ShouldNotBeNull();
             e.GitRepository.Repository.Tags["v0.1.1-juliet"].ShouldNotBeNull();
+        }
+    }
+
+    /// <summary>
+    /// A closed publication gate is known from the roadmap alone: the publication is refused before any build. A
+    /// regular build integrates the "dev/" branches into their base branch, so a refusal after the builds left the
+    /// base branches moved and new version tags (nothing pushed, but not what the developer left).
+    /// Here the gate is closed by a required release of the parent branch whose local packages are gone.
+    /// </summary>
+    [Test]
+    public async Task a_closed_gate_refuses_before_any_build_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+        var context = world.WorldRoot;
+
+        var rCore = await world.CreateRepoAsync( "X-Core", "v1.0.0" ).ConfigureAwait( false );
+        var rConsumer = await world.CreateRepoAsync( "X-Consumer", "v0.1.0", references: [rCore] ).ConfigureAwait( false );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--regular" )).ShouldBeTrue();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, rConsumer.Root, "branch", "open", "juliet", "--link", "CI" )).ShouldBeTrue();
+
+        // A pending "local/" release of X-Core on "stable": publishing "juliet" requires it (and X-Consumer on
+        // "juliet" must be built: it consumes the X-Core release).
+        TestHelper.TouchAndCommit( rCore.WorkingFolderPath, branchName: null );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--regular", "--branch", "stable" )).ShouldBeTrue();
+
+        // Its packages are gone from "$Local": only a rebuild can fix it, the gate is closed.
+        var lost = Directory.EnumerateFiles( stack.StackRoot, "*.nupkg", SearchOption.AllDirectories )
+                            .Where( f => Path.GetFileName( f ).Equals( "X.Core.1.0.1.nupkg", StringComparison.OrdinalIgnoreCase ) )
+                            .ToList();
+        lost.ShouldNotBeEmpty();
+        foreach( var f in lost ) File.Delete( f );
+
+        var coreRefs = GetRefs( rCore );
+        var consumerRefs = GetRefs( rConsumer );
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "publish", "--branch", "juliet", "--regular" )).ShouldBeFalse();
+            logs.ShouldContain( "Unable to publish: the profile of branch 'juliet' would be incoherent. Nothing has been built." );
+        }
+        // Nothing has been built: no integration, no commit, no version tag.
+        GetRefs( rCore ).ShouldBe( coreRefs );
+        GetRefs( rConsumer ).ShouldBe( consumerRefs );
+
+        static Dictionary<string, string> GetRefs( FakeBuildRepo r )
+        {
+            using var e = r.CreateEditor();
+            return e.GitRepository.Repository.Refs.ToDictionary( x => x.CanonicalName, x => x.TargetIdentifier );
         }
     }
 }

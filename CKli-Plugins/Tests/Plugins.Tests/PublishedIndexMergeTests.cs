@@ -48,7 +48,7 @@ public class PublishedIndexMergeTests
 
         // Bob saves a profile of his own and commits it in his Stack, without pushing it: its version is the
         // greatest one, at the top of the "(stable)" list.
-        var bobVersion = SVersion.Parse( "2099.1.0" );
+        var bobVersion = TimeVersion.Parse( "2099.1.1" );
         bobPublished.Add( new PublishedProfile( first.StackUrl, first.World, bobVersion, first.Repositories ) );
         bobPublished.Save();
         using( var git = new LibGit2Sharp.Repository( bobStackFolder ) )

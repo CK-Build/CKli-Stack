@@ -19,7 +19,7 @@ public class PublishPullTests
 {
     /// <summary>
     /// Bob's Stack is stale when he publishes after Tim, on the same day: without the pull, both profiles would take
-    /// the same version (the next free Patch of the day), Bob's file would collide with Tim's and his Stack could
+    /// the same version (the next free ClashNumber of the day), Bob's file would collide with Tim's and his Stack could
     /// not be pushed.
     /// </summary>
     [Test]

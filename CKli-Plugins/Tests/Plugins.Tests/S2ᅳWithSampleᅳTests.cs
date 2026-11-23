@@ -4,6 +4,7 @@ using CKli.Core;
 using NUnit.Framework;
 using Shouldly;
 using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using static CK.Testing.MonitorTestHelper;
@@ -882,6 +883,92 @@ public class S2ᅳWithSampleᅳTests
 
             """ );
 
+    }
+
+    /// <summary>
+    /// "GenerateAssets.cs" runs with the local feed: its "#:package" can be a version that only the local feed has
+    /// (the version of a package of the World built locally), that nothing else put in the NuGet global cache.
+    /// </summary>
+    [Test]
+    public async Task GenerateAssets_restores_a_package_that_only_the_local_feed_has_Async()
+    {
+        var clonedFolder = TestHelper.InitializeClonedFolder();
+        var remotes = TestHelper.OpenRemotes( "CKt(with_sample)" );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+
+        // A package that only the local feed has. A previous run put it in the NuGet global cache: it is removed.
+        var localFeed = clonedFolder.Path.Combine( "CKt/.PublicStack/$Local/NuGet" );
+        Directory.Exists( localFeed ).ShouldBeTrue();
+        WriteEmptyPackage( localFeed, "CKt.OnlyInLocalFeed", "1.0.0" );
+        NuGetHelper.Cache.RemovePackage( TestHelper.Monitor, "CKt.OnlyInLocalFeed", SVersion.Parse( "1.0.0" ) ).ShouldBeTrue();
+
+        var inSampleApp = context.ChangeDirectory( "Samples/CKt-App-Sample" );
+        File.WriteAllText( inSampleApp.CurrentDirectory.Combine( "Deployment/GenerateAssets.cs" ), """
+            #:package CKt.OnlyInLocalFeed@1.0.0
+            #:property PublishAot=false
+            using System;
+            using System.IO;
+
+            Directory.CreateDirectory( "Assets/ZipDemo" );
+            File.WriteAllText( $"Assets/ZipDemo/Install-{args[0]}.txt", "I'm the install manual of CKt.SomeApp version '{args[0]}'." );
+
+            """ );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleApp, "commit", "GenerateAssets.cs uses a package of the local feed." )).ShouldBeTrue();
+
+        // Only CKt-App-Sample is built: without the local feed, "dotnet run GenerateAssets.cs" fails (NU1101).
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--with-assets" )).ShouldBeTrue();
+        Directory.EnumerateFiles( clonedFolder.Path.Combine( "CKt/.PublicStack/$Local/Assets/CKt-App-Sample" ), "ZipDemo.zip", SearchOption.AllDirectories )
+                 .ShouldHaveSingleItem();
+
+        static void WriteEmptyPackage( NormalizedPath feed, string packageId, string version )
+        {
+            using var file = File.Create( feed.AppendPart( $"{packageId}.{version}.nupkg" ) );
+            using var zip = new ZipArchive( file, ZipArchiveMode.Create );
+            using var w = new StreamWriter( zip.CreateEntry( $"{packageId}.nuspec" ).Open() );
+            w.Write( $"""
+                <?xml version="1.0"?>
+                <package>
+                  <metadata>
+                    <id>{packageId}</id>
+                    <version>{version}</version>
+                    <authors>Plugins.Tests</authors>
+                    <description>Empty package.</description>
+                  </metadata>
+                </package>
+                """ );
+        }
+    }
+
+    /// <summary>
+    /// A failed "GenerateAssets.cs" is a failed step of the build: its row says so and displays the end of its output
+    /// (an unhandled exception has no "error XX0000:" line) and the log file.
+    /// </summary>
+    [Test]
+    public async Task a_failed_GenerateAssets_displays_its_last_lines_and_its_log_file_Async()
+    {
+        var clonedFolder = TestHelper.InitializeClonedFolder();
+        var remotes = TestHelper.OpenRemotes( "CKt(with_sample)" );
+        var context = await remotes.CloneAsync( clonedFolder, Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var display = (StringScreen)context.Screen;
+
+        var inSampleApp = context.ChangeDirectory( "Samples/CKt-App-Sample" );
+        File.WriteAllText( inSampleApp.CurrentDirectory.Combine( "Deployment/GenerateAssets.cs" ), """
+            #:property PublishAot=false
+            using System;
+
+            throw new InvalidOperationException( "Something went wrong in GenerateAssets." );
+
+            """ );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, inSampleApp, "commit", "GenerateAssets.cs throws." )).ShouldBeTrue();
+
+        display.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, context, "build", "--with-assets" )).ShouldBeFalse();
+        var screen = display.ToPortableString();
+        screen.ShouldContain( "GenerateAssets.cs failed." );
+        screen.ShouldContain( "System.InvalidOperationException: Something went wrong in GenerateAssets." );
+        screen.ShouldContain( "Log file: " );
+        // The concluding error is not repeated: the row says the step.
+        screen.ShouldNotContain( "failed with code" );
     }
 
         [Explicit]

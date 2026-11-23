@@ -266,4 +266,39 @@ public class BuildContentInfoTests
         top.Select( p => p.ToString() ).ShouldBe( ["Abc.Top@1.0.0"] );
         transitive.ShouldBeEmpty();
     }
+
+    /// <summary>
+    /// The optional fifth section records what "Deployment/GenerateAssets.cs" was asked for: "Assets not generated."
+    /// (a "ckli build" without "--with-assets") or "Assets generated for: A, B". Without it, everything has been
+    /// generated (or there is no script): that is how the annotations written before it read.
+    /// </summary>
+    [TestCase( true, false )]
+    [TestCase( false, false )]
+    [TestCase( true, true )]
+    [TestCase( false, true )]
+    public void the_assets_request_round_trips( bool notGenerated, bool withTransitive )
+    {
+        var nl = System.Environment.NewLine;
+        var c = new BuildContentInfo( Packages( "A@1.0.0" ),
+                                      ["P"],
+                                      [],
+                                      withTransitive ? Packages( "T@1.0.0" ) : default,
+                                      assetsNotGenerated: notGenerated,
+                                      assetsRequest: notGenerated ? default : ["Advanced", "Normal"] );
+        var text = c.ToString();
+        text.ShouldEndWith( notGenerated ? "Assets not generated." + nl : "Assets generated for: Advanced, Normal" + nl );
+        BuildContentInfo.TryParse( text, out var back ).ShouldBeTrue();
+        back.ShouldBe( c );
+        back!.AssetsNotGenerated.ShouldBe( notGenerated );
+
+        // The request decides whether the version must be built again.
+        back.HasGeneratedAssets( null ).ShouldBeTrue();
+        back.HasGeneratedAssets( [] ).ShouldBeFalse();
+        back.HasGeneratedAssets( ["Normal"] ).ShouldBe( !notGenerated );
+        back.HasGeneratedAssets( ["Other"] ).ShouldBeFalse();
+
+        var old = new BuildContentInfo( Packages( "A@1.0.0" ), ["P"], [] );
+        old.HasGeneratedAssets( [] ).ShouldBeTrue();
+        old.HasGeneratedAssets( ["Other"] ).ShouldBeTrue();
+    }
 }

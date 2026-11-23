@@ -360,7 +360,7 @@ public class LTSCreateTests
     /// <para>
     /// PublishPlugin used to compose it from the StackRepository.StackWorkingFolder instead, so every World
     /// of a Stack shared one folder: an LTS World's profiles landed in the default World's, in its index, and
-    /// competed for the next free Patch of the day.
+    /// competed for the next free ClashNumber of the day.
     /// </para>
     /// <para>
     /// The folder is bound to the World: when a LTS World is created, what the default World has published so far
