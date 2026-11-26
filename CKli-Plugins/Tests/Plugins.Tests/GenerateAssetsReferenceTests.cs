@@ -13,6 +13,8 @@ namespace Plugins.Tests;
 /// The "#:package Name@Version" directives of "Deployment/GenerateAssets.cs" are "second class" package references
 /// (<c>GitSolutionContent.ScriptConsumed</c>): they order the builds and are upgraded when their solution is built,
 /// but they never trigger a build on their own.
+/// The "//ck-package Name@Version" directives of the same script are first class references (<c>GitSolutionContent.Consumed</c>):
+/// they also trigger a build.
 /// </summary>
 public class GenerateAssetsReferenceTests
 {
@@ -90,17 +92,112 @@ public class GenerateAssetsReferenceTests
         }
     }
 
-    static void WriteScript( FakeBuildRepo repo, string packageId, string version )
+    /// <summary>
+    /// X-Down is created before X-Up (a lower index) and its script has a "//ck-package" of X-Up's package.
+    /// Unlike a "#:package", a build of X-Up builds X-Down and upgrades its script.
+    /// </summary>
+    [Test]
+    public async Task a_ck_package_reference_orders_the_builds_is_upgraded_and_triggers_a_build_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rDown = await world.CreateRepoAsync( "X-Down", "v1.0.0" ).ConfigureAwait( false );
+        var rUp = await world.CreateRepoAsync( "X-Up", "v1.0.0" ).ConfigureAwait( false );
+        var upPackage = rUp.DefaultProjectName;
+        WriteScriptLines( rDown, "#:package Some.Tool@1.0.0", $"//ck-package {upPackage}@1.0.0" );
+
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+
+        // X-Up is modified: X-Up is built first, then X-Down because of its "//ck-package" that is upgraded.
+        TestHelper.TouchAndCommit( rUp.WorkingFolderPath, branchName: null );
+        stack.Screen.Clear();
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build", "--dry-run" )).ShouldBeTrue();
+        var plan = stack.Screen.ToString();
+        plan.ShouldContain( "Required build for 2 " );
+        plan.IndexOf( "X-Up" ).ShouldBeLessThan( plan.IndexOf( "X-Down" ), "X-Up is ranked before X-Down." );
+        (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeTrue();
+        var upVersion = LastVersion( rUp );
+        var script = ReadScript( rDown );
+        script.ShouldContain( $"//ck-package {upPackage}@{upVersion}\r\n" );
+        // The build adds it to the consumed packages of its version tag ("dotnet package list" doesn't see it).
+        LastTagAnnotation( rDown ).ShouldContain( $"{upPackage}@{upVersion}" );
+        script.ShouldContain( "#:package Some.Tool@1.0.0\r\n", customMessage: "An external package without update is left as it is." );
+    }
+
+    /// <summary>
+    /// The one version per package identifier rule covers the "//ck-package" directives.
+    /// </summary>
+    [Test]
+    public async Task a_ck_package_version_that_differs_from_the_projects_is_an_error_Async()
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var rUp = await world.CreateRepoAsync( "X-Up", "v1.0.0" ).ConfigureAwait( false );
+        var rDown = await world.CreateRepoAsync( "X-Down", "v1.0.0", references: [rUp] ).ConfigureAwait( false );
+        WriteScriptLines( rDown, $"//ck-package {rUp.DefaultProjectName}@0.9.0" );
+
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeFalse();
+            logs.ShouldContain( t => t.Contains( $"Package '{rUp.DefaultProjectName}' is referenced in two versions by this repository:" )
+                                     && t.Contains( "Deployment/GenerateAssets.cs" ) );
+        }
+    }
+
+    /// <summary>
+    /// A "//ck-package" of a package of the solution itself is an error (a "#:package" is ignored), as is a
+    /// "//ck-package" without version or with an invalid one (a "#:package" is skipped): nothing else can give it.
+    /// </summary>
+    [TestCase( "own", "is a project of this solution." )]
+    [TestCase( "", "a version is required" )]
+    [TestCase( "@", "the version is not a valid version." )]
+    [TestCase( "@1.*", "the version is not a valid version." )]
+    public async Task invalid_ck_package_directives_are_errors_Async( string suffix, string expected )
+    {
+        using var testEnv = await TestHelper.CKliCreateFakeBuildTestEnvAsync().ConfigureAwait( false );
+        var stack = await testEnv.CreateStackAsync( pluginConfigurationEditor: Helper.ConfigureFakeFeeds ).ConfigureAwait( false );
+        var world = stack.DefaultWorld;
+
+        var r = await world.CreateRepoAsync( "X-Alone", "v1.0.0" ).ConfigureAwait( false );
+        WriteScriptLines( r, suffix == "own"
+                                ? $"//ck-package {r.DefaultProjectName}@1.0.0"
+                                : $"//ck-package Some.Package{suffix}" );
+
+        using( TestHelper.Monitor.CollectTexts( out var logs ) )
+        {
+            (await CKliCommands.ExecAsync( TestHelper.Monitor, world.WorldRoot, "build" )).ShouldBeFalse();
+            logs.ShouldContain( t => t.Contains( "//ck-package" ) && t.Contains( expected ) );
+        }
+    }
+
+    static void WriteScript( FakeBuildRepo repo, string packageId, string version ) => WriteScriptLines( repo, $"#:package {packageId}@{version}" );
+
+    static void WriteScriptLines( FakeBuildRepo repo, params string[] directives )
     {
         using var e = repo.CreateEditor();
         TestHelper.TouchAndCommit( e.GitRepository.Repository,
                                    "Deployment/GenerateAssets.cs",
-                                   fileContent: _ => $"#:package {packageId}@{version}\r\nreturn 0;\r\n" );
+                                   fileContent: _ => string.Concat( directives.Select( d => d + "\r\n" ) ) + "return 0;\r\n" );
     }
 
     static string ReadScript( FakeBuildRepo repo )
     {
         return File.ReadAllText( repo.WorkingFolderPath.Combine( "Deployment/GenerateAssets.cs" ) );
+    }
+
+    // The annotation (the BuildContentInfo) of the greatest version tag.
+    static string LastTagAnnotation( FakeBuildRepo repo )
+    {
+        using var e = repo.CreateEditor();
+        return e.GitRepository.Repository.Tags
+                .Select( t => (Tag: t, V: SVersion.TryParse( t.FriendlyName.Substring( t.FriendlyName.LastIndexOf( '/' ) + 1 ).TrimStart( 'v' ), out var v ) ? v : null) )
+                .Where( t => t.V != null )
+                .MaxBy( t => t.V )
+                .Tag.Annotation.Message;
     }
 
     // The greatest version of the version tags ("v1.0.1--ci.2" or "building/v..."...).
