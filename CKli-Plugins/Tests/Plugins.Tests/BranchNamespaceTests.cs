@@ -398,6 +398,31 @@ public class BranchNamespaceTests
           .ShouldBe( """<Explo Name="explo/again" Link="Manual" Parent="zulu" />""" );
     }
 
+    [Test]
+    public void a_sub_exploratory_branch_can_be_added_next_to_other_sub_exploratory_branches()
+    {
+        var def = Namespace( """
+            <BranchModel Root="stable">
+              <Explo Name="explo/cris-auth" Link="Full" Parent="stable">
+                <Explo Name="explo/linux" Link="Full" />
+                <Explo Name="explo/uc" Link="Full" />
+              </Explo>
+            </BranchModel>
+            """ );
+        var (ns, b) = def.AddOrUpdateExplo( "explo/uc-fixes", BranchLinkType.Full, def.FindRequired( "explo/uc" ) );
+        b.Parent.ShouldNotBeNull().Name.ShouldBe( "explo/uc" );
+        ns.ToString().ShouldBe( """
+            <BranchModel Root="stable">
+              <Explo Name="explo/cris-auth" Link="Full" Parent="stable">
+                <Explo Name="explo/linux" Link="Full" />
+                <Explo Name="explo/uc" Link="Full">
+                  <Explo Name="explo/uc-fixes" Link="Full" />
+                </Explo>
+              </Explo>
+            </BranchModel>
+            """ );
+    }
+
     /// <summary>
     /// A "-ci" suffix qualifies a branch name to tell its CI builds from its regular versions - the Publish
     /// plugin's "Published/index.json" does exactly that - so an exploratory name, the only branch name that
